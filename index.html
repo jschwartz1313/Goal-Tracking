@@ -675,118 +675,185 @@
             localStorage.setItem('habitHistory', JSON.stringify(history));
         }
 
-        // Goals functions
-        function addGoal() {
-            console.log('addGoal called');
-            const input = document.getElementById('goalInput');
-            console.log('Input element:', input);
-            const goalText = input.value.trim();
-            console.log('Goal text:', goalText);
+        // Goals functions - Completely rewritten for reliability
+        window.addGoal = function() {
+            try {
+                const input = document.getElementById('goalInput');
+                if (!input) {
+                    alert('Error: Goal input not found');
+                    return;
+                }
 
-            if (!goalText) {
-                alert('Please enter a goal!');
-                return;
+                const goalText = input.value.trim();
+
+                if (!goalText) {
+                    alert('Please enter a goal!');
+                    return;
+                }
+
+                const todayKey = getTodayKey();
+                let allGoals = {};
+
+                try {
+                    const stored = localStorage.getItem('dailyGoals');
+                    if (stored) {
+                        allGoals = JSON.parse(stored);
+                    }
+                } catch (e) {
+                    console.error('Error parsing stored goals:', e);
+                    allGoals = {};
+                }
+
+                if (!allGoals[todayKey]) {
+                    allGoals[todayKey] = [];
+                }
+
+                const newGoal = {
+                    id: Date.now(),
+                    text: goalText,
+                    status: 'incomplete'
+                };
+
+                allGoals[todayKey].push(newGoal);
+
+                try {
+                    localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                    console.log('Goal saved successfully:', newGoal);
+                } catch (e) {
+                    console.error('Error saving goal:', e);
+                    alert('Error saving goal. Please try again.');
+                    return;
+                }
+
+                input.value = '';
+                renderGoals();
+            } catch (e) {
+                console.error('Error in addGoal:', e);
+                alert('An error occurred. Please check the console.');
             }
-
-            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
-            const todayKey = getTodayKey();
-            console.log('Today key:', todayKey);
-
-            if (!goals[todayKey]) {
-                goals[todayKey] = [];
-            }
-
-            const newGoal = {
-                id: Date.now(),
-                text: goalText,
-                status: 'incomplete'
-            };
-
-            goals[todayKey].push(newGoal);
-            console.log('Goals after push:', goals);
-            localStorage.setItem('dailyGoals', JSON.stringify(goals));
-
-            input.value = '';
-            console.log('Calling renderGoals...');
-            renderGoals();
         }
 
         function renderGoals() {
-            console.log('renderGoals called');
-            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
-            const todayKey = getTodayKey();
-            const todayGoals = goals[todayKey] || [];
-            console.log('Today goals:', todayGoals);
+            try {
+                const goalsList = document.getElementById('goalsList');
 
-            const goalsList = document.getElementById('goalsList');
-            console.log('Goals list element:', goalsList);
+                if (!goalsList) {
+                    console.error('Goals list element not found!');
+                    return;
+                }
 
-            if (!goalsList) {
-                console.error('goalsList element not found!');
-                return;
+                const todayKey = getTodayKey();
+                let allGoals = {};
+
+                try {
+                    const stored = localStorage.getItem('dailyGoals');
+                    if (stored) {
+                        allGoals = JSON.parse(stored);
+                    }
+                } catch (e) {
+                    console.error('Error parsing goals:', e);
+                }
+
+                const todayGoals = allGoals[todayKey] || [];
+
+                // Clear existing content
+                goalsList.innerHTML = '';
+
+                if (todayGoals.length === 0) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'empty-goals';
+                    emptyDiv.textContent = 'No goals for today yet. Add one above!';
+                    goalsList.appendChild(emptyDiv);
+                    return;
+                }
+
+                // Render each goal
+                todayGoals.forEach((goal, index) => {
+                    const li = document.createElement('li');
+                    li.className = `goal-item ${goal.status}`;
+
+                    // Status button
+                    const statusBtn = document.createElement('button');
+                    statusBtn.className = `goal-status-btn ${goal.status}`;
+                    statusBtn.textContent = goal.status === 'incomplete' ? 'Incomplete' :
+                                           goal.status === 'partial' ? 'Partial' : 'Complete';
+                    statusBtn.onclick = function() { cycleGoalStatus(goal.id); };
+
+                    // Goal text
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'goal-text';
+                    textDiv.textContent = goal.text;
+
+                    // Delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-goal-btn';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.onclick = function() { deleteGoal(goal.id); };
+
+                    li.appendChild(statusBtn);
+                    li.appendChild(textDiv);
+                    li.appendChild(deleteBtn);
+                    goalsList.appendChild(li);
+                });
+
+                console.log(`Rendered ${todayGoals.length} goals successfully`);
+            } catch (e) {
+                console.error('Error in renderGoals:', e);
             }
-
-            goalsList.innerHTML = '';
-
-            if (todayGoals.length === 0) {
-                console.log('No goals, showing empty message');
-                goalsList.innerHTML = '<div class="empty-goals">No goals for today yet. Add one above!</div>';
-                return;
-            }
-
-            console.log('Rendering', todayGoals.length, 'goals');
-
-            todayGoals.forEach(goal => {
-                const li = document.createElement('li');
-                li.className = `goal-item ${goal.status}`;
-
-                const statusText = {
-                    'incomplete': 'Incomplete',
-                    'partial': 'Partial',
-                    'complete': 'Complete'
-                };
-
-                li.innerHTML = `
-                    <button class="goal-status-btn ${goal.status}" onclick="cycleGoalStatus(${goal.id})">
-                        ${statusText[goal.status]}
-                    </button>
-                    <div class="goal-text">${goal.text}</div>
-                    <button class="delete-goal-btn" onclick="deleteGoal(${goal.id})">Delete</button>
-                `;
-
-                goalsList.appendChild(li);
-            });
         }
 
         function cycleGoalStatus(goalId) {
-            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
-            const todayKey = getTodayKey();
-            const todayGoals = goals[todayKey] || [];
+            try {
+                const todayKey = getTodayKey();
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
-            const goal = todayGoals.find(g => g.id === goalId);
-            if (!goal) return;
+                if (!allGoals[todayKey]) {
+                    console.error('No goals found for today');
+                    return;
+                }
 
-            // Cycle through: incomplete -> partial -> complete -> incomplete
-            if (goal.status === 'incomplete') {
-                goal.status = 'partial';
-            } else if (goal.status === 'partial') {
-                goal.status = 'complete';
-            } else {
-                goal.status = 'incomplete';
+                const goal = allGoals[todayKey].find(g => g.id === goalId);
+
+                if (!goal) {
+                    console.error('Goal not found:', goalId);
+                    return;
+                }
+
+                // Cycle through: incomplete -> partial -> complete -> incomplete
+                if (goal.status === 'incomplete') {
+                    goal.status = 'partial';
+                } else if (goal.status === 'partial') {
+                    goal.status = 'complete';
+                } else {
+                    goal.status = 'incomplete';
+                }
+
+                localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                renderGoals();
+            } catch (e) {
+                console.error('Error in cycleGoalStatus:', e);
             }
-
-            localStorage.setItem('dailyGoals', JSON.stringify(goals));
-            renderGoals();
         }
 
         function deleteGoal(goalId) {
-            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
-            const todayKey = getTodayKey();
-            const todayGoals = goals[todayKey] || [];
+            try {
+                if (!confirm('Delete this goal?')) {
+                    return;
+                }
 
-            goals[todayKey] = todayGoals.filter(g => g.id !== goalId);
-            localStorage.setItem('dailyGoals', JSON.stringify(goals));
-            renderGoals();
+                const todayKey = getTodayKey();
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+                if (!allGoals[todayKey]) {
+                    return;
+                }
+
+                allGoals[todayKey] = allGoals[todayKey].filter(g => g.id !== goalId);
+                localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                renderGoals();
+            } catch (e) {
+                console.error('Error in deleteGoal:', e);
+            }
         }
 
         // Update statistics
