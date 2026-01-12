@@ -685,7 +685,7 @@
                 return;
             }
 
-            const goals = JSON.parse(localStorage.getItem('dailyGoals'));
+            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
             const todayKey = getTodayKey();
 
             if (!goals[todayKey]) {
@@ -706,7 +706,7 @@
         }
 
         function renderGoals() {
-            const goals = JSON.parse(localStorage.getItem('dailyGoals'));
+            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
             const todayKey = getTodayKey();
             const todayGoals = goals[todayKey] || [];
 
@@ -741,9 +741,9 @@
         }
 
         function cycleGoalStatus(goalId) {
-            const goals = JSON.parse(localStorage.getItem('dailyGoals'));
+            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
             const todayKey = getTodayKey();
-            const todayGoals = goals[todayKey];
+            const todayGoals = goals[todayKey] || [];
 
             const goal = todayGoals.find(g => g.id === goalId);
             if (!goal) return;
@@ -762,9 +762,9 @@
         }
 
         function deleteGoal(goalId) {
-            const goals = JSON.parse(localStorage.getItem('dailyGoals'));
+            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
             const todayKey = getTodayKey();
-            const todayGoals = goals[todayKey];
+            const todayGoals = goals[todayKey] || [];
 
             goals[todayKey] = todayGoals.filter(g => g.id !== goalId);
             localStorage.setItem('dailyGoals', JSON.stringify(goals));
@@ -862,7 +862,7 @@
                 scoresHTML += '</div>';
 
                 // Get goals for this date
-                const allGoals = JSON.parse(localStorage.getItem('dailyGoals'));
+                const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
                 const dateGoals = allGoals[date] || [];
                 let goalsHTML = '';
 
