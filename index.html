@@ -677,8 +677,11 @@
 
         // Goals functions
         function addGoal() {
+            console.log('addGoal called');
             const input = document.getElementById('goalInput');
+            console.log('Input element:', input);
             const goalText = input.value.trim();
+            console.log('Goal text:', goalText);
 
             if (!goalText) {
                 alert('Please enter a goal!');
@@ -687,6 +690,7 @@
 
             const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
             const todayKey = getTodayKey();
+            console.log('Today key:', todayKey);
 
             if (!goals[todayKey]) {
                 goals[todayKey] = [];
@@ -699,24 +703,38 @@
             };
 
             goals[todayKey].push(newGoal);
+            console.log('Goals after push:', goals);
             localStorage.setItem('dailyGoals', JSON.stringify(goals));
 
             input.value = '';
+            console.log('Calling renderGoals...');
             renderGoals();
         }
 
         function renderGoals() {
+            console.log('renderGoals called');
             const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
             const todayKey = getTodayKey();
             const todayGoals = goals[todayKey] || [];
+            console.log('Today goals:', todayGoals);
 
             const goalsList = document.getElementById('goalsList');
+            console.log('Goals list element:', goalsList);
+
+            if (!goalsList) {
+                console.error('goalsList element not found!');
+                return;
+            }
+
             goalsList.innerHTML = '';
 
             if (todayGoals.length === 0) {
+                console.log('No goals, showing empty message');
                 goalsList.innerHTML = '<div class="empty-goals">No goals for today yet. Add one above!</div>';
                 return;
             }
+
+            console.log('Rendering', todayGoals.length, 'goals');
 
             todayGoals.forEach(goal => {
                 const li = document.createElement('li');

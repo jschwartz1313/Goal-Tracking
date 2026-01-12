@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Goals</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .test { margin: 20px 0; padding: 10px; background: #f0f0f0; }
+        button { margin: 5px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Debug Daily Goals</h1>
+
+    <div class="test">
+        <h2>Test 1: Check if goalInput exists</h2>
+        <button onclick="test1()">Run Test 1</button>
+        <div id="result1"></div>
+    </div>
+
+    <div class="test">
+        <h2>Test 2: Check if goalsList exists</h2>
+        <button onclick="test2()">Run Test 2</button>
+        <div id="result2"></div>
+    </div>
+
+    <div class="test">
+        <h2>Test 3: Add a goal manually</h2>
+        <input type="text" id="testGoalInput" placeholder="Enter test goal">
+        <button onclick="test3()">Add Goal</button>
+        <div id="result3"></div>
+    </div>
+
+    <div class="test">
+        <h2>Test 4: View localStorage</h2>
+        <button onclick="test4()">View Storage</button>
+        <div id="result4"></div>
+    </div>
+
+    <div class="test">
+        <h2>Test 5: Render Goals</h2>
+        <button onclick="test5()">Render Goals</button>
+        <ul id="testGoalsList"></ul>
+    </div>
+
+    <script>
+        function getTodayKey() {
+            const today = new Date();
+            return today.toISOString().split('T')[0];
+        }
+
+        function test1() {
+            const input = document.getElementById('testGoalInput');
+            document.getElementById('result1').innerHTML = input ?
+                '✅ Input element found!' :
+                '❌ Input element NOT found!';
+        }
+
+        function test2() {
+            const list = document.getElementById('testGoalsList');
+            document.getElementById('result2').innerHTML = list ?
+                '✅ Goals list element found!' :
+                '❌ Goals list element NOT found!';
+        }
+
+        function test3() {
+            const input = document.getElementById('testGoalInput');
+            const goalText = input.value.trim();
+
+            if (!goalText) {
+                document.getElementById('result3').innerHTML = '❌ Please enter a goal!';
+                return;
+            }
+
+            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+            const todayKey = getTodayKey();
+
+            if (!goals[todayKey]) {
+                goals[todayKey] = [];
+            }
+
+            const newGoal = {
+                id: Date.now(),
+                text: goalText,
+                status: 'incomplete'
+            };
+
+            goals[todayKey].push(newGoal);
+            localStorage.setItem('dailyGoals', JSON.stringify(goals));
+
+            document.getElementById('result3').innerHTML =
+                `✅ Goal added! Total goals today: ${goals[todayKey].length}`;
+            input.value = '';
+        }
+
+        function test4() {
+            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+            const todayKey = getTodayKey();
+            const todayGoals = goals[todayKey] || [];
+
+            document.getElementById('result4').innerHTML = `
+                <strong>Today's date key:</strong> ${todayKey}<br>
+                <strong>Goals today:</strong> ${todayGoals.length}<br>
+                <strong>Raw data:</strong><br>
+                <pre>${JSON.stringify(goals, null, 2)}</pre>
+            `;
+        }
+
+        function test5() {
+            const goals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+            const todayKey = getTodayKey();
+            const todayGoals = goals[todayKey] || [];
+
+            const goalsList = document.getElementById('testGoalsList');
+            goalsList.innerHTML = '';
+
+            if (todayGoals.length === 0) {
+                goalsList.innerHTML = '<li>No goals for today yet!</li>';
+                return;
+            }
+
+            todayGoals.forEach(goal => {
+                const li = document.createElement('li');
+                li.textContent = `${goal.text} - Status: ${goal.status}`;
+                goalsList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
