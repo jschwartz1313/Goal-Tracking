@@ -306,6 +306,135 @@
             outline: none;
             border-color: #667eea;
         }
+
+        .goals-section {
+            margin-top: 20px;
+        }
+
+        .goal-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .goal-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .goal-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .add-goal-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .add-goal-btn:hover {
+            background: #5568d3;
+        }
+
+        .goals-list {
+            list-style: none;
+        }
+
+        .goal-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid #ddd;
+            transition: all 0.3s;
+        }
+
+        .goal-item.incomplete {
+            border-left-color: #dc3545;
+        }
+
+        .goal-item.partial {
+            border-left-color: #ffc107;
+        }
+
+        .goal-item.complete {
+            border-left-color: #28a745;
+        }
+
+        .goal-status-btn {
+            min-width: 120px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .goal-status-btn.incomplete {
+            background: #dc3545;
+        }
+
+        .goal-status-btn.partial {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .goal-status-btn.complete {
+            background: #28a745;
+        }
+
+        .goal-status-btn:hover {
+            opacity: 0.8;
+        }
+
+        .goal-text {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .goal-item.complete .goal-text {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .delete-goal-btn {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .delete-goal-btn:hover {
+            background: #5a6268;
+        }
+
+        .empty-goals {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -322,6 +451,17 @@
         <!-- Today Section -->
         <div id="today-section" class="section active">
             <div id="metricsContainer"></div>
+
+            <div class="goals-section">
+                <div class="category-header">
+                    <h2>Today's Goals</h2>
+                </div>
+                <div class="goal-input-container">
+                    <input type="text" id="goalInput" class="goal-input" placeholder="Add a goal for today..." />
+                    <button class="add-goal-btn" onclick="addGoal()">Add Goal</button>
+                </div>
+                <ul id="goalsList" class="goals-list"></ul>
+            </div>
 
             <div class="notes-section">
                 <div class="category-header">
@@ -404,6 +544,9 @@
             }
             if (!localStorage.getItem('habitHistory')) {
                 localStorage.setItem('habitHistory', JSON.stringify({}));
+            }
+            if (!localStorage.getItem('dailyGoals')) {
+                localStorage.setItem('dailyGoals', JSON.stringify({}));
             }
         }
 
@@ -495,6 +638,9 @@
             document.getElementById('dailyNotes').value = todayData.notes || '';
             document.getElementById('dailyNotes').onchange = saveNotes;
 
+            // Load goals
+            renderGoals();
+
             updateStats();
         }
 
@@ -527,6 +673,102 @@
 
             history[todayKey].notes = notes;
             localStorage.setItem('habitHistory', JSON.stringify(history));
+        }
+
+        // Goals functions
+        function addGoal() {
+            const input = document.getElementById('goalInput');
+            const goalText = input.value.trim();
+
+            if (!goalText) {
+                alert('Please enter a goal!');
+                return;
+            }
+
+            const goals = JSON.parse(localStorage.getItem('dailyGoals'));
+            const todayKey = getTodayKey();
+
+            if (!goals[todayKey]) {
+                goals[todayKey] = [];
+            }
+
+            const newGoal = {
+                id: Date.now(),
+                text: goalText,
+                status: 'incomplete'
+            };
+
+            goals[todayKey].push(newGoal);
+            localStorage.setItem('dailyGoals', JSON.stringify(goals));
+
+            input.value = '';
+            renderGoals();
+        }
+
+        function renderGoals() {
+            const goals = JSON.parse(localStorage.getItem('dailyGoals'));
+            const todayKey = getTodayKey();
+            const todayGoals = goals[todayKey] || [];
+
+            const goalsList = document.getElementById('goalsList');
+            goalsList.innerHTML = '';
+
+            if (todayGoals.length === 0) {
+                goalsList.innerHTML = '<div class="empty-goals">No goals for today yet. Add one above!</div>';
+                return;
+            }
+
+            todayGoals.forEach(goal => {
+                const li = document.createElement('li');
+                li.className = `goal-item ${goal.status}`;
+
+                const statusText = {
+                    'incomplete': 'Incomplete',
+                    'partial': 'Partial',
+                    'complete': 'Complete'
+                };
+
+                li.innerHTML = `
+                    <button class="goal-status-btn ${goal.status}" onclick="cycleGoalStatus(${goal.id})">
+                        ${statusText[goal.status]}
+                    </button>
+                    <div class="goal-text">${goal.text}</div>
+                    <button class="delete-goal-btn" onclick="deleteGoal(${goal.id})">Delete</button>
+                `;
+
+                goalsList.appendChild(li);
+            });
+        }
+
+        function cycleGoalStatus(goalId) {
+            const goals = JSON.parse(localStorage.getItem('dailyGoals'));
+            const todayKey = getTodayKey();
+            const todayGoals = goals[todayKey];
+
+            const goal = todayGoals.find(g => g.id === goalId);
+            if (!goal) return;
+
+            // Cycle through: incomplete -> partial -> complete -> incomplete
+            if (goal.status === 'incomplete') {
+                goal.status = 'partial';
+            } else if (goal.status === 'partial') {
+                goal.status = 'complete';
+            } else {
+                goal.status = 'incomplete';
+            }
+
+            localStorage.setItem('dailyGoals', JSON.stringify(goals));
+            renderGoals();
+        }
+
+        function deleteGoal(goalId) {
+            const goals = JSON.parse(localStorage.getItem('dailyGoals'));
+            const todayKey = getTodayKey();
+            const todayGoals = goals[todayKey];
+
+            goals[todayKey] = todayGoals.filter(g => g.id !== goalId);
+            localStorage.setItem('dailyGoals', JSON.stringify(goals));
+            renderGoals();
         }
 
         // Update statistics
@@ -619,9 +861,28 @@
                 });
                 scoresHTML += '</div>';
 
+                // Get goals for this date
+                const allGoals = JSON.parse(localStorage.getItem('dailyGoals'));
+                const dateGoals = allGoals[date] || [];
+                let goalsHTML = '';
+
+                if (dateGoals.length > 0) {
+                    goalsHTML = '<div style="margin-top: 15px;"><strong>Goals:</strong><ul style="margin: 5px 0; padding-left: 20px;">';
+                    dateGoals.forEach(goal => {
+                        const statusEmoji = {
+                            'incomplete': '🔴',
+                            'partial': '🟡',
+                            'complete': '🟢'
+                        };
+                        goalsHTML += `<li style="margin: 5px 0;">${statusEmoji[goal.status]} ${goal.text}</li>`;
+                    });
+                    goalsHTML += '</ul></div>';
+                }
+
                 entryDiv.innerHTML = `
                     <div class="history-date">${formattedDate} - Average: ${avg}/10</div>
                     ${scoresHTML}
+                    ${goalsHTML}
                     ${data.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${data.notes}</div>` : ''}
                 `;
                 container.appendChild(entryDiv);
@@ -688,6 +949,13 @@
 
             renderMetricsList();
         }
+
+        // Add Enter key support for goal input
+        document.getElementById('goalInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addGoal();
+            }
+        });
 
         // Initialize
         initializeData();
