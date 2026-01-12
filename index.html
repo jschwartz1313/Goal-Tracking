@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Goal Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .date {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .goal-input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        .goals-list {
+            list-style: none;
+        }
+
+        .goal-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: transform 0.2s;
+        }
+
+        .goal-item:hover {
+            transform: translateX(5px);
+        }
+
+        .goal-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .goal-text {
+            flex: 1;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .stats {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stats h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .stats p {
+            color: #666;
+            font-size: 18px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Daily Goal Tracker</h1>
+        <div class="date" id="currentDate"></div>
+
+        <div class="goal-input-section">
+            <div class="input-group">
+                <input type="text" id="goalInput" placeholder="Enter your goal for today..." />
+                <button onclick="addGoal()">Add Goal</button>
+            </div>
+        </div>
+
+        <ul class="goals-list" id="goalsList"></ul>
+
+        <div class="stats">
+            <h3>Today's Progress</h3>
+            <p id="statsText">0 of 0 goals completed</p>
+        </div>
+    </div>
+
+    <script>
+        // Display current date
+        function updateDate() {
+            const dateElement = document.getElementById('currentDate');
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateElement.textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        // Load goals from localStorage
+        function loadGoals() {
+            const goals = JSON.parse(localStorage.getItem('dailyGoals')) || [];
+            const goalsList = document.getElementById('goalsList');
+            goalsList.innerHTML = '';
+
+            if (goals.length === 0) {
+                goalsList.innerHTML = '<div class="empty-state">No goals yet. Add your first goal above!</div>';
+            } else {
+                goals.forEach((goal, index) => {
+                    const li = document.createElement('li');
+                    li.className = `goal-item ${goal.completed ? 'completed' : ''}`;
+                    li.innerHTML = `
+                        <input type="checkbox" class="checkbox" ${goal.completed ? 'checked' : ''} onchange="toggleGoal(${index})">
+                        <span class="goal-text">${goal.text}</span>
+                        <button class="delete-btn" onclick="deleteGoal(${index})">Delete</button>
+                    `;
+                    goalsList.appendChild(li);
+                });
+            }
+
+            updateStats();
+        }
+
+        // Add new goal
+        function addGoal() {
+            const input = document.getElementById('goalInput');
+            const goalText = input.value.trim();
+
+            if (goalText === '') {
+                alert('Please enter a goal!');
+                return;
+            }
+
+            const goals = JSON.parse(localStorage.getItem('dailyGoals')) || [];
+            goals.push({ text: goalText, completed: false });
+            localStorage.setItem('dailyGoals', JSON.stringify(goals));
+
+            input.value = '';
+            loadGoals();
+        }
+
+        // Toggle goal completion
+        function toggleGoal(index) {
+            const goals = JSON.parse(localStorage.getItem('dailyGoals')) || [];
+            goals[index].completed = !goals[index].completed;
+            localStorage.setItem('dailyGoals', JSON.stringify(goals));
+            loadGoals();
+        }
+
+        // Delete goal
+        function deleteGoal(index) {
+            const goals = JSON.parse(localStorage.getItem('dailyGoals')) || [];
+            goals.splice(index, 1);
+            localStorage.setItem('dailyGoals', JSON.stringify(goals));
+            loadGoals();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const goals = JSON.parse(localStorage.getItem('dailyGoals')) || [];
+            const completed = goals.filter(goal => goal.completed).length;
+            const total = goals.length;
+            document.getElementById('statsText').textContent = `${completed} of ${total} goals completed`;
+        }
+
+        // Allow Enter key to add goal
+        document.getElementById('goalInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addGoal();
+            }
+        });
+
+        // Initialize
+        updateDate();
+        loadGoals();
+    </script>
+</body>
+</html>
