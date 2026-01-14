@@ -435,6 +435,39 @@
             padding: 30px;
             font-style: italic;
         }
+
+        .danger-zone {
+            margin-top: 40px;
+            padding: 20px;
+            background: #fff5f5;
+            border: 2px solid #dc3545;
+            border-radius: 8px;
+        }
+
+        .danger-zone h3 {
+            color: #dc3545;
+            margin-bottom: 10px;
+        }
+
+        .danger-zone p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .btn-clear-all {
+            background: #dc3545;
+            padding: 12px 24px;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-clear-all:hover {
+            background: #c82333;
+        }
     </style>
 </head>
 <body>
@@ -521,6 +554,12 @@
                 <h2>Your Metrics</h2>
             </div>
             <div id="metricsList"></div>
+
+            <div class="danger-zone">
+                <h3>Danger Zone</h3>
+                <p>This will permanently delete all your data including metrics history, goals, and notes. This action cannot be undone.</p>
+                <button class="btn-clear-all" onclick="clearAllData()">Clear All Data</button>
+            </div>
         </div>
     </div>
 
@@ -1036,6 +1075,39 @@
             localStorage.setItem('habitHistory', JSON.stringify(history));
 
             renderMetricsList();
+        }
+
+        // Clear all data
+        function clearAllData() {
+            const confirmed = confirm('⚠️ WARNING: This will permanently delete ALL your data including:\n\n- All metrics history\n- All daily goals\n- All notes\n- Custom metrics\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?');
+
+            if (!confirmed) {
+                return;
+            }
+
+            // Double confirmation
+            const doubleConfirm = confirm('Are you REALLY sure? This is your last chance to cancel.');
+
+            if (!doubleConfirm) {
+                return;
+            }
+
+            try {
+                // Clear all localStorage
+                localStorage.removeItem('habitMetrics');
+                localStorage.removeItem('habitHistory');
+                localStorage.removeItem('dailyGoals');
+
+                // Reinitialize with defaults
+                initializeData();
+
+                // Refresh the page
+                alert('All data has been cleared successfully. The page will now refresh.');
+                location.reload();
+            } catch (e) {
+                console.error('Error clearing data:', e);
+                alert('An error occurred while clearing data. Please try again or clear your browser cache manually.');
+            }
         }
 
         // Add Enter key support for goal input
