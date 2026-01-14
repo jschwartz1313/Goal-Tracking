@@ -954,7 +954,9 @@
 
             dates.forEach(date => {
                 const data = history[date];
-                const dateObj = new Date(date);
+                // Parse date as local date (not UTC) to avoid timezone issues
+                const [year, month, day] = date.split('-').map(Number);
+                const dateObj = new Date(year, month - 1, day);
                 const formattedDate = dateObj.toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
