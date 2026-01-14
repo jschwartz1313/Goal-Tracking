@@ -595,7 +595,13 @@
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+            const dateKey = `${year}-${month}-${day}`;
+            console.log('getTodayKey() called:', {
+                fullDate: today.toString(),
+                year, month, day,
+                dateKey
+            });
+            return dateKey;
         }
 
         // Update date display

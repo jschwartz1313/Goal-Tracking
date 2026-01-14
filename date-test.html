@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Date Debug Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result {
+            background: #e8f4f8;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #0066cc;
+        }
+        h2 {
+            color: #0066cc;
+            margin-top: 0;
+        }
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Date Debugging Tool</h1>
+
+    <div class="test-section">
+        <h2>Current Browser Time Information</h2>
+        <button onclick="showTimeInfo()">Show Time Info</button>
+        <div id="timeInfo"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>getTodayKey() Test</h2>
+        <button onclick="testGetTodayKey()">Test getTodayKey()</button>
+        <div id="getTodayKeyResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Compare Display Date vs Storage Key</h2>
+        <button onclick="compareDisplayVsStorage()">Compare Dates</button>
+        <div id="compareResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Save and Retrieve</h2>
+        <button onclick="testSaveRetrieve()">Test Full Cycle</button>
+        <div id="testResult"></div>
+    </div>
+
+    <script>
+        // Copy of the getTodayKey function from index.html
+        function getTodayKey() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateKey = `${year}-${month}-${day}`;
+            console.log('getTodayKey() called:', {
+                fullDate: today.toString(),
+                year, month, day,
+                dateKey
+            });
+            return dateKey;
+        }
+
+        function showTimeInfo() {
+            const now = new Date();
+            const html = `
+                <div class="result">
+                    <strong>Raw Date Object:</strong><br>
+                    ${now.toString()}<br><br>
+
+                    <strong>Timezone Offset (minutes):</strong><br>
+                    ${now.getTimezoneOffset()} (${now.getTimezoneOffset() / 60} hours)<br><br>
+
+                    <strong>Date Components:</strong><br>
+                    Year: ${now.getFullYear()}<br>
+                    Month: ${now.getMonth() + 1} (${now.getMonth() + 1})<br>
+                    Day: ${now.getDate()}<br>
+                    Hours: ${now.getHours()}<br>
+                    Minutes: ${now.getMinutes()}<br><br>
+
+                    <strong>UTC Components:</strong><br>
+                    UTC Year: ${now.getUTCFullYear()}<br>
+                    UTC Month: ${now.getUTCMonth() + 1}<br>
+                    UTC Day: ${now.getUTCDate()}<br>
+                    UTC Hours: ${now.getUTCHours()}<br>
+
+                    <strong>ISO String:</strong><br>
+                    ${now.toISOString()}<br><br>
+
+                    <strong>Local Date String:</strong><br>
+                    ${now.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })}
+                </div>
+            `;
+            document.getElementById('timeInfo').innerHTML = html;
+        }
+
+        function testGetTodayKey() {
+            const result = getTodayKey();
+            const html = `
+                <div class="result">
+                    <strong>getTodayKey() returned:</strong><br>
+                    ${result}<br><br>
+
+                    <strong>Expected format:</strong><br>
+                    YYYY-MM-DD<br><br>
+
+                    <strong>Check console for debug log</strong>
+                </div>
+            `;
+            document.getElementById('getTodayKeyResult').innerHTML = html;
+        }
+
+        function compareDisplayVsStorage() {
+            const now = new Date();
+            const displayDate = now.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const storageKey = getTodayKey();
+
+            // Parse the storage key back to display format
+            const [year, month, day] = storageKey.split('-').map(Number);
+            const parsedDate = new Date(year, month - 1, day);
+            const parsedDisplay = parsedDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            const match = displayDate === parsedDisplay ? '✅ MATCH' : '❌ MISMATCH';
+
+            const html = `
+                <div class="result">
+                    <strong>Display Date (from updateDate function):</strong><br>
+                    ${displayDate}<br><br>
+
+                    <strong>Storage Key (from getTodayKey):</strong><br>
+                    ${storageKey}<br><br>
+
+                    <strong>Storage Key Parsed Back to Display:</strong><br>
+                    ${parsedDisplay}<br><br>
+
+                    <strong>Result:</strong><br>
+                    ${match}
+                </div>
+            `;
+            document.getElementById('compareResult').innerHTML = html;
+        }
+
+        function testSaveRetrieve() {
+            const testData = {
+                timestamp: new Date().toString(),
+                testValue: 'Test entry at ' + new Date().toLocaleTimeString()
+            };
+
+            const dateKey = getTodayKey();
+
+            // Save to localStorage
+            let history = JSON.parse(localStorage.getItem('testHistory') || '{}');
+            history[dateKey] = testData;
+            localStorage.setItem('testHistory', JSON.stringify(history));
+
+            // Retrieve and parse
+            const retrieved = JSON.parse(localStorage.getItem('testHistory'));
+            const dates = Object.keys(retrieved);
+
+            let resultsHTML = '<div class="result">';
+            resultsHTML += `<strong>Saved with key:</strong> ${dateKey}<br><br>`;
+            resultsHTML += `<strong>All keys in storage:</strong><br>`;
+            dates.forEach(key => {
+                const [year, month, day] = key.split('-').map(Number);
+                const dateObj = new Date(year, month - 1, day);
+                const displayDate = dateObj.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                resultsHTML += `${key} → ${displayDate}<br>`;
+            });
+            resultsHTML += `<br><strong>Full stored data:</strong><br>`;
+            resultsHTML += `<pre>${JSON.stringify(retrieved, null, 2)}</pre>`;
+            resultsHTML += '</div>';
+
+            document.getElementById('testResult').innerHTML = resultsHTML;
+        }
+    </script>
+</body>
+</html>
