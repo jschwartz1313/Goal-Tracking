@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Habit Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -468,6 +469,60 @@
         .btn-clear-all:hover {
             background: #c82333;
         }
+
+        .charts-section {
+            margin-top: 40px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .chart-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-row {
+                grid-template-columns: 1fr;
+            }
+            .chart-wrapper {
+                height: 250px;
+            }
+        }
+
+        .no-chart-data {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -525,6 +580,49 @@
                 <h2>Your History</h2>
             </div>
             <div id="historyContainer"></div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <div class="category-header">
+                    <h2>Analytics & Trends</h2>
+                </div>
+                <div class="charts-grid">
+                    <!-- Daily Average Trend Chart -->
+                    <div class="chart-container">
+                        <div class="chart-title">Daily Average Over Time</div>
+                        <div class="chart-wrapper">
+                            <canvas id="averageTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Two charts side by side -->
+                    <div class="chart-row">
+                        <!-- Metric Comparison Chart -->
+                        <div class="chart-container">
+                            <div class="chart-title">Average by Metric (All Time)</div>
+                            <div class="chart-wrapper">
+                                <canvas id="metricComparisonChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Goal Completion Chart -->
+                        <div class="chart-container">
+                            <div class="chart-title">Goal Completion Rate</div>
+                            <div class="chart-wrapper">
+                                <canvas id="goalCompletionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Average Chart -->
+                    <div class="chart-container">
+                        <div class="chart-title">Average by Category (Last 30 Days)</div>
+                        <div class="chart-wrapper">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Manage Metrics Section -->
@@ -1021,6 +1119,354 @@
                     ${data.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${data.notes}</div>` : ''}
                 `;
                 container.appendChild(entryDiv);
+            });
+
+            // Render charts after history entries
+            renderCharts();
+        }
+
+        // Chart instances (to destroy before re-rendering)
+        let chartInstances = {
+            averageTrend: null,
+            metricComparison: null,
+            goalCompletion: null,
+            category: null
+        };
+
+        // Render all charts
+        function renderCharts() {
+            const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
+            const metrics = JSON.parse(localStorage.getItem('habitMetrics') || '[]');
+            const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+            // Destroy existing charts
+            Object.keys(chartInstances).forEach(key => {
+                if (chartInstances[key]) {
+                    chartInstances[key].destroy();
+                    chartInstances[key] = null;
+                }
+            });
+
+            const dates = Object.keys(history).sort();
+
+            if (dates.length === 0) {
+                return;
+            }
+
+            // 1. Daily Average Trend Chart (Line)
+            renderAverageTrendChart(history, dates);
+
+            // 2. Metric Comparison Chart (Bar)
+            renderMetricComparisonChart(history, metrics, dates);
+
+            // 3. Goal Completion Chart (Doughnut)
+            renderGoalCompletionChart(allGoals);
+
+            // 4. Category Average Chart (Radar)
+            renderCategoryChart(history, metrics, dates);
+        }
+
+        // Line chart showing daily averages over time
+        function renderAverageTrendChart(history, dates) {
+            const ctx = document.getElementById('averageTrendChart');
+            if (!ctx) return;
+
+            // Get last 30 days of data
+            const recentDates = dates.slice(-30);
+            const labels = recentDates.map(date => {
+                const [year, month, day] = date.split('-').map(Number);
+                const dateObj = new Date(year, month - 1, day);
+                return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+
+            const averages = recentDates.map(date => {
+                const data = history[date];
+                const scores = Object.keys(data)
+                    .filter(key => key !== 'notes')
+                    .map(key => data[key]);
+                return scores.length > 0
+                    ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
+                    : 0;
+            });
+
+            chartInstances.averageTrend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Daily Average',
+                        data: averages,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 10,
+                            ticks: {
+                                stepSize: 2
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Bar chart comparing average scores by metric
+        function renderMetricComparisonChart(history, metrics, dates) {
+            const ctx = document.getElementById('metricComparisonChart');
+            if (!ctx) return;
+
+            // Calculate all-time average for each metric
+            const metricAverages = metrics.map(metric => {
+                const scores = dates
+                    .map(date => history[date][metric.id])
+                    .filter(score => score !== undefined);
+                return scores.length > 0
+                    ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
+                    : 0;
+            });
+
+            const labels = metrics.map(m => m.name.length > 15 ? m.name.substring(0, 15) + '...' : m.name);
+
+            // Color gradient based on score
+            const backgroundColors = metricAverages.map(avg => {
+                const value = parseFloat(avg);
+                if (value >= 7) return 'rgba(40, 167, 69, 0.7)';
+                if (value >= 5) return 'rgba(255, 193, 7, 0.7)';
+                return 'rgba(220, 53, 69, 0.7)';
+            });
+
+            chartInstances.metricComparison = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Average Score',
+                        data: metricAverages,
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors.map(c => c.replace('0.7', '1')),
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 10,
+                            ticks: {
+                                stepSize: 2
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Doughnut chart showing goal completion rates
+        function renderGoalCompletionChart(allGoals) {
+            const ctx = document.getElementById('goalCompletionChart');
+            if (!ctx) return;
+
+            // Count goals by status
+            let complete = 0;
+            let partial = 0;
+            let incomplete = 0;
+
+            Object.values(allGoals).forEach(dayGoals => {
+                dayGoals.forEach(goal => {
+                    if (goal.status === 'complete') complete++;
+                    else if (goal.status === 'partial') partial++;
+                    else incomplete++;
+                });
+            });
+
+            const total = complete + partial + incomplete;
+
+            if (total === 0) {
+                // Show empty state
+                chartInstances.goalCompletion = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['No goals yet'],
+                        datasets: [{
+                            data: [1],
+                            backgroundColor: ['#e9ecef'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+                return;
+            }
+
+            chartInstances.goalCompletion = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        `Complete (${complete})`,
+                        `Partial (${partial})`,
+                        `Incomplete (${incomplete})`
+                    ],
+                    datasets: [{
+                        data: [complete, partial, incomplete],
+                        backgroundColor: [
+                            'rgba(40, 167, 69, 0.8)',
+                            'rgba(255, 193, 7, 0.8)',
+                            'rgba(220, 53, 69, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(40, 167, 69, 1)',
+                            'rgba(255, 193, 7, 1)',
+                            'rgba(220, 53, 69, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const percentage = ((context.raw / total) * 100).toFixed(1);
+                                    return `${context.label}: ${percentage}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Radar chart showing category averages
+        function renderCategoryChart(history, metrics, dates) {
+            const ctx = document.getElementById('categoryChart');
+            if (!ctx) return;
+
+            // Get last 30 days
+            const recentDates = dates.slice(-30);
+
+            // Group metrics by category and calculate averages
+            const categories = {};
+            metrics.forEach(metric => {
+                if (!categories[metric.category]) {
+                    categories[metric.category] = { total: 0, count: 0 };
+                }
+                recentDates.forEach(date => {
+                    const score = history[date][metric.id];
+                    if (score !== undefined) {
+                        categories[metric.category].total += score;
+                        categories[metric.category].count++;
+                    }
+                });
+            });
+
+            const categoryLabels = Object.keys(categories);
+            const categoryAverages = categoryLabels.map(cat =>
+                categories[cat].count > 0
+                    ? (categories[cat].total / categories[cat].count).toFixed(1)
+                    : 0
+            );
+
+            chartInstances.category = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{
+                        label: 'Last 30 Days Average',
+                        data: categoryAverages,
+                        backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                        borderColor: '#667eea',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 10,
+                            ticks: {
+                                stepSize: 2
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
             });
         }
 
