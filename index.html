@@ -842,6 +842,42 @@
             border-color: #667eea;
         }
 
+        .goal-date-input {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            min-width: 140px;
+        }
+
+        .goal-date-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .upcoming-goals-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px dashed #ddd;
+        }
+
+        .upcoming-goals-title {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .goal-date-badge {
+            font-size: 11px;
+            background: #e9ecef;
+            color: #666;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
         .goal-linked-badge {
             font-size: 11px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -884,7 +920,8 @@
                 </div>
                 <div class="goal-input-container">
                     <div class="goal-input-row">
-                        <input type="text" id="goalInput" class="goal-input" placeholder="Add a goal for today..." />
+                        <input type="text" id="goalInput" class="goal-input" placeholder="Add a goal..." />
+                        <input type="date" id="goalDateInput" class="goal-date-input" title="Select date for this goal">
                         <select id="goalLinkSelect" class="goal-link-select">
                             <option value="">No linked goal</option>
                         </select>
@@ -892,6 +929,12 @@
                     <button class="add-goal-btn" onclick="addGoal()">Add Goal</button>
                 </div>
                 <ul id="goalsList" class="goals-list"></ul>
+
+                <!-- Upcoming Goals Section -->
+                <div id="upcomingGoalsSection" class="upcoming-goals-section" style="display: none;">
+                    <h3 class="upcoming-goals-title">Upcoming Goals</h3>
+                    <ul id="upcomingGoalsList" class="goals-list"></ul>
+                </div>
             </div>
 
             <div class="notes-section">
@@ -1215,6 +1258,7 @@
             try {
                 const input = document.getElementById('goalInput');
                 const linkSelect = document.getElementById('goalLinkSelect');
+                const dateInput = document.getElementById('goalDateInput');
                 if (!input) {
                     alert('Error: Goal input not found');
                     return;
@@ -1227,7 +1271,8 @@
                     return;
                 }
 
-                const todayKey = getTodayKey();
+                // Use selected date or default to today
+                const selectedDate = dateInput && dateInput.value ? dateInput.value : getTodayKey();
                 let allGoals = {};
 
                 try {
@@ -1240,8 +1285,8 @@
                     allGoals = {};
                 }
 
-                if (!allGoals[todayKey]) {
-                    allGoals[todayKey] = [];
+                if (!allGoals[selectedDate]) {
+                    allGoals[selectedDate] = [];
                 }
 
                 // Get linked goal ID if selected
@@ -1254,11 +1299,11 @@
                     linkedGoalId: linkedGoalId
                 };
 
-                allGoals[todayKey].push(newGoal);
+                allGoals[selectedDate].push(newGoal);
 
                 try {
                     localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
-                    console.log('Goal saved successfully:', newGoal);
+                    console.log('Goal saved successfully for', selectedDate, ':', newGoal);
                 } catch (e) {
                     console.error('Error saving goal:', e);
                     alert('Error saving goal. Please try again.');
@@ -1267,6 +1312,8 @@
 
                 input.value = '';
                 if (linkSelect) linkSelect.value = '';
+                // Reset date to today after adding
+                if (dateInput) dateInput.value = getTodayKey();
                 renderGoals();
             } catch (e) {
                 console.error('Error in addGoal:', e);
@@ -1277,6 +1324,8 @@
         function renderGoals() {
             try {
                 const goalsList = document.getElementById('goalsList');
+                const upcomingSection = document.getElementById('upcomingGoalsSection');
+                const upcomingList = document.getElementById('upcomingGoalsList');
 
                 if (!goalsList) {
                     console.error('Goals list element not found!');
@@ -1305,69 +1354,207 @@
                     emptyDiv.className = 'empty-goals';
                     emptyDiv.textContent = 'No goals for today yet. Add one above!';
                     goalsList.appendChild(emptyDiv);
+                } else {
+                    // Get long-term goals for badge display
+                    const longTermGoals = getLongTermGoals();
+
+                    // Render each goal
+                    todayGoals.forEach((goal, index) => {
+                        const li = document.createElement('li');
+                        li.className = `goal-item ${goal.status}`;
+                        li.dataset.goalId = goal.id;
+
+                        // Status button
+                        const statusBtn = document.createElement('button');
+                        statusBtn.className = `goal-status-btn ${goal.status}`;
+                        statusBtn.textContent = goal.status === 'incomplete' ? 'Incomplete' :
+                                               goal.status === 'partial' ? 'Partial' : 'Complete';
+                        statusBtn.onclick = function() { cycleGoalStatus(goal.id); };
+
+                        // Goal text with linked badge
+                        const textDiv = document.createElement('div');
+                        textDiv.className = 'goal-text';
+                        textDiv.textContent = goal.text;
+
+                        // Add linked goal badge if applicable
+                        if (goal.linkedGoalId) {
+                            const linkedGoal = longTermGoals.find(g => g.id === goal.linkedGoalId);
+                            if (linkedGoal) {
+                                const badge = document.createElement('span');
+                                badge.className = 'goal-linked-badge';
+                                badge.textContent = linkedGoal.title.length > 15 ? linkedGoal.title.substring(0, 15) + '...' : linkedGoal.title;
+                                textDiv.appendChild(badge);
+                            }
+                        }
+
+                        // Actions container
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'goal-actions';
+
+                        // Edit button
+                        const editBtn = document.createElement('button');
+                        editBtn.className = 'edit-goal-btn';
+                        editBtn.textContent = 'Edit';
+                        editBtn.onclick = function() { startEditGoal(goal.id); };
+
+                        // Delete button
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-goal-btn';
+                        deleteBtn.textContent = 'Delete';
+                        deleteBtn.onclick = function() { deleteGoal(goal.id); };
+
+                        actionsDiv.appendChild(editBtn);
+                        actionsDiv.appendChild(deleteBtn);
+
+                        li.appendChild(statusBtn);
+                        li.appendChild(textDiv);
+                        li.appendChild(actionsDiv);
+                        goalsList.appendChild(li);
+                    });
+
+                    console.log(`Rendered ${todayGoals.length} goals successfully`);
+                }
+
+                // Render upcoming goals (future dates only)
+                if (upcomingSection && upcomingList) {
+                    upcomingList.innerHTML = '';
+                    const longTermGoals = getLongTermGoals();
+
+                    // Get future dates with goals
+                    const futureDates = Object.keys(allGoals)
+                        .filter(date => date > todayKey)
+                        .sort();
+
+                    if (futureDates.length === 0) {
+                        upcomingSection.style.display = 'none';
+                    } else {
+                        upcomingSection.style.display = 'block';
+
+                        futureDates.forEach(date => {
+                            const dateGoals = allGoals[date];
+                            dateGoals.forEach(goal => {
+                                const li = document.createElement('li');
+                                li.className = `goal-item ${goal.status}`;
+                                li.dataset.goalId = goal.id;
+                                li.dataset.goalDate = date;
+
+                                // Status button
+                                const statusBtn = document.createElement('button');
+                                statusBtn.className = `goal-status-btn ${goal.status}`;
+                                statusBtn.textContent = goal.status === 'incomplete' ? 'Incomplete' :
+                                                       goal.status === 'partial' ? 'Partial' : 'Complete';
+                                statusBtn.onclick = function() { cycleGoalStatusForDate(goal.id, date); };
+
+                                // Goal text with date badge
+                                const textDiv = document.createElement('div');
+                                textDiv.className = 'goal-text';
+                                textDiv.textContent = goal.text;
+
+                                // Add date badge
+                                const dateBadge = document.createElement('span');
+                                dateBadge.className = 'goal-date-badge';
+                                dateBadge.textContent = formatDateShort(date);
+                                textDiv.appendChild(dateBadge);
+
+                                // Add linked goal badge if applicable
+                                if (goal.linkedGoalId) {
+                                    const linkedGoal = longTermGoals.find(g => g.id === goal.linkedGoalId);
+                                    if (linkedGoal) {
+                                        const badge = document.createElement('span');
+                                        badge.className = 'goal-linked-badge';
+                                        badge.textContent = linkedGoal.title.length > 15 ? linkedGoal.title.substring(0, 15) + '...' : linkedGoal.title;
+                                        textDiv.appendChild(badge);
+                                    }
+                                }
+
+                                // Actions container
+                                const actionsDiv = document.createElement('div');
+                                actionsDiv.className = 'goal-actions';
+
+                                // Delete button only for upcoming (edit would be complex)
+                                const deleteBtn = document.createElement('button');
+                                deleteBtn.className = 'delete-goal-btn';
+                                deleteBtn.textContent = 'Delete';
+                                deleteBtn.onclick = function() { deleteGoalForDate(goal.id, date); };
+
+                                actionsDiv.appendChild(deleteBtn);
+
+                                li.appendChild(statusBtn);
+                                li.appendChild(textDiv);
+                                li.appendChild(actionsDiv);
+                                upcomingList.appendChild(li);
+                            });
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('Error in renderGoals:', e);
+            }
+        }
+
+        // Format date for short display (e.g., "Jan 20")
+        function formatDateShort(dateStr) {
+            const [year, month, day] = dateStr.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // Cycle goal status for a specific date
+        function cycleGoalStatusForDate(goalId, date) {
+            try {
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+                if (!allGoals[date]) {
+                    console.error('No goals found for date:', date);
                     return;
                 }
 
-                // Get long-term goals for badge display
-                const longTermGoals = getLongTermGoals();
+                const goal = allGoals[date].find(g => g.id === goalId);
 
-                // Render each goal
-                todayGoals.forEach((goal, index) => {
-                    const li = document.createElement('li');
-                    li.className = `goal-item ${goal.status}`;
-                    li.dataset.goalId = goal.id;
+                if (!goal) {
+                    console.error('Goal not found:', goalId);
+                    return;
+                }
 
-                    // Status button
-                    const statusBtn = document.createElement('button');
-                    statusBtn.className = `goal-status-btn ${goal.status}`;
-                    statusBtn.textContent = goal.status === 'incomplete' ? 'Incomplete' :
-                                           goal.status === 'partial' ? 'Partial' : 'Complete';
-                    statusBtn.onclick = function() { cycleGoalStatus(goal.id); };
+                if (goal.status === 'incomplete') {
+                    goal.status = 'partial';
+                } else if (goal.status === 'partial') {
+                    goal.status = 'complete';
+                } else {
+                    goal.status = 'incomplete';
+                }
 
-                    // Goal text with linked badge
-                    const textDiv = document.createElement('div');
-                    textDiv.className = 'goal-text';
-                    textDiv.textContent = goal.text;
-
-                    // Add linked goal badge if applicable
-                    if (goal.linkedGoalId) {
-                        const linkedGoal = longTermGoals.find(g => g.id === goal.linkedGoalId);
-                        if (linkedGoal) {
-                            const badge = document.createElement('span');
-                            badge.className = 'goal-linked-badge';
-                            badge.textContent = linkedGoal.title.length > 15 ? linkedGoal.title.substring(0, 15) + '...' : linkedGoal.title;
-                            textDiv.appendChild(badge);
-                        }
-                    }
-
-                    // Actions container
-                    const actionsDiv = document.createElement('div');
-                    actionsDiv.className = 'goal-actions';
-
-                    // Edit button
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'edit-goal-btn';
-                    editBtn.textContent = 'Edit';
-                    editBtn.onclick = function() { startEditGoal(goal.id); };
-
-                    // Delete button
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-goal-btn';
-                    deleteBtn.textContent = 'Delete';
-                    deleteBtn.onclick = function() { deleteGoal(goal.id); };
-
-                    actionsDiv.appendChild(editBtn);
-                    actionsDiv.appendChild(deleteBtn);
-
-                    li.appendChild(statusBtn);
-                    li.appendChild(textDiv);
-                    li.appendChild(actionsDiv);
-                    goalsList.appendChild(li);
-                });
-
-                console.log(`Rendered ${todayGoals.length} goals successfully`);
+                localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                renderGoals();
             } catch (e) {
-                console.error('Error in renderGoals:', e);
+                console.error('Error in cycleGoalStatusForDate:', e);
+            }
+        }
+
+        // Delete goal for a specific date
+        function deleteGoalForDate(goalId, date) {
+            try {
+                if (!confirm('Delete this goal?')) {
+                    return;
+                }
+
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+                if (!allGoals[date]) {
+                    return;
+                }
+
+                allGoals[date] = allGoals[date].filter(g => g.id !== goalId);
+
+                // Clean up empty date entries
+                if (allGoals[date].length === 0) {
+                    delete allGoals[date];
+                }
+
+                localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                renderGoals();
+            } catch (e) {
+                console.error('Error in deleteGoalForDate:', e);
             }
         }
 
@@ -2428,6 +2615,12 @@
         updateDate();
         renderMetrics();
         updateGoalLinkDropdown();
+
+        // Set date input to today's date
+        const dateInput = document.getElementById('goalDateInput');
+        if (dateInput) {
+            dateInput.value = getTodayKey();
+        }
     </script>
 </body>
 </html>
