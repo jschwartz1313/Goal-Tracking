@@ -430,6 +430,68 @@
             background: #5a6268;
         }
 
+        .edit-goal-btn {
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .edit-goal-btn:hover {
+            background: #5568d3;
+        }
+
+        .goal-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .goal-edit-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .goal-edit-input:focus {
+            outline: none;
+        }
+
+        .save-goal-btn {
+            padding: 8px 16px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .save-goal-btn:hover {
+            background: #218838;
+        }
+
+        .cancel-edit-btn {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .cancel-edit-btn:hover {
+            background: #5a6268;
+        }
+
         .empty-goals {
             text-align: center;
             color: #999;
@@ -1253,6 +1315,7 @@
                 todayGoals.forEach((goal, index) => {
                     const li = document.createElement('li');
                     li.className = `goal-item ${goal.status}`;
+                    li.dataset.goalId = goal.id;
 
                     // Status button
                     const statusBtn = document.createElement('button');
@@ -1277,15 +1340,28 @@
                         }
                     }
 
+                    // Actions container
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'goal-actions';
+
+                    // Edit button
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'edit-goal-btn';
+                    editBtn.textContent = 'Edit';
+                    editBtn.onclick = function() { startEditGoal(goal.id); };
+
                     // Delete button
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'delete-goal-btn';
                     deleteBtn.textContent = 'Delete';
                     deleteBtn.onclick = function() { deleteGoal(goal.id); };
 
+                    actionsDiv.appendChild(editBtn);
+                    actionsDiv.appendChild(deleteBtn);
+
                     li.appendChild(statusBtn);
                     li.appendChild(textDiv);
-                    li.appendChild(deleteBtn);
+                    li.appendChild(actionsDiv);
                     goalsList.appendChild(li);
                 });
 
@@ -1346,6 +1422,124 @@
                 renderGoals();
             } catch (e) {
                 console.error('Error in deleteGoal:', e);
+            }
+        }
+
+        // Start editing a goal - transforms the goal item into an editable form
+        function startEditGoal(goalId) {
+            try {
+                const todayKey = getTodayKey();
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+                const goal = allGoals[todayKey]?.find(g => g.id === goalId);
+
+                if (!goal) {
+                    console.error('Goal not found:', goalId);
+                    return;
+                }
+
+                const goalsList = document.getElementById('goalsList');
+                const longTermGoals = getLongTermGoals();
+
+                // Find the goal item by data attribute and replace its content with edit form
+                const li = goalsList.querySelector(`[data-goal-id="${goalId}"]`);
+                if (li) {
+                    // Clear and rebuild with edit form
+                    li.innerHTML = '';
+                    li.className = 'goal-item editing';
+
+                    // Text input
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'goal-edit-input';
+                    input.value = goal.text;
+                    input.id = `edit-input-${goalId}`;
+
+                    // Link dropdown
+                    const select = document.createElement('select');
+                    select.className = 'goal-link-select';
+                    select.id = `edit-link-${goalId}`;
+                    select.innerHTML = '<option value="">No linked goal</option>';
+                    longTermGoals.filter(g => g.status !== 'completed').forEach(ltg => {
+                        const option = document.createElement('option');
+                        option.value = ltg.id;
+                        option.textContent = ltg.title.length > 20 ? ltg.title.substring(0, 20) + '...' : ltg.title;
+                        if (goal.linkedGoalId === ltg.id) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+
+                    // Actions
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'goal-actions';
+
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'save-goal-btn';
+                    saveBtn.textContent = 'Save';
+                    saveBtn.onclick = function() { saveEditGoal(goalId); };
+
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'cancel-edit-btn';
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.onclick = function() { renderGoals(); };
+
+                    actionsDiv.appendChild(saveBtn);
+                    actionsDiv.appendChild(cancelBtn);
+
+                    li.appendChild(input);
+                    li.appendChild(select);
+                    li.appendChild(actionsDiv);
+
+                    // Focus the input
+                    input.focus();
+                    input.select();
+
+                    // Allow Enter to save
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            saveEditGoal(goalId);
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Error in startEditGoal:', e);
+            }
+        }
+
+        // Save the edited goal
+        function saveEditGoal(goalId) {
+            try {
+                const input = document.getElementById(`edit-input-${goalId}`);
+                const select = document.getElementById(`edit-link-${goalId}`);
+
+                if (!input) {
+                    console.error('Edit input not found');
+                    return;
+                }
+
+                const newText = input.value.trim();
+                if (!newText) {
+                    alert('Goal text cannot be empty!');
+                    return;
+                }
+
+                const todayKey = getTodayKey();
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+                const goal = allGoals[todayKey]?.find(g => g.id === goalId);
+
+                if (!goal) {
+                    console.error('Goal not found:', goalId);
+                    return;
+                }
+
+                // Update the goal
+                goal.text = newText;
+                goal.linkedGoalId = select && select.value ? parseInt(select.value) : null;
+
+                localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                renderGoals();
+            } catch (e) {
+                console.error('Error in saveEditGoal:', e);
             }
         }
 
