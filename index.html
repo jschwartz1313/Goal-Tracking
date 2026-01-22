@@ -260,6 +260,85 @@
             background: #f8f9fa;
             margin-bottom: 10px;
             border-radius: 8px;
+            cursor: grab;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .metric-list-item:hover {
+            border-left-color: #667eea;
+        }
+
+        .metric-list-item.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .metric-list-item.drag-over {
+            border-top: 3px solid #667eea;
+        }
+
+        .metric-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .metric-drag-handle {
+            color: #999;
+            font-size: 18px;
+            cursor: grab;
+        }
+
+        .metric-name-display {
+            font-weight: 600;
+        }
+
+        .metric-category-display {
+            color: #666;
+            margin-left: 10px;
+        }
+
+        .metric-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-edit-metric {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .btn-edit-metric:hover {
+            background: #5568d3;
+        }
+
+        .metric-edit-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex: 1;
+        }
+
+        .metric-edit-input {
+            padding: 8px 12px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .metric-edit-select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
         }
 
         .history-entry {
@@ -2529,24 +2608,155 @@
             alert('Metric added successfully!');
         }
 
-        // Render metrics list
+        // Render metrics list with drag-and-drop reordering
+        let draggedMetricId = null;
+
         function renderMetricsList() {
             const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
             const container = document.getElementById('metricsList');
             container.innerHTML = '';
 
-            metrics.forEach(metric => {
+            metrics.forEach((metric, index) => {
                 const div = document.createElement('div');
                 div.className = 'metric-list-item';
+                div.draggable = true;
+                div.dataset.metricId = metric.id;
+                div.dataset.index = index;
+
                 div.innerHTML = `
-                    <div>
-                        <strong>${metric.name}</strong>
-                        <span style="color: #666; margin-left: 10px;">(${metric.category})</span>
+                    <div class="metric-info">
+                        <span class="metric-drag-handle">☰</span>
+                        <span class="metric-name-display">${metric.name}</span>
+                        <span class="metric-category-display">(${metric.category})</span>
                     </div>
-                    <button class="btn btn-danger" onclick="deleteMetric(${metric.id})">Delete</button>
+                    <div class="metric-actions">
+                        <button class="btn-edit-metric" onclick="startEditMetric(${metric.id})">Edit</button>
+                        <button class="btn btn-danger" onclick="deleteMetric(${metric.id})">Delete</button>
+                    </div>
                 `;
+
+                // Drag events
+                div.addEventListener('dragstart', handleDragStart);
+                div.addEventListener('dragend', handleDragEnd);
+                div.addEventListener('dragover', handleDragOver);
+                div.addEventListener('dragleave', handleDragLeave);
+                div.addEventListener('drop', handleDrop);
+
                 container.appendChild(div);
             });
+        }
+
+        function handleDragStart(e) {
+            draggedMetricId = parseInt(e.target.dataset.metricId);
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.metric-list-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const item = e.target.closest('.metric-list-item');
+            if (item && parseInt(item.dataset.metricId) !== draggedMetricId) {
+                item.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            const item = e.target.closest('.metric-list-item');
+            if (item) {
+                item.classList.remove('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const targetItem = e.target.closest('.metric-list-item');
+            if (!targetItem) return;
+
+            const targetId = parseInt(targetItem.dataset.metricId);
+            if (targetId === draggedMetricId) return;
+
+            // Reorder metrics
+            let metrics = JSON.parse(localStorage.getItem('habitMetrics'));
+            const draggedIndex = metrics.findIndex(m => m.id === draggedMetricId);
+            const targetIndex = metrics.findIndex(m => m.id === targetId);
+
+            if (draggedIndex === -1 || targetIndex === -1) return;
+
+            // Remove dragged item and insert at target position
+            const [draggedMetric] = metrics.splice(draggedIndex, 1);
+            metrics.splice(targetIndex, 0, draggedMetric);
+
+            localStorage.setItem('habitMetrics', JSON.stringify(metrics));
+            renderMetricsList();
+        }
+
+        // Start editing a metric
+        function startEditMetric(metricId) {
+            const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
+            const metric = metrics.find(m => m.id === metricId);
+            if (!metric) return;
+
+            const container = document.getElementById('metricsList');
+            const item = container.querySelector(`[data-metric-id="${metricId}"]`);
+            if (!item) return;
+
+            item.draggable = false;
+            item.innerHTML = `
+                <div class="metric-edit-form">
+                    <input type="text" class="metric-edit-input" id="edit-metric-name-${metricId}" value="${metric.name}">
+                    <select class="metric-edit-select" id="edit-metric-category-${metricId}">
+                        <option value="Health" ${metric.category === 'Health' ? 'selected' : ''}>Health</option>
+                        <option value="Productivity" ${metric.category === 'Productivity' ? 'selected' : ''}>Productivity</option>
+                        <option value="Mental" ${metric.category === 'Mental' ? 'selected' : ''}>Mental Wellbeing</option>
+                        <option value="Social" ${metric.category === 'Social' ? 'selected' : ''}>Social</option>
+                        <option value="Other" ${metric.category === 'Other' ? 'selected' : ''}>Other</option>
+                    </select>
+                </div>
+                <div class="metric-actions">
+                    <button class="save-goal-btn" onclick="saveEditMetric(${metricId})">Save</button>
+                    <button class="cancel-edit-btn" onclick="renderMetricsList()">Cancel</button>
+                </div>
+            `;
+
+            // Focus and select the input
+            const input = document.getElementById(`edit-metric-name-${metricId}`);
+            input.focus();
+            input.select();
+
+            // Allow Enter to save
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    saveEditMetric(metricId);
+                }
+            });
+        }
+
+        // Save edited metric
+        function saveEditMetric(metricId) {
+            const nameInput = document.getElementById(`edit-metric-name-${metricId}`);
+            const categorySelect = document.getElementById(`edit-metric-category-${metricId}`);
+
+            const newName = nameInput.value.trim();
+            if (!newName) {
+                alert('Metric name cannot be empty!');
+                return;
+            }
+
+            let metrics = JSON.parse(localStorage.getItem('habitMetrics'));
+            const metric = metrics.find(m => m.id === metricId);
+            if (!metric) return;
+
+            metric.name = newName;
+            metric.category = categorySelect.value;
+
+            localStorage.setItem('habitMetrics', JSON.stringify(metrics));
+            renderMetricsList();
         }
 
         // Delete metric
