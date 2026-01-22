@@ -1241,9 +1241,16 @@
         // Render metrics for today
         function renderMetrics() {
             const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
-            const history = JSON.parse(localStorage.getItem('habitHistory'));
+            let history = JSON.parse(localStorage.getItem('habitHistory'));
             const todayKey = getTodayKey();
-            const todayData = history[todayKey] || {};
+
+            // Ensure today's entry exists
+            if (!history[todayKey]) {
+                history[todayKey] = {};
+            }
+
+            const todayData = history[todayKey];
+            let needsSave = false;
 
             const container = document.getElementById('metricsContainer');
             container.innerHTML = '';
@@ -1268,7 +1275,13 @@
                 container.appendChild(categoryDiv);
 
                 categories[category].forEach(metric => {
-                    const value = todayData[metric.id] || 5;
+                    // If metric doesn't have a value for today, initialize it to 5
+                    if (todayData[metric.id] === undefined) {
+                        todayData[metric.id] = 5;
+                        needsSave = true;
+                    }
+                    const value = todayData[metric.id];
+
                     const metricDiv = document.createElement('div');
                     metricDiv.className = 'metric-item';
                     metricDiv.innerHTML = `
@@ -1290,6 +1303,11 @@
                     container.appendChild(metricDiv);
                 });
             });
+
+            // Save if we initialized any default values
+            if (needsSave) {
+                localStorage.setItem('habitHistory', JSON.stringify(history));
+            }
 
             // Load notes
             document.getElementById('dailyNotes').value = todayData.notes || '';
