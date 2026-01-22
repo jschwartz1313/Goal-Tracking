@@ -349,10 +349,112 @@
             border-left: 4px solid #667eea;
         }
 
+        .history-entry.editing {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
         .history-date {
             font-weight: 600;
             color: #667eea;
-            margin-bottom: 10px;
+        }
+
+        .history-edit-btn {
+            padding: 6px 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .history-edit-btn:hover {
+            background: #5568d3;
+        }
+
+        .history-edit-form {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .history-edit-metric {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .history-edit-metric-name {
+            min-width: 150px;
+            font-weight: 500;
+        }
+
+        .history-edit-slider {
+            flex: 1;
+            height: 6px;
+        }
+
+        .history-edit-value {
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .history-edit-notes {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 10px;
+            font-family: inherit;
+        }
+
+        .history-edit-notes:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .history-edit-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .history-goals-edit {
+            margin-top: 15px;
+        }
+
+        .history-goal-item-edit {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .history-goal-status-select {
+            padding: 6px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
         }
 
         .history-scores {
@@ -2212,6 +2314,7 @@
 
                 const entryDiv = document.createElement('div');
                 entryDiv.className = 'history-entry';
+                entryDiv.dataset.date = date;
 
                 let scoresHTML = '<div class="history-scores">';
                 Object.keys(data).forEach(key => {
@@ -2248,7 +2351,10 @@
                 }
 
                 entryDiv.innerHTML = `
-                    <div class="history-date">${formattedDate} - Average: ${avg}/10</div>
+                    <div class="history-header">
+                        <div class="history-date">${formattedDate} - Average: ${avg}/10</div>
+                        <button class="history-edit-btn" onclick="startEditHistory('${date}')">Edit</button>
+                    </div>
                     ${scoresHTML}
                     ${goalsHTML}
                     ${data.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${data.notes}</div>` : ''}
@@ -2258,6 +2364,128 @@
 
             // Render charts after history entries
             renderCharts();
+        }
+
+        // Start editing a history entry
+        function startEditHistory(date) {
+            const history = JSON.parse(localStorage.getItem('habitHistory'));
+            const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
+            const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+            const data = history[date];
+            const dateGoals = allGoals[date] || [];
+
+            if (!data) return;
+
+            const container = document.getElementById('historyContainer');
+            const entryDiv = container.querySelector(`[data-date="${date}"]`);
+            if (!entryDiv) return;
+
+            // Parse date for display
+            const [year, month, day] = date.split('-').map(Number);
+            const dateObj = new Date(year, month - 1, day);
+            const formattedDate = dateObj.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            entryDiv.className = 'history-entry editing';
+
+            // Build metrics edit form
+            let metricsEditHTML = '';
+            metrics.forEach(metric => {
+                const value = data[metric.id] !== undefined ? data[metric.id] : 5;
+                metricsEditHTML += `
+                    <div class="history-edit-metric">
+                        <span class="history-edit-metric-name">${metric.name}</span>
+                        <input type="range" min="1" max="10" value="${value}"
+                               class="slider history-edit-slider"
+                               id="history-edit-${date}-${metric.id}"
+                               oninput="document.getElementById('history-value-${date}-${metric.id}').textContent = this.value + '/10'">
+                        <span class="history-edit-value" id="history-value-${date}-${metric.id}">${value}/10</span>
+                    </div>
+                `;
+            });
+
+            // Build goals edit form
+            let goalsEditHTML = '';
+            if (dateGoals.length > 0) {
+                goalsEditHTML = '<div class="history-goals-edit"><strong>Goals:</strong>';
+                dateGoals.forEach((goal, index) => {
+                    goalsEditHTML += `
+                        <div class="history-goal-item-edit">
+                            <select class="history-goal-status-select" id="history-goal-${date}-${index}">
+                                <option value="incomplete" ${goal.status === 'incomplete' ? 'selected' : ''}>🔴 Incomplete</option>
+                                <option value="partial" ${goal.status === 'partial' ? 'selected' : ''}>🟡 Partial</option>
+                                <option value="complete" ${goal.status === 'complete' ? 'selected' : ''}>🟢 Complete</option>
+                            </select>
+                            <span style="flex: 1;">${goal.text}</span>
+                        </div>
+                    `;
+                });
+                goalsEditHTML += '</div>';
+            }
+
+            entryDiv.innerHTML = `
+                <div class="history-header">
+                    <div class="history-date">${formattedDate}</div>
+                    <span style="color: #28a745; font-weight: 600;">Editing...</span>
+                </div>
+                <div class="history-edit-form">
+                    ${metricsEditHTML}
+                    ${goalsEditHTML}
+                    <div style="margin-top: 15px;">
+                        <strong>Notes:</strong>
+                        <textarea class="history-edit-notes" id="history-notes-${date}">${data.notes || ''}</textarea>
+                    </div>
+                    <div class="history-edit-actions">
+                        <button class="save-goal-btn" onclick="saveEditHistory('${date}')">Save Changes</button>
+                        <button class="cancel-edit-btn" onclick="renderHistory()">Cancel</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Save edited history entry
+        function saveEditHistory(date) {
+            const history = JSON.parse(localStorage.getItem('habitHistory'));
+            const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
+            const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+            if (!history[date]) {
+                history[date] = {};
+            }
+
+            // Save metric values
+            metrics.forEach(metric => {
+                const slider = document.getElementById(`history-edit-${date}-${metric.id}`);
+                if (slider) {
+                    history[date][metric.id] = parseInt(slider.value);
+                }
+            });
+
+            // Save notes
+            const notesTextarea = document.getElementById(`history-notes-${date}`);
+            if (notesTextarea) {
+                history[date].notes = notesTextarea.value;
+            }
+
+            localStorage.setItem('habitHistory', JSON.stringify(history));
+
+            // Save goal statuses
+            if (allGoals[date]) {
+                allGoals[date].forEach((goal, index) => {
+                    const statusSelect = document.getElementById(`history-goal-${date}-${index}`);
+                    if (statusSelect) {
+                        goal.status = statusSelect.value;
+                    }
+                });
+                localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+            }
+
+            // Re-render history
+            renderHistory();
         }
 
         // Chart instances (to destroy before re-rendering)
