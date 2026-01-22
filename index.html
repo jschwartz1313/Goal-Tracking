@@ -2854,7 +2854,7 @@
             alert('Metric added successfully!');
         }
 
-        // Render metrics list with drag-and-drop reordering
+        // Render metrics list with drag-and-drop reordering, grouped by category
         let draggedMetricId = null;
 
         function renderMetricsList() {
@@ -2862,33 +2862,52 @@
             const container = document.getElementById('metricsList');
             container.innerHTML = '';
 
+            // Group metrics by category (preserving order within each category)
+            const categories = {};
             metrics.forEach((metric, index) => {
-                const div = document.createElement('div');
-                div.className = 'metric-list-item';
-                div.draggable = true;
-                div.dataset.metricId = metric.id;
-                div.dataset.index = index;
+                if (!categories[metric.category]) {
+                    categories[metric.category] = [];
+                }
+                categories[metric.category].push({ ...metric, globalIndex: index });
+            });
 
-                div.innerHTML = `
-                    <div class="metric-info">
-                        <span class="metric-drag-handle">☰</span>
-                        <span class="metric-name-display">${metric.name}</span>
-                        <span class="metric-category-display">(${metric.category})</span>
-                    </div>
-                    <div class="metric-actions">
-                        <button class="btn-edit-metric" onclick="startEditMetric(${metric.id})">Edit</button>
-                        <button class="btn btn-danger" onclick="deleteMetric(${metric.id})">Delete</button>
-                    </div>
-                `;
+            // Render each category
+            Object.keys(categories).forEach(category => {
+                // Category header
+                const categoryHeader = document.createElement('div');
+                categoryHeader.className = 'category-header';
+                categoryHeader.style.marginTop = '20px';
+                categoryHeader.innerHTML = `<h2>${category}</h2>`;
+                container.appendChild(categoryHeader);
 
-                // Drag events
-                div.addEventListener('dragstart', handleDragStart);
-                div.addEventListener('dragend', handleDragEnd);
-                div.addEventListener('dragover', handleDragOver);
-                div.addEventListener('dragleave', handleDragLeave);
-                div.addEventListener('drop', handleDrop);
+                // Metrics in this category
+                categories[category].forEach(metric => {
+                    const div = document.createElement('div');
+                    div.className = 'metric-list-item';
+                    div.draggable = true;
+                    div.dataset.metricId = metric.id;
+                    div.dataset.index = metric.globalIndex;
 
-                container.appendChild(div);
+                    div.innerHTML = `
+                        <div class="metric-info">
+                            <span class="metric-drag-handle">☰</span>
+                            <span class="metric-name-display">${metric.name}</span>
+                        </div>
+                        <div class="metric-actions">
+                            <button class="btn-edit-metric" onclick="startEditMetric(${metric.id})">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteMetric(${metric.id})">Delete</button>
+                        </div>
+                    `;
+
+                    // Drag events
+                    div.addEventListener('dragstart', handleDragStart);
+                    div.addEventListener('dragend', handleDragEnd);
+                    div.addEventListener('dragover', handleDragOver);
+                    div.addEventListener('dragleave', handleDragLeave);
+                    div.addEventListener('drop', handleDrop);
+
+                    container.appendChild(div);
+                });
             });
         }
 
