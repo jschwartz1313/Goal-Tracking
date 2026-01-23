@@ -1125,6 +1125,13 @@
                 <textarea id="dailyNotes" class="notes-textarea" placeholder="Add any notes about your day..."></textarea>
             </div>
 
+            <div class="notes-section">
+                <div class="category-header">
+                    <h2>Lessons Learned</h2>
+                </div>
+                <textarea id="lessonsLearned" class="notes-textarea" placeholder="What did you learn today?"></textarea>
+            </div>
+
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="todayAverage">0.0</div>
@@ -1415,6 +1422,10 @@
             document.getElementById('dailyNotes').value = todayData.notes || '';
             document.getElementById('dailyNotes').onchange = saveNotes;
 
+            // Load lessons learned
+            document.getElementById('lessonsLearned').value = todayData.lessonsLearned || '';
+            document.getElementById('lessonsLearned').onchange = saveLessonsLearned;
+
             // Load goals
             renderGoals();
 
@@ -1449,6 +1460,20 @@
             }
 
             history[todayKey].notes = notes;
+            localStorage.setItem('habitHistory', JSON.stringify(history));
+        }
+
+        // Save lessons learned
+        function saveLessonsLearned() {
+            const lessonsLearned = document.getElementById('lessonsLearned').value;
+            const history = JSON.parse(localStorage.getItem('habitHistory'));
+            const todayKey = getTodayKey();
+
+            if (!history[todayKey]) {
+                history[todayKey] = {};
+            }
+
+            history[todayKey].lessonsLearned = lessonsLearned;
             localStorage.setItem('habitHistory', JSON.stringify(history));
         }
 
@@ -2358,6 +2383,7 @@
                     ${scoresHTML}
                     ${goalsHTML}
                     ${data.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${data.notes}</div>` : ''}
+                    ${data.lessonsLearned ? `<div style="margin-top: 10px; font-style: italic; color: #667eea;"><strong>Lessons Learned:</strong> ${data.lessonsLearned}</div>` : ''}
                 `;
                 container.appendChild(entryDiv);
             });
@@ -2439,6 +2465,10 @@
                         <strong>Notes:</strong>
                         <textarea class="history-edit-notes" id="history-notes-${date}">${data.notes || ''}</textarea>
                     </div>
+                    <div style="margin-top: 15px;">
+                        <strong>Lessons Learned:</strong>
+                        <textarea class="history-edit-notes" id="history-lessons-${date}">${data.lessonsLearned || ''}</textarea>
+                    </div>
                     <div class="history-edit-actions">
                         <button class="save-goal-btn" onclick="saveEditHistory('${date}')">Save Changes</button>
                         <button class="cancel-edit-btn" onclick="renderHistory()">Cancel</button>
@@ -2469,6 +2499,12 @@
             const notesTextarea = document.getElementById(`history-notes-${date}`);
             if (notesTextarea) {
                 history[date].notes = notesTextarea.value;
+            }
+
+            // Save lessons learned
+            const lessonsTextarea = document.getElementById(`history-lessons-${date}`);
+            if (lessonsTextarea) {
+                history[date].lessonsLearned = lessonsTextarea.value;
             }
 
             localStorage.setItem('habitHistory', JSON.stringify(history));
