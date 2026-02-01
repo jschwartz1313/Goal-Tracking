@@ -1695,12 +1695,19 @@
                                 const actionsDiv = document.createElement('div');
                                 actionsDiv.className = 'goal-actions';
 
-                                // Delete button only for upcoming (edit would be complex)
+                                // Edit button
+                                const editBtn = document.createElement('button');
+                                editBtn.className = 'edit-goal-btn';
+                                editBtn.textContent = 'Edit';
+                                editBtn.onclick = function() { startEditUpcomingGoal(goal.id, date); };
+
+                                // Delete button
                                 const deleteBtn = document.createElement('button');
                                 deleteBtn.className = 'delete-goal-btn';
                                 deleteBtn.textContent = 'Delete';
                                 deleteBtn.onclick = function() { deleteGoalForDate(goal.id, date); };
 
+                                actionsDiv.appendChild(editBtn);
                                 actionsDiv.appendChild(deleteBtn);
 
                                 li.appendChild(statusBtn);
@@ -1779,6 +1786,151 @@
                 renderGoals();
             } catch (e) {
                 console.error('Error in deleteGoalForDate:', e);
+            }
+        }
+
+        // Start editing an upcoming goal
+        function startEditUpcomingGoal(goalId, sourceDate) {
+            try {
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+                const goal = allGoals[sourceDate]?.find(g => g.id === goalId);
+
+                if (!goal) {
+                    console.error('Goal not found:', goalId);
+                    return;
+                }
+
+                const upcomingList = document.getElementById('upcomingGoalsList');
+                const longTermGoals = getLongTermGoals();
+
+                // Find the goal item by data attribute
+                const li = upcomingList.querySelector(`[data-goal-id="${goalId}"]`);
+                if (li) {
+                    // Clear and rebuild with edit form
+                    li.innerHTML = '';
+                    li.className = 'goal-item editing';
+
+                    // Text input
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'goal-edit-input';
+                    input.value = goal.text;
+                    input.id = `edit-upcoming-input-${goalId}`;
+
+                    // Date input
+                    const dateInput = document.createElement('input');
+                    dateInput.type = 'date';
+                    dateInput.className = 'goal-date-input';
+                    dateInput.value = sourceDate;
+                    dateInput.id = `edit-upcoming-date-${goalId}`;
+
+                    // Link dropdown
+                    const select = document.createElement('select');
+                    select.className = 'goal-link-select';
+                    select.id = `edit-upcoming-link-${goalId}`;
+                    select.innerHTML = '<option value="">No linked goal</option>';
+                    longTermGoals.filter(g => g.status !== 'completed').forEach(ltg => {
+                        const option = document.createElement('option');
+                        option.value = ltg.id;
+                        option.textContent = ltg.title.length > 20 ? ltg.title.substring(0, 20) + '...' : ltg.title;
+                        if (goal.linkedGoalId === ltg.id) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+
+                    // Actions
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'goal-actions';
+
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'save-goal-btn';
+                    saveBtn.textContent = 'Save';
+                    saveBtn.onclick = function() { saveEditUpcomingGoal(goalId, sourceDate); };
+
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.className = 'cancel-edit-btn';
+                    cancelBtn.textContent = 'Cancel';
+                    cancelBtn.onclick = function() { renderGoals(); };
+
+                    actionsDiv.appendChild(saveBtn);
+                    actionsDiv.appendChild(cancelBtn);
+
+                    li.appendChild(input);
+                    li.appendChild(dateInput);
+                    li.appendChild(select);
+                    li.appendChild(actionsDiv);
+
+                    // Focus the input
+                    input.focus();
+                    input.select();
+
+                    // Allow Enter to save
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            saveEditUpcomingGoal(goalId, sourceDate);
+                        }
+                    });
+                }
+            } catch (e) {
+                console.error('Error in startEditUpcomingGoal:', e);
+            }
+        }
+
+        // Save edited upcoming goal
+        function saveEditUpcomingGoal(goalId, sourceDate) {
+            try {
+                const input = document.getElementById(`edit-upcoming-input-${goalId}`);
+                const select = document.getElementById(`edit-upcoming-link-${goalId}`);
+                const dateInput = document.getElementById(`edit-upcoming-date-${goalId}`);
+
+                if (!input) {
+                    console.error('Edit input not found');
+                    return;
+                }
+
+                const newText = input.value.trim();
+                if (!newText) {
+                    alert('Goal text cannot be empty!');
+                    return;
+                }
+
+                const newDate = dateInput ? dateInput.value : sourceDate;
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+                // Find the goal in the source date
+                const goalIndex = allGoals[sourceDate]?.findIndex(g => g.id === goalId);
+                if (goalIndex === -1 || goalIndex === undefined) {
+                    console.error('Goal not found:', goalId);
+                    return;
+                }
+
+                // Get the goal and update it
+                const goal = allGoals[sourceDate][goalIndex];
+                goal.text = newText;
+                goal.linkedGoalId = select && select.value ? parseInt(select.value) : null;
+
+                // If date changed, move the goal
+                if (newDate !== sourceDate) {
+                    // Remove from source date
+                    allGoals[sourceDate].splice(goalIndex, 1);
+
+                    // Clean up empty date entries
+                    if (allGoals[sourceDate].length === 0) {
+                        delete allGoals[sourceDate];
+                    }
+
+                    // Add to new date
+                    if (!allGoals[newDate]) {
+                        allGoals[newDate] = [];
+                    }
+                    allGoals[newDate].push(goal);
+                }
+
+                localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                renderGoals();
+            } catch (e) {
+                console.error('Error in saveEditUpcomingGoal:', e);
             }
         }
 
