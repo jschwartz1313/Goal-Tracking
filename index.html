@@ -1037,6 +1037,21 @@
             border-color: #667eea;
         }
 
+        .goal-filter-select {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            cursor: pointer;
+        }
+
+        .goal-filter-select option {
+            background: white;
+            color: #333;
+        }
+
         .upcoming-goals-section {
             margin-top: 25px;
             padding-top: 20px;
@@ -1096,8 +1111,14 @@
             <div id="metricsContainer"></div>
 
             <div class="goals-section">
-                <div class="category-header">
+                <div class="category-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h2>Goals</h2>
+                    <select id="goalFilterSelect" class="goal-filter-select" onchange="renderGoals()">
+                        <option value="all">Show All</option>
+                        <option value="incomplete">Incomplete Only</option>
+                        <option value="partial">Partial Only</option>
+                        <option value="complete">Complete Only</option>
+                    </select>
                 </div>
                 <div class="goal-input-container">
                     <div class="goal-input-row">
@@ -1570,6 +1591,15 @@
 
                 const todayGoals = allGoals[todayKey] || [];
 
+                // Get filter value
+                const filterSelect = document.getElementById('goalFilterSelect');
+                const filterValue = filterSelect ? filterSelect.value : 'all';
+
+                // Filter goals based on selection
+                const filteredGoals = filterValue === 'all'
+                    ? todayGoals
+                    : todayGoals.filter(g => g.status === filterValue);
+
                 // Clear existing content
                 goalsList.innerHTML = '';
 
@@ -1578,12 +1608,17 @@
                     emptyDiv.className = 'empty-goals';
                     emptyDiv.textContent = 'No goals for today yet. Add one above!';
                     goalsList.appendChild(emptyDiv);
+                } else if (filteredGoals.length === 0) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'empty-goals';
+                    emptyDiv.textContent = `No ${filterValue} goals for today.`;
+                    goalsList.appendChild(emptyDiv);
                 } else {
                     // Get long-term goals for badge display
                     const longTermGoals = getLongTermGoals();
 
-                    // Render each goal
-                    todayGoals.forEach((goal, index) => {
+                    // Render each filtered goal
+                    filteredGoals.forEach((goal, index) => {
                         const li = document.createElement('li');
                         li.className = `goal-item ${goal.status}`;
                         li.dataset.goalId = goal.id;
@@ -1649,14 +1684,24 @@
                         .filter(date => date > todayKey)
                         .sort();
 
-                    if (futureDates.length === 0) {
+                    // Check if there are any upcoming goals after filtering
+                    let hasUpcomingGoals = false;
+                    futureDates.forEach(date => {
+                        const dateGoals = allGoals[date];
+                        const filtered = filterValue === 'all' ? dateGoals : dateGoals.filter(g => g.status === filterValue);
+                        if (filtered.length > 0) hasUpcomingGoals = true;
+                    });
+
+                    if (futureDates.length === 0 || !hasUpcomingGoals) {
                         upcomingSection.style.display = 'none';
                     } else {
                         upcomingSection.style.display = 'block';
 
                         futureDates.forEach(date => {
                             const dateGoals = allGoals[date];
-                            dateGoals.forEach(goal => {
+                            // Apply same filter to upcoming goals
+                            const filteredDateGoals = filterValue === 'all' ? dateGoals : dateGoals.filter(g => g.status === filterValue);
+                            filteredDateGoals.forEach(goal => {
                                 const li = document.createElement('li');
                                 li.className = `goal-item ${goal.status}`;
                                 li.dataset.goalId = goal.id;
