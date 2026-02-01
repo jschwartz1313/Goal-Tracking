@@ -1837,11 +1837,11 @@
         }
 
         // Start editing a goal - transforms the goal item into an editable form
-        function startEditGoal(goalId) {
+        function startEditGoal(goalId, sourceDate = null) {
             try {
-                const todayKey = getTodayKey();
+                const currentDate = sourceDate || getTodayKey();
                 let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
-                const goal = allGoals[todayKey]?.find(g => g.id === goalId);
+                const goal = allGoals[currentDate]?.find(g => g.id === goalId);
 
                 if (!goal) {
                     console.error('Goal not found:', goalId);
@@ -1865,6 +1865,14 @@
                     input.value = goal.text;
                     input.id = `edit-input-${goalId}`;
 
+                    // Date input for moving goal to different day
+                    const dateInput = document.createElement('input');
+                    dateInput.type = 'date';
+                    dateInput.className = 'goal-date-input';
+                    dateInput.value = currentDate;
+                    dateInput.id = `edit-date-${goalId}`;
+                    dateInput.title = 'Change date to move goal';
+
                     // Link dropdown
                     const select = document.createElement('select');
                     select.className = 'goal-link-select';
@@ -1887,7 +1895,7 @@
                     const saveBtn = document.createElement('button');
                     saveBtn.className = 'save-goal-btn';
                     saveBtn.textContent = 'Save';
-                    saveBtn.onclick = function() { saveEditGoal(goalId); };
+                    saveBtn.onclick = function() { saveEditGoal(goalId, currentDate); };
 
                     const cancelBtn = document.createElement('button');
                     cancelBtn.className = 'cancel-edit-btn';
@@ -1898,6 +1906,7 @@
                     actionsDiv.appendChild(cancelBtn);
 
                     li.appendChild(input);
+                    li.appendChild(dateInput);
                     li.appendChild(select);
                     li.appendChild(actionsDiv);
 
@@ -1908,7 +1917,7 @@
                     // Allow Enter to save
                     input.addEventListener('keypress', function(e) {
                         if (e.key === 'Enter') {
-                            saveEditGoal(goalId);
+                            saveEditGoal(goalId, currentDate);
                         }
                     });
                 }
@@ -1918,10 +1927,11 @@
         }
 
         // Save the edited goal
-        function saveEditGoal(goalId) {
+        function saveEditGoal(goalId, sourceDate = null) {
             try {
                 const input = document.getElementById(`edit-input-${goalId}`);
                 const select = document.getElementById(`edit-link-${goalId}`);
+                const dateInput = document.getElementById(`edit-date-${goalId}`);
 
                 if (!input) {
                     console.error('Edit input not found');
@@ -1934,18 +1944,38 @@
                     return;
                 }
 
-                const todayKey = getTodayKey();
+                const originalDate = sourceDate || getTodayKey();
+                const newDate = dateInput ? dateInput.value : originalDate;
                 let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
-                const goal = allGoals[todayKey]?.find(g => g.id === goalId);
 
-                if (!goal) {
+                // Find the goal in the original date
+                const goalIndex = allGoals[originalDate]?.findIndex(g => g.id === goalId);
+                if (goalIndex === -1 || goalIndex === undefined) {
                     console.error('Goal not found:', goalId);
                     return;
                 }
 
-                // Update the goal
+                // Get the goal and update it
+                const goal = allGoals[originalDate][goalIndex];
                 goal.text = newText;
                 goal.linkedGoalId = select && select.value ? parseInt(select.value) : null;
+
+                // If date changed, move the goal
+                if (newDate !== originalDate) {
+                    // Remove from original date
+                    allGoals[originalDate].splice(goalIndex, 1);
+
+                    // Clean up empty date entries
+                    if (allGoals[originalDate].length === 0) {
+                        delete allGoals[originalDate];
+                    }
+
+                    // Add to new date
+                    if (!allGoals[newDate]) {
+                        allGoals[newDate] = [];
+                    }
+                    allGoals[newDate].push(goal);
+                }
 
                 localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
                 renderGoals();
@@ -2447,6 +2477,7 @@
                                 <option value="complete" ${goal.status === 'complete' ? 'selected' : ''}>🟢 Complete</option>
                             </select>
                             <span style="flex: 1;">${goal.text}</span>
+                            <input type="date" class="goal-date-input" id="history-goal-date-${date}-${index}" value="${date}" title="Move to different day" style="min-width: 120px;">
                         </div>
                     `;
                 });
@@ -2509,14 +2540,43 @@
 
             localStorage.setItem('habitHistory', JSON.stringify(history));
 
-            // Save goal statuses
+            // Save goal statuses and handle date changes
             if (allGoals[date]) {
-                allGoals[date].forEach((goal, index) => {
+                // Process goals in reverse order to handle index shifts when moving
+                const goalsToMove = [];
+
+                for (let index = allGoals[date].length - 1; index >= 0; index--) {
+                    const goal = allGoals[date][index];
                     const statusSelect = document.getElementById(`history-goal-${date}-${index}`);
+                    const dateInput = document.getElementById(`history-goal-date-${date}-${index}`);
+
                     if (statusSelect) {
                         goal.status = statusSelect.value;
                     }
+
+                    // Check if date changed
+                    if (dateInput && dateInput.value !== date) {
+                        goalsToMove.push({ goal: goal, newDate: dateInput.value, index: index });
+                    }
+                }
+
+                // Move goals to new dates
+                goalsToMove.forEach(({ goal, newDate, index }) => {
+                    // Remove from current date
+                    allGoals[date].splice(index, 1);
+
+                    // Add to new date
+                    if (!allGoals[newDate]) {
+                        allGoals[newDate] = [];
+                    }
+                    allGoals[newDate].push(goal);
                 });
+
+                // Clean up empty date entries
+                if (allGoals[date] && allGoals[date].length === 0) {
+                    delete allGoals[date];
+                }
+
                 localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
             }
 
