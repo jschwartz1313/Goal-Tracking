@@ -3951,7 +3951,9 @@
             }
 
             if (dates.length === 0) {
-                container.innerHTML = '<div class="empty-state">No history yet. Start tracking today!</div>';
+                container.innerHTML = filterDate
+                    ? '<div class="empty-state">No history for this day yet.</div>'
+                    : '<div class="empty-state">No history yet. Start tracking today!</div>';
                 renderCalendar();
                 return;
             }
@@ -4897,8 +4899,17 @@
 
                 // Click handler
                 cell.onclick = function() {
+                    if (selectedCalendarDate === dateKey) {
+                        selectedCalendarDate = null;
+                        if (calendarDetail) {
+                            calendarDetail.style.display = 'none';
+                        }
+                        renderHistory();
+                        return;
+                    }
+
                     selectedCalendarDate = dateKey;
-                    renderCalendar();
+                    renderHistory(dateKey);
                     renderCalendarDetail(dateKey);
                 };
 
@@ -4991,6 +5002,7 @@
         }
 
         function showOnlyHistoryDate(dateKey) {
+            selectedCalendarDate = dateKey;
             renderHistory(dateKey);
             const entry = document.getElementById(`history-entry-${dateKey}`);
             if (entry) {
@@ -5001,6 +5013,7 @@
         }
 
         function showAllHistory() {
+            selectedCalendarDate = null;
             renderHistory();
             const container = document.getElementById('historyContainer');
             if (container) {
