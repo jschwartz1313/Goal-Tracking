@@ -4905,16 +4905,19 @@
                 // Click handler
                 cell.onclick = function() {
                     if (selectedCalendarDate === dateKey) {
+                        // Clicking same date again - deselect and show all history
                         selectedCalendarDate = null;
                         if (calendarDetail) {
                             calendarDetail.style.display = 'none';
                         }
+                        document.getElementById('historyContainer').style.display = 'block';
                         renderHistory();
                         return;
                     }
 
+                    // Selecting a date - show calendar detail only, hide history list
                     selectedCalendarDate = dateKey;
-                    renderHistory(dateKey);
+                    document.getElementById('historyContainer').style.display = 'none';
                     renderCalendarDetail(dateKey);
                 };
 
@@ -5009,6 +5012,10 @@
 
         function showOnlyHistoryDate(dateKey) {
             selectedCalendarDate = dateKey;
+            // Hide calendar detail and show history
+            const calendarDetail = document.getElementById('calendarDetail');
+            if (calendarDetail) calendarDetail.style.display = 'none';
+            document.getElementById('historyContainer').style.display = 'block';
             renderHistory(dateKey);
             const entry = document.getElementById(`history-entry-${dateKey}`);
             if (entry) {
@@ -5020,8 +5027,14 @@
 
         function showAllHistory() {
             selectedCalendarDate = null;
-            renderHistory();
+            // Hide calendar detail and show all history
+            const calendarDetail = document.getElementById('calendarDetail');
+            if (calendarDetail) calendarDetail.style.display = 'none';
             const container = document.getElementById('historyContainer');
+            if (container) {
+                container.style.display = 'block';
+            }
+            renderHistory();
             if (container) {
                 container.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
