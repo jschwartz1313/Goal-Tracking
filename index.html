@@ -717,6 +717,147 @@
             margin-top: 40px;
         }
 
+        /* Calendar Styles */
+        .calendar-section {
+            margin-top: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .calendar-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .calendar-btn {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .calendar-btn:hover {
+            background: #5568d3;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .calendar-weekday {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            padding: 6px 0;
+        }
+
+        .calendar-day {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px 8px;
+            min-height: 70px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .calendar-day:hover {
+            border-color: #667eea;
+            background: #f1f3ff;
+        }
+
+        .calendar-day.inactive {
+            opacity: 0.4;
+            cursor: default;
+        }
+
+        .calendar-day.today {
+            border-color: #28a745;
+            background: #f0fff4;
+        }
+
+        .calendar-day.selected {
+            border-color: #667eea;
+            background: #eef0ff;
+        }
+
+        .calendar-day-number {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .calendar-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .calendar-badge {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            color: white;
+            background: #6c757d;
+        }
+
+        .calendar-badge.avg-high { background: #28a745; }
+        .calendar-badge.avg-mid { background: #ffc107; color: #333; }
+        .calendar-badge.avg-low { background: #dc3545; }
+        .calendar-badge.goals { background: #17a2b8; }
+        .calendar-badge.notes { background: #764ba2; }
+
+        .calendar-detail {
+            margin-top: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .calendar-detail h4 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .calendar-detail-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 600px) {
+            .calendar-grid {
+                gap: 6px;
+            }
+            .calendar-day {
+                min-height: 60px;
+                padding: 8px 6px;
+            }
+        }
+
         .charts-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -1439,6 +1580,22 @@
             <div class="category-header">
                 <h2>Your History</h2>
             </div>
+
+            <!-- Calendar Section -->
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <div class="calendar-title" id="calendarTitle">Month Year</div>
+                    <div class="calendar-nav">
+                        <button class="calendar-btn" onclick="goToPrevMonth()">Prev</button>
+                        <button class="calendar-btn" onclick="goToToday()">Today</button>
+                        <button class="calendar-btn" onclick="goToNextMonth()">Next</button>
+                    </div>
+                </div>
+                <div class="calendar-grid" id="calendarWeekdays"></div>
+                <div class="calendar-grid" id="calendarGrid"></div>
+                <div class="calendar-detail" id="calendarDetail" style="display: none;"></div>
+            </div>
+
             <div id="historyContainer"></div>
 
             <!-- Charts Section -->
@@ -1866,9 +2023,9 @@
                 // Check each recurring goal and add if not already present for today
                 recurringGoals.forEach(recurring => {
                     // Check if this recurring goal already exists in today's goals
-                    const exists = allGoals[todayKey].some(g => g.recurringId === recurring.id);
+                    const existingIndex = allGoals[todayKey].findIndex(g => g.recurringId === recurring.id);
 
-                    if (!exists) {
+                    if (existingIndex === -1) {
                         // Add the recurring goal to today
                         const newGoal = {
                             id: Date.now() + Math.random(), // Ensure unique ID
@@ -1882,6 +2039,19 @@
                         };
                         allGoals[todayKey].push(newGoal);
                         needsSave = true;
+                    } else {
+                        // Update existing recurring goal instance with latest data from definition
+                        const existingGoal = allGoals[todayKey][existingIndex];
+                        if (existingGoal.text !== recurring.text ||
+                            existingGoal.duration !== recurring.duration ||
+                            existingGoal.timeOfDay !== recurring.timeOfDay ||
+                            existingGoal.linkedGoalId !== recurring.linkedGoalId) {
+                            existingGoal.text = recurring.text;
+                            existingGoal.duration = recurring.duration;
+                            existingGoal.timeOfDay = recurring.timeOfDay;
+                            existingGoal.linkedGoalId = recurring.linkedGoalId;
+                            needsSave = true;
+                        }
                     }
                 });
 
@@ -3270,6 +3440,7 @@
 
             if (dates.length === 0) {
                 container.innerHTML = '<div class="empty-state">No history yet. Start tracking today!</div>';
+                renderCalendar();
                 return;
             }
 
@@ -3295,6 +3466,7 @@
                 const entryDiv = document.createElement('div');
                 entryDiv.className = 'history-entry';
                 entryDiv.dataset.date = date;
+                entryDiv.id = `history-entry-${date}`;
 
                 let scoresHTML = '<div class="history-scores">';
                 Object.keys(data).forEach(key => {
@@ -3345,6 +3517,7 @@
 
             // Render charts after history entries
             renderCharts();
+            renderCalendar();
         }
 
         // Start editing a history entry
@@ -4120,6 +4293,197 @@
         updateGoalLinkDropdown();
         updateRecurringGoalLinkDropdown();
         renderRecurringGoals();
+
+        // Calendar state
+        let calendarMonth = new Date().getMonth();
+        let calendarYear = new Date().getFullYear();
+        let selectedCalendarDate = null;
+
+        // Render calendar view for the history section
+        function renderCalendar() {
+            const calendarTitle = document.getElementById('calendarTitle');
+            const calendarGrid = document.getElementById('calendarGrid');
+            const calendarWeekdays = document.getElementById('calendarWeekdays');
+            const calendarDetail = document.getElementById('calendarDetail');
+
+            if (!calendarTitle || !calendarGrid || !calendarWeekdays) return;
+
+            // Weekday headers
+            calendarWeekdays.innerHTML = '';
+            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+                const div = document.createElement('div');
+                div.className = 'calendar-weekday';
+                div.textContent = day;
+                calendarWeekdays.appendChild(div);
+            });
+
+            const monthName = new Date(calendarYear, calendarMonth, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            calendarTitle.textContent = monthName;
+
+            calendarGrid.innerHTML = '';
+
+            const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+            const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+            const todayKey = getTodayKey();
+
+            const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
+            const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+            // Empty cells before month starts
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'calendar-day inactive';
+                calendarGrid.appendChild(empty);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateKey = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const cell = document.createElement('div');
+                cell.className = 'calendar-day';
+                if (dateKey === todayKey) cell.classList.add('today');
+                if (selectedCalendarDate === dateKey) cell.classList.add('selected');
+
+                const number = document.createElement('div');
+                number.className = 'calendar-day-number';
+                number.textContent = day;
+                cell.appendChild(number);
+
+                const badges = document.createElement('div');
+                badges.className = 'calendar-badges';
+
+                // Average score badge if history exists
+                if (history[dateKey]) {
+                    const scores = Object.keys(history[dateKey])
+                        .filter(key => key !== 'notes' && key !== 'lessonsLearned')
+                        .map(key => history[dateKey][key]);
+                    if (scores.length > 0) {
+                        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+                        const badge = document.createElement('span');
+                        badge.className = `calendar-badge ${avg >= 7 ? 'avg-high' : avg >= 5 ? 'avg-mid' : 'avg-low'}`;
+                        badge.textContent = `${avg.toFixed(1)}`;
+                        badges.appendChild(badge);
+                    }
+                    if (history[dateKey].notes || history[dateKey].lessonsLearned) {
+                        const noteBadge = document.createElement('span');
+                        noteBadge.className = 'calendar-badge notes';
+                        noteBadge.textContent = 'Notes';
+                        badges.appendChild(noteBadge);
+                    }
+                }
+
+                // Goals badge if goals exist
+                if (allGoals[dateKey] && allGoals[dateKey].length > 0) {
+                    const goalsBadge = document.createElement('span');
+                    goalsBadge.className = 'calendar-badge goals';
+                    goalsBadge.textContent = `${allGoals[dateKey].length} goals`;
+                    badges.appendChild(goalsBadge);
+                }
+
+                cell.appendChild(badges);
+
+                // Click handler
+                cell.onclick = function() {
+                    selectedCalendarDate = dateKey;
+                    renderCalendar();
+                    renderCalendarDetail(dateKey);
+                };
+
+                calendarGrid.appendChild(cell);
+            }
+
+            if (calendarDetail && !selectedCalendarDate) {
+                calendarDetail.style.display = 'none';
+            }
+        }
+
+        function renderCalendarDetail(dateKey) {
+            const calendarDetail = document.getElementById('calendarDetail');
+            if (!calendarDetail) return;
+
+            const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
+            const metrics = JSON.parse(localStorage.getItem('habitMetrics') || '[]');
+            const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+            const [year, month, day] = dateKey.split('-').map(Number);
+            const dateObj = new Date(year, month - 1, day);
+            const formattedDate = dateObj.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            const data = history[dateKey] || null;
+            const dateGoals = allGoals[dateKey] || [];
+
+            let avgText = 'No metrics logged.';
+            if (data) {
+                const scores = Object.keys(data)
+                    .filter(key => key !== 'notes' && key !== 'lessonsLearned')
+                    .map(key => data[key]);
+                if (scores.length > 0) {
+                    const avg = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
+                    avgText = `Average score: ${avg}/10`;
+                }
+            }
+
+            let goalsText = dateGoals.length > 0
+                ? `Goals: ${dateGoals.length} total (${dateGoals.filter(g => g.status === 'complete').length} complete)`
+                : 'No goals logged.';
+
+            const notesText = data && data.notes ? data.notes : '';
+            const lessonsText = data && data.lessonsLearned ? data.lessonsLearned : '';
+
+            calendarDetail.innerHTML = `
+                <h4>${formattedDate}</h4>
+                <div>${avgText}</div>
+                <div style="margin-top: 6px;">${goalsText}</div>
+                ${notesText ? `<div style="margin-top: 6px;"><strong>Notes:</strong> ${notesText}</div>` : ''}
+                ${lessonsText ? `<div style="margin-top: 6px;"><strong>Lessons Learned:</strong> ${lessonsText}</div>` : ''}
+                <div class="calendar-detail-actions">
+                    <button class="btn" onclick="jumpToHistory('${dateKey}')">Jump to History</button>
+                    ${data ? `<button class="btn" onclick="startEditHistory('${dateKey}')">Edit This Day</button>` : ''}
+                </div>
+            `;
+            calendarDetail.style.display = 'block';
+        }
+
+        function goToPrevMonth() {
+            calendarMonth--;
+            if (calendarMonth < 0) {
+                calendarMonth = 11;
+                calendarYear--;
+            }
+            renderCalendar();
+        }
+
+        function goToNextMonth() {
+            calendarMonth++;
+            if (calendarMonth > 11) {
+                calendarMonth = 0;
+                calendarYear++;
+            }
+            renderCalendar();
+        }
+
+        function goToToday() {
+            const today = new Date();
+            calendarMonth = today.getMonth();
+            calendarYear = today.getFullYear();
+            selectedCalendarDate = getTodayKey();
+            renderCalendar();
+            renderCalendarDetail(selectedCalendarDate);
+        }
+
+        function jumpToHistory(dateKey) {
+            renderHistory();
+            const entry = document.getElementById(`history-entry-${dateKey}`);
+            if (entry) {
+                entry.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                entry.classList.add('editing');
+                setTimeout(() => entry.classList.remove('editing'), 1200);
+            }
+        }
 
         // Set date input to today's date
         const dateInput = document.getElementById('goalDateInput');
