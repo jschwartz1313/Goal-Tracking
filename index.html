@@ -1259,6 +1259,69 @@
             outline: none;
         }
 
+        .goal-time-input {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .goal-time-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .goal-time-input::placeholder {
+            font-size: 12px;
+        }
+
+        .recurring-time-input {
+            width: 80px;
+            padding: 10px;
+            border: 2px solid #17a2b8;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .recurring-time-input:focus {
+            outline: none;
+            border-color: #138496;
+        }
+
+        .goal-duration-badge {
+            font-size: 11px;
+            background: #6c757d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .total-time-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .total-time-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .total-time-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
         @media (max-width: 600px) {
             .goal-input-row {
                 flex-direction: column;
@@ -1295,9 +1358,15 @@
                         <option value="complete">Complete Only</option>
                     </select>
                 </div>
+                <!-- Total Time Counter -->
+                <div class="total-time-container">
+                    <span class="total-time-label">Total Time for Today</span>
+                    <span class="total-time-value" id="totalTimeDisplay">0 min</span>
+                </div>
                 <div class="goal-input-container">
                     <div class="goal-input-row">
                         <input type="text" id="goalInput" class="goal-input" placeholder="Add a goal..." />
+                        <input type="number" id="goalTimeInput" class="goal-time-input" placeholder="min" min="0" title="Duration in minutes">
                         <input type="date" id="goalDateInput" class="goal-date-input" title="Select date for this goal">
                         <select id="goalLinkSelect" class="goal-link-select">
                             <option value="">No linked goal</option>
@@ -1319,6 +1388,7 @@
                     <p style="color: #666; font-size: 13px; margin-bottom: 15px;">These goals automatically appear every day.</p>
                     <div class="recurring-input-container">
                         <input type="text" id="recurringGoalInput" class="recurring-input" placeholder="Add a recurring daily goal..." />
+                        <input type="number" id="recurringGoalDurationInput" class="recurring-time-input" placeholder="min" min="0" title="Duration in minutes">
                         <select id="recurringGoalTimeSelect" class="recurring-time-select">
                             <option value="">Any time</option>
                             <option value="morning">Morning</option>
@@ -1702,6 +1772,7 @@
                 const input = document.getElementById('goalInput');
                 const linkSelect = document.getElementById('goalLinkSelect');
                 const dateInput = document.getElementById('goalDateInput');
+                const timeInput = document.getElementById('goalTimeInput');
                 if (!input) {
                     alert('Error: Goal input not found');
                     return;
@@ -1734,12 +1805,15 @@
 
                 // Get linked goal ID if selected
                 const linkedGoalId = linkSelect && linkSelect.value ? parseInt(linkSelect.value) : null;
+                // Get duration in minutes
+                const duration = timeInput && timeInput.value ? parseInt(timeInput.value) : null;
 
                 const newGoal = {
                     id: Date.now(),
                     text: goalText,
                     status: 'incomplete',
-                    linkedGoalId: linkedGoalId
+                    linkedGoalId: linkedGoalId,
+                    duration: duration
                 };
 
                 allGoals[selectedDate].push(newGoal);
@@ -1755,6 +1829,7 @@
 
                 input.value = '';
                 if (linkSelect) linkSelect.value = '';
+                if (timeInput) timeInput.value = '';
                 // Reset date to today after adding
                 if (dateInput) dateInput.value = getTodayKey();
                 renderGoals();
@@ -1801,6 +1876,7 @@
                             status: 'incomplete',
                             linkedGoalId: recurring.linkedGoalId,
                             timeOfDay: recurring.timeOfDay,
+                            duration: recurring.duration,
                             recurringId: recurring.id, // Link back to the recurring goal definition
                             isRecurring: true
                         };
@@ -1844,6 +1920,19 @@
                 }
 
                 const todayGoals = allGoals[todayKey] || [];
+
+                // Calculate and display total time for today
+                const totalMinutes = todayGoals.reduce((sum, goal) => sum + (goal.duration || 0), 0);
+                const totalTimeDisplay = document.getElementById('totalTimeDisplay');
+                if (totalTimeDisplay) {
+                    if (totalMinutes >= 60) {
+                        const hours = Math.floor(totalMinutes / 60);
+                        const mins = totalMinutes % 60;
+                        totalTimeDisplay.textContent = mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+                    } else {
+                        totalTimeDisplay.textContent = `${totalMinutes} min`;
+                    }
+                }
 
                 // Get filter value
                 const filterSelect = document.getElementById('goalFilterSelect');
@@ -1914,6 +2003,16 @@
                                 badge.textContent = linkedGoal.title.length > 15 ? linkedGoal.title.substring(0, 15) + '...' : linkedGoal.title;
                                 textDiv.appendChild(badge);
                             }
+                        }
+
+                        // Add duration badge if applicable
+                        if (goal.duration) {
+                            const durationBadge = document.createElement('span');
+                            durationBadge.className = 'goal-duration-badge';
+                            durationBadge.textContent = goal.duration >= 60
+                                ? `${Math.floor(goal.duration / 60)}h ${goal.duration % 60}m`
+                                : `${goal.duration} min`;
+                            textDiv.appendChild(durationBadge);
                         }
 
                         // Actions container
@@ -2132,6 +2231,16 @@
                     input.value = goal.text;
                     input.id = `edit-upcoming-input-${goalId}`;
 
+                    // Duration input
+                    const durationInput = document.createElement('input');
+                    durationInput.type = 'number';
+                    durationInput.className = 'goal-time-input';
+                    durationInput.placeholder = 'min';
+                    durationInput.min = '0';
+                    durationInput.value = goal.duration || '';
+                    durationInput.id = `edit-upcoming-duration-${goalId}`;
+                    durationInput.title = 'Duration in minutes';
+
                     // Date input
                     const dateInput = document.createElement('input');
                     dateInput.type = 'date';
@@ -2172,6 +2281,7 @@
                     actionsDiv.appendChild(cancelBtn);
 
                     li.appendChild(input);
+                    li.appendChild(durationInput);
                     li.appendChild(dateInput);
                     li.appendChild(select);
                     li.appendChild(actionsDiv);
@@ -2198,6 +2308,7 @@
                 const input = document.getElementById(`edit-upcoming-input-${goalId}`);
                 const select = document.getElementById(`edit-upcoming-link-${goalId}`);
                 const dateInput = document.getElementById(`edit-upcoming-date-${goalId}`);
+                const durationInput = document.getElementById(`edit-upcoming-duration-${goalId}`);
 
                 if (!input) {
                     console.error('Edit input not found');
@@ -2224,6 +2335,7 @@
                 const goal = allGoals[sourceDate][goalIndex];
                 goal.text = newText;
                 goal.linkedGoalId = select && select.value ? parseInt(select.value) : null;
+                goal.duration = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
 
                 // If date changed, move the goal
                 if (newDate !== sourceDate) {
@@ -2332,6 +2444,16 @@
                     input.value = goal.text;
                     input.id = `edit-input-${goalId}`;
 
+                    // Duration input
+                    const durationInput = document.createElement('input');
+                    durationInput.type = 'number';
+                    durationInput.className = 'goal-time-input';
+                    durationInput.placeholder = 'min';
+                    durationInput.min = '0';
+                    durationInput.value = goal.duration || '';
+                    durationInput.id = `edit-duration-${goalId}`;
+                    durationInput.title = 'Duration in minutes';
+
                     // Date input for moving goal to different day
                     const dateInput = document.createElement('input');
                     dateInput.type = 'date';
@@ -2373,6 +2495,7 @@
                     actionsDiv.appendChild(cancelBtn);
 
                     li.appendChild(input);
+                    li.appendChild(durationInput);
                     li.appendChild(dateInput);
                     li.appendChild(select);
                     li.appendChild(actionsDiv);
@@ -2399,6 +2522,7 @@
                 const input = document.getElementById(`edit-input-${goalId}`);
                 const select = document.getElementById(`edit-link-${goalId}`);
                 const dateInput = document.getElementById(`edit-date-${goalId}`);
+                const durationInput = document.getElementById(`edit-duration-${goalId}`);
 
                 if (!input) {
                     console.error('Edit input not found');
@@ -2426,6 +2550,7 @@
                 const goal = allGoals[originalDate][goalIndex];
                 goal.text = newText;
                 goal.linkedGoalId = select && select.value ? parseInt(select.value) : null;
+                goal.duration = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
 
                 // If date changed, move the goal
                 if (newDate !== originalDate) {
@@ -2478,6 +2603,7 @@
                 const input = document.getElementById('recurringGoalInput');
                 const linkSelect = document.getElementById('recurringGoalLinkSelect');
                 const timeSelect = document.getElementById('recurringGoalTimeSelect');
+                const durationInput = document.getElementById('recurringGoalDurationInput');
 
                 if (!input) {
                     alert('Error: Recurring goal input not found');
@@ -2493,12 +2619,14 @@
                 const recurringGoals = getRecurringGoals();
                 const linkedGoalId = linkSelect && linkSelect.value ? parseInt(linkSelect.value) : null;
                 const timeOfDay = timeSelect && timeSelect.value ? timeSelect.value : null;
+                const duration = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
 
                 const newGoal = {
                     id: Date.now(),
                     text: goalText,
                     linkedGoalId: linkedGoalId,
-                    timeOfDay: timeOfDay
+                    timeOfDay: timeOfDay,
+                    duration: duration
                 };
 
                 recurringGoals.push(newGoal);
@@ -2507,6 +2635,7 @@
                 input.value = '';
                 if (linkSelect) linkSelect.value = '';
                 if (timeSelect) timeSelect.value = '';
+                if (durationInput) durationInput.value = '';
 
                 renderRecurringGoals();
                 renderGoals(); // Re-render to show the new recurring goal in today's list
@@ -2582,6 +2711,16 @@
                         }
                     }
 
+                    // Add duration badge if applicable
+                    if (goal.duration) {
+                        const durationBadge = document.createElement('span');
+                        durationBadge.className = 'goal-duration-badge';
+                        durationBadge.textContent = goal.duration >= 60
+                            ? `${Math.floor(goal.duration / 60)}h ${goal.duration % 60}m`
+                            : `${goal.duration} min`;
+                        textDiv.appendChild(durationBadge);
+                    }
+
                     const actionsDiv = document.createElement('div');
                     actionsDiv.className = 'goal-actions';
 
@@ -2646,6 +2785,16 @@
                 `;
 
                 // Link select
+                // Duration input
+                const durationInput = document.createElement('input');
+                durationInput.type = 'number';
+                durationInput.className = 'recurring-time-input';
+                durationInput.placeholder = 'min';
+                durationInput.min = '0';
+                durationInput.value = goal.duration || '';
+                durationInput.id = `edit-recurring-duration-${goalId}`;
+                durationInput.title = 'Duration in minutes';
+
                 const linkSelect = document.createElement('select');
                 linkSelect.className = 'goal-link-select';
                 linkSelect.style.borderColor = '#17a2b8';
@@ -2677,6 +2826,7 @@
                 actionsDiv.appendChild(cancelBtn);
 
                 formDiv.appendChild(input);
+                formDiv.appendChild(durationInput);
                 formDiv.appendChild(timeSelect);
                 formDiv.appendChild(linkSelect);
                 formDiv.appendChild(actionsDiv);
@@ -2704,6 +2854,7 @@
                 const input = document.getElementById(`edit-recurring-input-${goalId}`);
                 const timeSelect = document.getElementById(`edit-recurring-time-${goalId}`);
                 const linkSelect = document.getElementById(`edit-recurring-link-${goalId}`);
+                const durationInput = document.getElementById(`edit-recurring-duration-${goalId}`);
 
                 if (!input) {
                     console.error('Edit input not found');
@@ -2724,6 +2875,7 @@
                 recurringGoals[goalIndex].text = newText;
                 recurringGoals[goalIndex].timeOfDay = timeSelect && timeSelect.value ? timeSelect.value : null;
                 recurringGoals[goalIndex].linkedGoalId = linkSelect && linkSelect.value ? parseInt(linkSelect.value) : null;
+                recurringGoals[goalIndex].duration = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
 
                 saveRecurringGoals(recurringGoals);
                 renderRecurringGoals();
