@@ -1084,6 +1084,108 @@
             white-space: nowrap;
         }
 
+        .goal-recurring-badge {
+            font-size: 11px;
+            background: #17a2b8;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .recurring-goals-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .recurring-goals-title {
+            font-size: 1.1em;
+            color: #17a2b8;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recurring-goals-title::before {
+            content: "🔄";
+        }
+
+        .recurring-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .recurring-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 2px solid #17a2b8;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .recurring-input:focus {
+            outline: none;
+            border-color: #138496;
+        }
+
+        .add-recurring-btn {
+            padding: 10px 20px;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .add-recurring-btn:hover {
+            background: #138496;
+        }
+
+        .recurring-goals-list {
+            list-style: none;
+        }
+
+        .recurring-goal-item {
+            background: #e8f4f8;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .recurring-goal-text {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .delete-recurring-btn {
+            padding: 6px 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .delete-recurring-btn:hover {
+            background: #5a6268;
+        }
+
         @media (max-width: 600px) {
             .goal-input-row {
                 flex-direction: column;
@@ -1136,6 +1238,20 @@
                 <div id="upcomingGoalsSection" class="upcoming-goals-section" style="display: none;">
                     <h3 class="upcoming-goals-title">Upcoming Goals</h3>
                     <ul id="upcomingGoalsList" class="goals-list"></ul>
+                </div>
+
+                <!-- Recurring Daily Goals Section -->
+                <div class="recurring-goals-section">
+                    <h3 class="recurring-goals-title">Daily Recurring Goals</h3>
+                    <p style="color: #666; font-size: 13px; margin-bottom: 15px;">These goals automatically appear every day.</p>
+                    <div class="recurring-input-container">
+                        <input type="text" id="recurringGoalInput" class="recurring-input" placeholder="Add a recurring daily goal..." />
+                        <select id="recurringGoalLinkSelect" class="goal-link-select" style="border-color: #17a2b8;">
+                            <option value="">No linked goal</option>
+                        </select>
+                        <button class="add-recurring-btn" onclick="addRecurringGoal()">Add Recurring</button>
+                    </div>
+                    <ul id="recurringGoalsList" class="recurring-goals-list"></ul>
                 </div>
             </div>
 
@@ -1323,6 +1439,9 @@
             }
             if (!localStorage.getItem('longTermGoals')) {
                 localStorage.setItem('longTermGoals', JSON.stringify([]));
+            }
+            if (!localStorage.getItem('recurringDailyGoals')) {
+                localStorage.setItem('recurringDailyGoals', JSON.stringify([]));
             }
         }
 
@@ -1566,8 +1685,63 @@
             }
         }
 
+        // Ensure recurring goals are present in today's daily goals
+        function ensureRecurringGoalsForToday() {
+            try {
+                const todayKey = getTodayKey();
+                const recurringGoals = getRecurringGoals();
+
+                if (recurringGoals.length === 0) return;
+
+                let allGoals = {};
+                try {
+                    const stored = localStorage.getItem('dailyGoals');
+                    if (stored) {
+                        allGoals = JSON.parse(stored);
+                    }
+                } catch (e) {
+                    allGoals = {};
+                }
+
+                if (!allGoals[todayKey]) {
+                    allGoals[todayKey] = [];
+                }
+
+                let needsSave = false;
+
+                // Check each recurring goal and add if not already present for today
+                recurringGoals.forEach(recurring => {
+                    // Check if this recurring goal already exists in today's goals
+                    const exists = allGoals[todayKey].some(g => g.recurringId === recurring.id);
+
+                    if (!exists) {
+                        // Add the recurring goal to today
+                        const newGoal = {
+                            id: Date.now() + Math.random(), // Ensure unique ID
+                            text: recurring.text,
+                            status: 'incomplete',
+                            linkedGoalId: recurring.linkedGoalId,
+                            recurringId: recurring.id, // Link back to the recurring goal definition
+                            isRecurring: true
+                        };
+                        allGoals[todayKey].push(newGoal);
+                        needsSave = true;
+                    }
+                });
+
+                if (needsSave) {
+                    localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                }
+            } catch (e) {
+                console.error('Error in ensureRecurringGoalsForToday:', e);
+            }
+        }
+
         function renderGoals() {
             try {
+                // First ensure recurring goals are added to today
+                ensureRecurringGoalsForToday();
+
                 const goalsList = document.getElementById('goalsList');
                 const upcomingSection = document.getElementById('upcomingGoalsSection');
                 const upcomingList = document.getElementById('upcomingGoalsList');
@@ -1634,6 +1808,14 @@
                         const textDiv = document.createElement('div');
                         textDiv.className = 'goal-text';
                         textDiv.textContent = goal.text;
+
+                        // Add recurring badge if applicable
+                        if (goal.isRecurring) {
+                            const recurringBadge = document.createElement('span');
+                            recurringBadge.className = 'goal-recurring-badge';
+                            recurringBadge.textContent = 'Daily';
+                            textDiv.appendChild(recurringBadge);
+                        }
 
                         // Add linked goal badge if applicable
                         if (goal.linkedGoalId) {
@@ -2181,6 +2363,160 @@
             }
         }
 
+        // ========== RECURRING DAILY GOALS FUNCTIONS ==========
+
+        // Get all recurring daily goals
+        function getRecurringGoals() {
+            try {
+                return JSON.parse(localStorage.getItem('recurringDailyGoals') || '[]');
+            } catch (e) {
+                console.error('Error getting recurring goals:', e);
+                return [];
+            }
+        }
+
+        // Save recurring daily goals
+        function saveRecurringGoals(goals) {
+            try {
+                localStorage.setItem('recurringDailyGoals', JSON.stringify(goals));
+            } catch (e) {
+                console.error('Error saving recurring goals:', e);
+            }
+        }
+
+        // Add a new recurring daily goal
+        window.addRecurringGoal = function() {
+            try {
+                const input = document.getElementById('recurringGoalInput');
+                const linkSelect = document.getElementById('recurringGoalLinkSelect');
+
+                if (!input) {
+                    alert('Error: Recurring goal input not found');
+                    return;
+                }
+
+                const goalText = input.value.trim();
+                if (!goalText) {
+                    alert('Please enter a recurring goal!');
+                    return;
+                }
+
+                const recurringGoals = getRecurringGoals();
+                const linkedGoalId = linkSelect && linkSelect.value ? parseInt(linkSelect.value) : null;
+
+                const newGoal = {
+                    id: Date.now(),
+                    text: goalText,
+                    linkedGoalId: linkedGoalId
+                };
+
+                recurringGoals.push(newGoal);
+                saveRecurringGoals(recurringGoals);
+
+                input.value = '';
+                if (linkSelect) linkSelect.value = '';
+
+                renderRecurringGoals();
+                renderGoals(); // Re-render to show the new recurring goal in today's list
+            } catch (e) {
+                console.error('Error in addRecurringGoal:', e);
+                alert('An error occurred. Please check the console.');
+            }
+        }
+
+        // Delete a recurring daily goal
+        function deleteRecurringGoal(goalId) {
+            try {
+                if (!confirm('Delete this recurring goal? It will no longer appear in your daily goals.')) {
+                    return;
+                }
+
+                let recurringGoals = getRecurringGoals();
+                recurringGoals = recurringGoals.filter(g => g.id !== goalId);
+                saveRecurringGoals(recurringGoals);
+
+                renderRecurringGoals();
+                renderGoals();
+            } catch (e) {
+                console.error('Error in deleteRecurringGoal:', e);
+            }
+        }
+
+        // Render the recurring goals management list
+        function renderRecurringGoals() {
+            try {
+                const list = document.getElementById('recurringGoalsList');
+                if (!list) return;
+
+                const recurringGoals = getRecurringGoals();
+                const longTermGoals = getLongTermGoals();
+
+                list.innerHTML = '';
+
+                if (recurringGoals.length === 0) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'empty-goals';
+                    emptyDiv.style.padding = '15px';
+                    emptyDiv.textContent = 'No recurring goals yet. Add one above!';
+                    list.appendChild(emptyDiv);
+                    return;
+                }
+
+                recurringGoals.forEach(goal => {
+                    const li = document.createElement('li');
+                    li.className = 'recurring-goal-item';
+
+                    const textDiv = document.createElement('div');
+                    textDiv.className = 'recurring-goal-text';
+                    textDiv.textContent = goal.text;
+
+                    // Add linked goal badge if applicable
+                    if (goal.linkedGoalId) {
+                        const linkedGoal = longTermGoals.find(g => g.id === goal.linkedGoalId);
+                        if (linkedGoal) {
+                            const badge = document.createElement('span');
+                            badge.className = 'goal-linked-badge';
+                            badge.textContent = linkedGoal.title.length > 15 ? linkedGoal.title.substring(0, 15) + '...' : linkedGoal.title;
+                            textDiv.appendChild(badge);
+                        }
+                    }
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-recurring-btn';
+                    deleteBtn.textContent = 'Remove';
+                    deleteBtn.onclick = function() { deleteRecurringGoal(goal.id); };
+
+                    li.appendChild(textDiv);
+                    li.appendChild(deleteBtn);
+                    list.appendChild(li);
+                });
+            } catch (e) {
+                console.error('Error in renderRecurringGoals:', e);
+            }
+        }
+
+        // Update recurring goal link dropdown
+        function updateRecurringGoalLinkDropdown() {
+            try {
+                const select = document.getElementById('recurringGoalLinkSelect');
+                if (!select) return;
+
+                const longTermGoals = getLongTermGoals().filter(g => g.status !== 'completed');
+
+                // Keep the first option, remove others
+                select.innerHTML = '<option value="">No linked goal</option>';
+
+                longTermGoals.forEach(goal => {
+                    const option = document.createElement('option');
+                    option.value = goal.id;
+                    option.textContent = goal.title.length > 25 ? goal.title.substring(0, 25) + '...' : goal.title;
+                    select.appendChild(option);
+                });
+            } catch (e) {
+                console.error('Error updating recurring goal link dropdown:', e);
+            }
+        }
+
         // ========== LONG-TERM GOALS FUNCTIONS ==========
 
         // Get all long-term goals
@@ -2251,6 +2587,7 @@
 
                 renderLongTermGoals();
                 updateGoalLinkDropdown();
+                updateRecurringGoalLinkDropdown();
                 alert('Long-term goal added successfully!');
             } catch (e) {
                 console.error('Error adding long-term goal:', e);
@@ -2295,6 +2632,7 @@
                 saveLongTermGoals(goals);
                 renderLongTermGoals();
                 updateGoalLinkDropdown();
+                updateRecurringGoalLinkDropdown();
             } catch (e) {
                 console.error('Error deleting long-term goal:', e);
             }
@@ -3378,11 +3716,20 @@
             }
         });
 
+        // Add Enter key support for recurring goal input
+        document.getElementById('recurringGoalInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addRecurringGoal();
+            }
+        });
+
         // Initialize
         initializeData();
         updateDate();
         renderMetrics();
         updateGoalLinkDropdown();
+        updateRecurringGoalLinkDropdown();
+        renderRecurringGoals();
 
         // Set date input to today's date
         const dateInput = document.getElementById('goalDateInput');
