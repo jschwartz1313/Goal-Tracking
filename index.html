@@ -1463,6 +1463,196 @@
             font-weight: bold;
         }
 
+        /* Journal Styles */
+        .journal-today {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 30px;
+        }
+
+        .journal-date-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .journal-date-header h3 {
+            color: #333;
+            margin: 0;
+        }
+
+        .view-day-btn {
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .view-day-btn:hover {
+            opacity: 0.9;
+        }
+
+        .journal-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .journal-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .save-journal-btn {
+            padding: 12px 24px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .save-journal-btn:hover {
+            background: #218838;
+        }
+
+        .journal-entries-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .journal-entry-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .journal-entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .journal-entry-date {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .journal-entry-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .journal-entry-content {
+            color: #555;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .journal-entry-preview {
+            color: #555;
+            line-height: 1.6;
+            max-height: 100px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .journal-entry-preview.collapsed::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: linear-gradient(transparent, white);
+        }
+
+        .expand-btn {
+            padding: 6px 12px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .expand-btn:hover {
+            background: #5a6268;
+        }
+
+        .edit-journal-btn {
+            padding: 6px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .edit-journal-btn:hover {
+            background: #5568d3;
+        }
+
+        .delete-journal-btn {
+            padding: 6px 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .delete-journal-btn:hover {
+            background: #c82333;
+        }
+
+        .journal-edit-textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .empty-journal {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-style: italic;
+        }
+
         @media (max-width: 600px) {
             .goal-input-row {
                 flex-direction: column;
@@ -1480,6 +1670,7 @@
 
         <div class="nav-buttons">
             <button class="nav-btn active" onclick="showSection('today')">Today</button>
+            <button class="nav-btn" onclick="showSection('journal')">Journal</button>
             <button class="nav-btn" onclick="showSection('longterm')">Long-Term Goals</button>
             <button class="nav-btn" onclick="showSection('history')">History</button>
             <button class="nav-btn" onclick="showSection('manage')">Manage Metrics</button>
@@ -1642,6 +1833,31 @@
             </div>
         </div>
 
+        <!-- Journal Section -->
+        <div id="journal-section" class="section">
+            <div class="category-header">
+                <h2>Journal</h2>
+            </div>
+
+            <!-- Today's Journal Entry -->
+            <div class="journal-today">
+                <div class="journal-date-header">
+                    <h3 id="journalTodayDate">Today's Entry</h3>
+                    <button class="view-day-btn" onclick="viewDayFromJournal(getTodayKey())">View Day's Goals & Metrics</button>
+                </div>
+                <textarea id="journalTodayEntry" class="journal-textarea" placeholder="Write your journal entry for today..."></textarea>
+                <button class="save-journal-btn" onclick="saveJournalEntry(getTodayKey())">Save Entry</button>
+            </div>
+
+            <!-- Past Journal Entries -->
+            <div class="journal-history">
+                <div class="category-header" style="margin-top: 30px;">
+                    <h2>Past Entries</h2>
+                </div>
+                <div id="journalEntriesList" class="journal-entries-list"></div>
+            </div>
+        </div>
+
         <!-- Long-Term Goals Section -->
         <div id="longterm-section" class="section">
             <div class="category-header">
@@ -1749,6 +1965,9 @@
             if (!localStorage.getItem('recurringDailyGoals')) {
                 localStorage.setItem('recurringDailyGoals', JSON.stringify([]));
             }
+            if (!localStorage.getItem('journalEntries')) {
+                localStorage.setItem('journalEntries', JSON.stringify({}));
+            }
         }
 
         // Get today's date key (uses local date, not UTC)
@@ -1790,6 +2009,8 @@
                 renderMetricsList();
             } else if (section === 'longterm') {
                 renderLongTermGoals();
+            } else if (section === 'journal') {
+                renderJournal();
             }
         }
 
@@ -3389,6 +3610,294 @@
 
         // ========== END LONG-TERM GOALS FUNCTIONS ==========
 
+        // ========== JOURNAL FUNCTIONS ==========
+
+        // Get all journal entries
+        function getJournalEntries() {
+            try {
+                return JSON.parse(localStorage.getItem('journalEntries') || '{}');
+            } catch (e) {
+                console.error('Error getting journal entries:', e);
+                return {};
+            }
+        }
+
+        // Save journal entries
+        function saveJournalEntries(entries) {
+            try {
+                localStorage.setItem('journalEntries', JSON.stringify(entries));
+            } catch (e) {
+                console.error('Error saving journal entries:', e);
+            }
+        }
+
+        // Save a journal entry for a specific date
+        window.saveJournalEntry = function(dateKey) {
+            try {
+                const textarea = document.getElementById('journalTodayEntry');
+                if (!textarea) return;
+
+                const content = textarea.value.trim();
+                const entries = getJournalEntries();
+
+                if (content) {
+                    entries[dateKey] = {
+                        content: content,
+                        updatedAt: new Date().toISOString()
+                    };
+                } else {
+                    // Remove empty entries
+                    delete entries[dateKey];
+                }
+
+                saveJournalEntries(entries);
+                renderJournalEntries();
+                alert('Journal entry saved!');
+            } catch (e) {
+                console.error('Error saving journal entry:', e);
+            }
+        }
+
+        // Render the journal section
+        function renderJournal() {
+            try {
+                const todayKey = getTodayKey();
+                const entries = getJournalEntries();
+
+                // Update today's date display
+                const dateHeader = document.getElementById('journalTodayDate');
+                if (dateHeader) {
+                    const today = new Date();
+                    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                    dateHeader.textContent = today.toLocaleDateString('en-US', options);
+                }
+
+                // Load today's entry if exists
+                const textarea = document.getElementById('journalTodayEntry');
+                if (textarea && entries[todayKey]) {
+                    textarea.value = entries[todayKey].content;
+                } else if (textarea) {
+                    textarea.value = '';
+                }
+
+                // Render past entries
+                renderJournalEntries();
+            } catch (e) {
+                console.error('Error rendering journal:', e);
+            }
+        }
+
+        // Render past journal entries
+        function renderJournalEntries() {
+            try {
+                const container = document.getElementById('journalEntriesList');
+                if (!container) return;
+
+                const entries = getJournalEntries();
+                const todayKey = getTodayKey();
+
+                // Get dates sorted in reverse order (newest first), excluding today
+                const dates = Object.keys(entries)
+                    .filter(date => date !== todayKey)
+                    .sort((a, b) => b.localeCompare(a));
+
+                container.innerHTML = '';
+
+                if (dates.length === 0) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'empty-journal';
+                    emptyDiv.textContent = 'No past journal entries yet.';
+                    container.appendChild(emptyDiv);
+                    return;
+                }
+
+                dates.forEach(dateKey => {
+                    const entry = entries[dateKey];
+                    const card = document.createElement('div');
+                    card.className = 'journal-entry-card';
+                    card.dataset.date = dateKey;
+
+                    // Format the date nicely
+                    const [year, month, day] = dateKey.split('-').map(Number);
+                    const date = new Date(year, month - 1, day);
+                    const formattedDate = date.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+
+                    // Header with date and actions
+                    const header = document.createElement('div');
+                    header.className = 'journal-entry-header';
+
+                    const dateSpan = document.createElement('span');
+                    dateSpan.className = 'journal-entry-date';
+                    dateSpan.textContent = formattedDate;
+
+                    const actions = document.createElement('div');
+                    actions.className = 'journal-entry-actions';
+
+                    const viewDayBtn = document.createElement('button');
+                    viewDayBtn.className = 'view-day-btn';
+                    viewDayBtn.textContent = 'View Day';
+                    viewDayBtn.onclick = function() { viewDayFromJournal(dateKey); };
+
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'edit-journal-btn';
+                    editBtn.textContent = 'Edit';
+                    editBtn.onclick = function() { startEditJournalEntry(dateKey); };
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-journal-btn';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.onclick = function() { deleteJournalEntry(dateKey); };
+
+                    actions.appendChild(viewDayBtn);
+                    actions.appendChild(editBtn);
+                    actions.appendChild(deleteBtn);
+
+                    header.appendChild(dateSpan);
+                    header.appendChild(actions);
+
+                    // Content preview
+                    const content = document.createElement('div');
+                    content.className = 'journal-entry-content';
+                    content.textContent = entry.content;
+
+                    card.appendChild(header);
+                    card.appendChild(content);
+                    container.appendChild(card);
+                });
+            } catch (e) {
+                console.error('Error rendering journal entries:', e);
+            }
+        }
+
+        // View a day's goals and metrics from journal
+        window.viewDayFromJournal = function(dateKey) {
+            try {
+                // Switch to history section and show that day's data
+                showSection('history');
+
+                // Find or create a way to show specific day
+                // For now, we'll use the calendar detail view if available
+                const calendarDetail = document.getElementById('calendarDetail');
+                if (calendarDetail && typeof showDayDetail === 'function') {
+                    showDayDetail(dateKey);
+                } else {
+                    // Fallback: scroll to history and alert user
+                    alert(`Viewing data for ${dateKey}. Check the History section.`);
+                }
+            } catch (e) {
+                console.error('Error viewing day from journal:', e);
+            }
+        }
+
+        // Start editing a journal entry
+        function startEditJournalEntry(dateKey) {
+            try {
+                const container = document.getElementById('journalEntriesList');
+                const card = container.querySelector(`[data-date="${dateKey}"]`);
+                if (!card) return;
+
+                const entries = getJournalEntries();
+                const entry = entries[dateKey];
+                if (!entry) return;
+
+                // Replace content with edit form
+                card.innerHTML = '';
+
+                // Format the date nicely
+                const [year, month, day] = dateKey.split('-').map(Number);
+                const date = new Date(year, month - 1, day);
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                const header = document.createElement('div');
+                header.className = 'journal-entry-header';
+
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'journal-entry-date';
+                dateSpan.textContent = formattedDate;
+                header.appendChild(dateSpan);
+
+                const textarea = document.createElement('textarea');
+                textarea.className = 'journal-edit-textarea';
+                textarea.value = entry.content;
+                textarea.id = `edit-journal-${dateKey}`;
+
+                const actions = document.createElement('div');
+                actions.className = 'journal-entry-actions';
+
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'save-goal-btn';
+                saveBtn.textContent = 'Save';
+                saveBtn.onclick = function() { saveEditJournalEntry(dateKey); };
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'cancel-edit-btn';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.onclick = function() { renderJournalEntries(); };
+
+                actions.appendChild(saveBtn);
+                actions.appendChild(cancelBtn);
+
+                card.appendChild(header);
+                card.appendChild(textarea);
+                card.appendChild(actions);
+
+                textarea.focus();
+            } catch (e) {
+                console.error('Error starting edit journal entry:', e);
+            }
+        }
+
+        // Save edited journal entry
+        function saveEditJournalEntry(dateKey) {
+            try {
+                const textarea = document.getElementById(`edit-journal-${dateKey}`);
+                if (!textarea) return;
+
+                const content = textarea.value.trim();
+                const entries = getJournalEntries();
+
+                if (content) {
+                    entries[dateKey] = {
+                        content: content,
+                        updatedAt: new Date().toISOString()
+                    };
+                    saveJournalEntries(entries);
+                }
+
+                renderJournalEntries();
+            } catch (e) {
+                console.error('Error saving edit journal entry:', e);
+            }
+        }
+
+        // Delete a journal entry
+        function deleteJournalEntry(dateKey) {
+            try {
+                if (!confirm('Delete this journal entry? This cannot be undone.')) {
+                    return;
+                }
+
+                const entries = getJournalEntries();
+                delete entries[dateKey];
+                saveJournalEntries(entries);
+                renderJournalEntries();
+            } catch (e) {
+                console.error('Error deleting journal entry:', e);
+            }
+        }
+
+        // ========== END JOURNAL FUNCTIONS ==========
+
         // Update statistics
         function updateStats() {
             const history = JSON.parse(localStorage.getItem('habitHistory'));
@@ -3430,13 +3939,16 @@
         }
 
         // Render history
-        function renderHistory() {
+        function renderHistory(filterDate = null) {
             const history = JSON.parse(localStorage.getItem('habitHistory'));
             const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
             const container = document.getElementById('historyContainer');
             container.innerHTML = '';
 
-            const dates = Object.keys(history).sort().reverse();
+            let dates = Object.keys(history).sort().reverse();
+            if (filterDate) {
+                dates = dates.filter(date => date === filterDate);
+            }
 
             if (dates.length === 0) {
                 container.innerHTML = '<div class="empty-state">No history yet. Start tracking today!</div>';
@@ -3515,8 +4027,10 @@
                 container.appendChild(entryDiv);
             });
 
-            // Render charts after history entries
-            renderCharts();
+            // Render charts after history entries (skip when filtering a single day)
+            if (!filterDate) {
+                renderCharts();
+            }
             renderCalendar();
         }
 
@@ -4441,7 +4955,8 @@
                 ${notesText ? `<div style="margin-top: 6px;"><strong>Notes:</strong> ${notesText}</div>` : ''}
                 ${lessonsText ? `<div style="margin-top: 6px;"><strong>Lessons Learned:</strong> ${lessonsText}</div>` : ''}
                 <div class="calendar-detail-actions">
-                    <button class="btn" onclick="jumpToHistory('${dateKey}')">Jump to History</button>
+                    <button class="btn" onclick="showOnlyHistoryDate('${dateKey}')">Show Only This Day</button>
+                    <button class="btn" onclick="showAllHistory()">Show All Days</button>
                     ${data ? `<button class="btn" onclick="startEditHistory('${dateKey}')">Edit This Day</button>` : ''}
                 </div>
             `;
@@ -4475,13 +4990,21 @@
             renderCalendarDetail(selectedCalendarDate);
         }
 
-        function jumpToHistory(dateKey) {
-            renderHistory();
+        function showOnlyHistoryDate(dateKey) {
+            renderHistory(dateKey);
             const entry = document.getElementById(`history-entry-${dateKey}`);
             if (entry) {
                 entry.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 entry.classList.add('editing');
                 setTimeout(() => entry.classList.remove('editing'), 1200);
+            }
+        }
+
+        function showAllHistory() {
+            renderHistory();
+            const container = document.getElementById('historyContainer');
+            if (container) {
+                container.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
 
