@@ -3907,8 +3907,9 @@
 
             // Today's average
             const todayScores = Object.keys(todayData)
-                .filter(key => key !== 'notes')
-                .map(key => todayData[key]);
+                .filter(key => key !== 'notes' && key !== 'lessonsLearned')
+                .map(key => todayData[key])
+                .filter(val => typeof val === 'number' && !isNaN(val));
             const todayAvg = todayScores.length > 0
                 ? (todayScores.reduce((a, b) => a + b, 0) / todayScores.length).toFixed(1)
                 : '0.0';
@@ -3922,8 +3923,9 @@
                 const key = date.toISOString().split('T')[0];
                 if (history[key]) {
                     const scores = Object.keys(history[key])
-                        .filter(k => k !== 'notes')
-                        .map(k => history[key][k]);
+                        .filter(k => k !== 'notes' && k !== 'lessonsLearned')
+                        .map(k => history[key][k])
+                        .filter(val => typeof val === 'number' && !isNaN(val));
                     if (scores.length > 0) {
                         last7Days.push(scores.reduce((a, b) => a + b, 0) / scores.length);
                     }
@@ -3971,8 +3973,9 @@
                 });
 
                 const scores = Object.keys(data)
-                    .filter(key => key !== 'notes')
-                    .map(key => data[key]);
+                    .filter(key => key !== 'notes' && key !== 'lessonsLearned')
+                    .map(key => data[key])
+                    .filter(val => typeof val === 'number' && !isNaN(val));
                 const avg = scores.length > 0
                     ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
                     : '0.0';
@@ -3984,7 +3987,7 @@
 
                 let scoresHTML = '<div class="history-scores">';
                 Object.keys(data).forEach(key => {
-                    if (key !== 'notes') {
+                    if (key !== 'notes' && key !== 'lessonsLearned') {
                         const metric = metrics.find(m => m.id == key);
                         if (metric) {
                             scoresHTML += `
@@ -4255,8 +4258,9 @@
             const averages = recentDates.map(date => {
                 const data = history[date];
                 const scores = Object.keys(data)
-                    .filter(key => key !== 'notes')
-                    .map(key => data[key]);
+                    .filter(key => key !== 'notes' && key !== 'lessonsLearned')
+                    .map(key => data[key])
+                    .filter(val => typeof val === 'number' && !isNaN(val));
                 return scores.length > 0
                     ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
                     : 0;
@@ -4317,7 +4321,7 @@
             const metricAverages = metrics.map(metric => {
                 const scores = dates
                     .map(date => history[date][metric.id])
-                    .filter(score => score !== undefined);
+                    .filter(score => typeof score === 'number' && !isNaN(score));
                 return scores.length > 0
                     ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
                     : 0;
@@ -4871,7 +4875,8 @@
                 if (history[dateKey]) {
                     const scores = Object.keys(history[dateKey])
                         .filter(key => key !== 'notes' && key !== 'lessonsLearned')
-                        .map(key => history[dateKey][key]);
+                        .map(key => history[dateKey][key])
+                        .filter(val => typeof val === 'number' && !isNaN(val));
                     if (scores.length > 0) {
                         const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
                         const badge = document.createElement('span');
@@ -4945,7 +4950,8 @@
             if (data) {
                 const scores = Object.keys(data)
                     .filter(key => key !== 'notes' && key !== 'lessonsLearned')
-                    .map(key => data[key]);
+                    .map(key => data[key])
+                    .filter(val => typeof val === 'number' && !isNaN(val));
                 if (scores.length > 0) {
                     const avg = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
                     avgText = `Average score: ${avg}/10`;
