@@ -1186,6 +1186,79 @@
             background: #5a6268;
         }
 
+        .edit-recurring-btn {
+            padding: 6px 12px;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .edit-recurring-btn:hover {
+            background: #138496;
+        }
+
+        .recurring-time-select {
+            padding: 10px;
+            border: 2px solid #17a2b8;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            min-width: 100px;
+        }
+
+        .recurring-time-select:focus {
+            outline: none;
+            border-color: #138496;
+        }
+
+        .goal-time-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .goal-time-badge.morning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .goal-time-badge.day {
+            background: #28a745;
+            color: white;
+        }
+
+        .goal-time-badge.night {
+            background: #6f42c1;
+            color: white;
+        }
+
+        .recurring-edit-form {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            width: 100%;
+        }
+
+        .recurring-edit-input {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px;
+            border: 2px solid #17a2b8;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .recurring-edit-input:focus {
+            outline: none;
+        }
+
         @media (max-width: 600px) {
             .goal-input-row {
                 flex-direction: column;
@@ -1246,6 +1319,12 @@
                     <p style="color: #666; font-size: 13px; margin-bottom: 15px;">These goals automatically appear every day.</p>
                     <div class="recurring-input-container">
                         <input type="text" id="recurringGoalInput" class="recurring-input" placeholder="Add a recurring daily goal..." />
+                        <select id="recurringGoalTimeSelect" class="recurring-time-select">
+                            <option value="">Any time</option>
+                            <option value="morning">Morning</option>
+                            <option value="day">Day</option>
+                            <option value="night">Night</option>
+                        </select>
                         <select id="recurringGoalLinkSelect" class="goal-link-select" style="border-color: #17a2b8;">
                             <option value="">No linked goal</option>
                         </select>
@@ -1721,6 +1800,7 @@
                             text: recurring.text,
                             status: 'incomplete',
                             linkedGoalId: recurring.linkedGoalId,
+                            timeOfDay: recurring.timeOfDay,
                             recurringId: recurring.id, // Link back to the recurring goal definition
                             isRecurring: true
                         };
@@ -1815,6 +1895,14 @@
                             recurringBadge.className = 'goal-recurring-badge';
                             recurringBadge.textContent = 'Daily';
                             textDiv.appendChild(recurringBadge);
+                        }
+
+                        // Add time of day badge if applicable
+                        if (goal.timeOfDay) {
+                            const timeBadge = document.createElement('span');
+                            timeBadge.className = `goal-time-badge ${goal.timeOfDay}`;
+                            timeBadge.textContent = goal.timeOfDay.charAt(0).toUpperCase() + goal.timeOfDay.slice(1);
+                            textDiv.appendChild(timeBadge);
                         }
 
                         // Add linked goal badge if applicable
@@ -2389,6 +2477,7 @@
             try {
                 const input = document.getElementById('recurringGoalInput');
                 const linkSelect = document.getElementById('recurringGoalLinkSelect');
+                const timeSelect = document.getElementById('recurringGoalTimeSelect');
 
                 if (!input) {
                     alert('Error: Recurring goal input not found');
@@ -2403,11 +2492,13 @@
 
                 const recurringGoals = getRecurringGoals();
                 const linkedGoalId = linkSelect && linkSelect.value ? parseInt(linkSelect.value) : null;
+                const timeOfDay = timeSelect && timeSelect.value ? timeSelect.value : null;
 
                 const newGoal = {
                     id: Date.now(),
                     text: goalText,
-                    linkedGoalId: linkedGoalId
+                    linkedGoalId: linkedGoalId,
+                    timeOfDay: timeOfDay
                 };
 
                 recurringGoals.push(newGoal);
@@ -2415,6 +2506,7 @@
 
                 input.value = '';
                 if (linkSelect) linkSelect.value = '';
+                if (timeSelect) timeSelect.value = '';
 
                 renderRecurringGoals();
                 renderGoals(); // Re-render to show the new recurring goal in today's list
@@ -2465,10 +2557,19 @@
                 recurringGoals.forEach(goal => {
                     const li = document.createElement('li');
                     li.className = 'recurring-goal-item';
+                    li.dataset.goalId = goal.id;
 
                     const textDiv = document.createElement('div');
                     textDiv.className = 'recurring-goal-text';
                     textDiv.textContent = goal.text;
+
+                    // Add time of day badge if applicable
+                    if (goal.timeOfDay) {
+                        const timeBadge = document.createElement('span');
+                        timeBadge.className = `goal-time-badge ${goal.timeOfDay}`;
+                        timeBadge.textContent = goal.timeOfDay.charAt(0).toUpperCase() + goal.timeOfDay.slice(1);
+                        textDiv.appendChild(timeBadge);
+                    }
 
                     // Add linked goal badge if applicable
                     if (goal.linkedGoalId) {
@@ -2481,17 +2582,154 @@
                         }
                     }
 
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'goal-actions';
+
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'edit-recurring-btn';
+                    editBtn.textContent = 'Edit';
+                    editBtn.onclick = function() { startEditRecurringGoal(goal.id); };
+
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'delete-recurring-btn';
                     deleteBtn.textContent = 'Remove';
                     deleteBtn.onclick = function() { deleteRecurringGoal(goal.id); };
 
+                    actionsDiv.appendChild(editBtn);
+                    actionsDiv.appendChild(deleteBtn);
+
                     li.appendChild(textDiv);
-                    li.appendChild(deleteBtn);
+                    li.appendChild(actionsDiv);
                     list.appendChild(li);
                 });
             } catch (e) {
                 console.error('Error in renderRecurringGoals:', e);
+            }
+        }
+
+        // Start editing a recurring goal
+        function startEditRecurringGoal(goalId) {
+            try {
+                const recurringGoals = getRecurringGoals();
+                const goal = recurringGoals.find(g => g.id === goalId);
+                if (!goal) return;
+
+                const list = document.getElementById('recurringGoalsList');
+                const li = list.querySelector(`[data-goal-id="${goalId}"]`);
+                if (!li) return;
+
+                const longTermGoals = getLongTermGoals().filter(g => g.status !== 'completed');
+
+                // Clear and rebuild with edit form
+                li.innerHTML = '';
+                li.className = 'recurring-goal-item';
+
+                const formDiv = document.createElement('div');
+                formDiv.className = 'recurring-edit-form';
+
+                // Text input
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'recurring-edit-input';
+                input.value = goal.text;
+                input.id = `edit-recurring-input-${goalId}`;
+
+                // Time select
+                const timeSelect = document.createElement('select');
+                timeSelect.className = 'recurring-time-select';
+                timeSelect.id = `edit-recurring-time-${goalId}`;
+                timeSelect.innerHTML = `
+                    <option value="">Any time</option>
+                    <option value="morning" ${goal.timeOfDay === 'morning' ? 'selected' : ''}>Morning</option>
+                    <option value="day" ${goal.timeOfDay === 'day' ? 'selected' : ''}>Day</option>
+                    <option value="night" ${goal.timeOfDay === 'night' ? 'selected' : ''}>Night</option>
+                `;
+
+                // Link select
+                const linkSelect = document.createElement('select');
+                linkSelect.className = 'goal-link-select';
+                linkSelect.style.borderColor = '#17a2b8';
+                linkSelect.id = `edit-recurring-link-${goalId}`;
+                linkSelect.innerHTML = '<option value="">No linked goal</option>';
+                longTermGoals.forEach(ltg => {
+                    const option = document.createElement('option');
+                    option.value = ltg.id;
+                    option.textContent = ltg.title.length > 20 ? ltg.title.substring(0, 20) + '...' : ltg.title;
+                    if (goal.linkedGoalId === ltg.id) option.selected = true;
+                    linkSelect.appendChild(option);
+                });
+
+                // Actions
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'goal-actions';
+
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'save-goal-btn';
+                saveBtn.textContent = 'Save';
+                saveBtn.onclick = function() { saveEditRecurringGoal(goalId); };
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'cancel-edit-btn';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.onclick = function() { renderRecurringGoals(); };
+
+                actionsDiv.appendChild(saveBtn);
+                actionsDiv.appendChild(cancelBtn);
+
+                formDiv.appendChild(input);
+                formDiv.appendChild(timeSelect);
+                formDiv.appendChild(linkSelect);
+                formDiv.appendChild(actionsDiv);
+
+                li.appendChild(formDiv);
+
+                // Focus the input
+                input.focus();
+                input.select();
+
+                // Allow Enter to save
+                input.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        saveEditRecurringGoal(goalId);
+                    }
+                });
+            } catch (e) {
+                console.error('Error in startEditRecurringGoal:', e);
+            }
+        }
+
+        // Save edited recurring goal
+        function saveEditRecurringGoal(goalId) {
+            try {
+                const input = document.getElementById(`edit-recurring-input-${goalId}`);
+                const timeSelect = document.getElementById(`edit-recurring-time-${goalId}`);
+                const linkSelect = document.getElementById(`edit-recurring-link-${goalId}`);
+
+                if (!input) {
+                    console.error('Edit input not found');
+                    return;
+                }
+
+                const newText = input.value.trim();
+                if (!newText) {
+                    alert('Goal text cannot be empty!');
+                    return;
+                }
+
+                let recurringGoals = getRecurringGoals();
+                const goalIndex = recurringGoals.findIndex(g => g.id === goalId);
+                if (goalIndex === -1) return;
+
+                // Update the goal
+                recurringGoals[goalIndex].text = newText;
+                recurringGoals[goalIndex].timeOfDay = timeSelect && timeSelect.value ? timeSelect.value : null;
+                recurringGoals[goalIndex].linkedGoalId = linkSelect && linkSelect.value ? parseInt(linkSelect.value) : null;
+
+                saveRecurringGoals(recurringGoals);
+                renderRecurringGoals();
+                renderGoals(); // Re-render to update any displayed recurring goals
+            } catch (e) {
+                console.error('Error in saveEditRecurringGoal:', e);
             }
         }
 
