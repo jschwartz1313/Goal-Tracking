@@ -1540,6 +1540,22 @@
             background: #218838;
         }
 
+        .skip-overdue-btn {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .skip-overdue-btn:hover {
+            background: #5a6268;
+        }
+
         .reschedule-btn {
             padding: 8px 16px;
             background: #17a2b8;
@@ -2715,10 +2731,20 @@
                         moveOverdueGoalToToday(goal.id, goal.originalDate);
                     };
 
-                    // Complete button
+                    // Skip button
+                    const skipBtn = document.createElement('button');
+                    skipBtn.className = 'skip-overdue-btn';
+                    skipBtn.textContent = 'Skip';
+                    skipBtn.title = 'Accept not completing this goal';
+                    skipBtn.onclick = function() {
+                        markOverdueGoalComplete(goal.id, goal.originalDate);
+                    };
+
+                    // Complete button (for goals actually completed in the past)
                     const completeBtn = document.createElement('button');
                     completeBtn.className = 'complete-overdue-btn';
-                    completeBtn.textContent = 'Mark Complete';
+                    completeBtn.textContent = 'Completed';
+                    completeBtn.title = 'Mark as actually completed';
                     completeBtn.onclick = function() {
                         markOverdueGoalComplete(goal.id, goal.originalDate);
                     };
@@ -2732,6 +2758,7 @@
                     };
 
                     actionsDiv.appendChild(moveBtn);
+                    actionsDiv.appendChild(skipBtn);
                     actionsDiv.appendChild(completeBtn);
                     actionsDiv.appendChild(deleteBtn);
 
