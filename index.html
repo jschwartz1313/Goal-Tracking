@@ -1642,6 +1642,17 @@
             background: #218838;
         }
 
+        .journal-save-status {
+            display: none;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 3px solid #28a745;
+        }
+
         .journal-entries-list {
             display: flex;
             flex-direction: column;
@@ -4185,7 +4196,7 @@
         }
 
         // Save a journal entry for a specific date
-        window.saveJournalEntry = function(dateKey) {
+        window.saveJournalEntry = function(dateKey, silent = false) {
             try {
                 const textarea = document.getElementById('journalTodayEntry');
                 if (!textarea) return;
@@ -4205,10 +4216,96 @@
 
                 saveJournalEntries(entries);
                 renderJournalEntries();
-                alert('Journal entry saved!');
+
+                // Show save feedback
+                if (!silent) {
+                    showJournalSaveFeedback('saved');
+                }
+
+                // Update the last saved indicator
+                updateJournalSaveStatus(content ? 'saved' : 'empty');
             } catch (e) {
                 console.error('Error saving journal entry:', e);
+                if (!silent) {
+                    showJournalSaveFeedback('error');
+                }
             }
+        }
+
+        // Show visual feedback for journal save
+        function showJournalSaveFeedback(status) {
+            const saveBtn = document.querySelector('.save-journal-btn');
+            if (!saveBtn) return;
+
+            const originalText = saveBtn.textContent;
+
+            if (status === 'saved') {
+                saveBtn.textContent = '✓ Saved!';
+                saveBtn.style.background = '#28a745';
+            } else if (status === 'error') {
+                saveBtn.textContent = '✗ Error';
+                saveBtn.style.background = '#dc3545';
+            }
+
+            setTimeout(() => {
+                saveBtn.textContent = originalText;
+                saveBtn.style.background = '';
+            }, 2000);
+        }
+
+        // Update journal save status indicator
+        function updateJournalSaveStatus(status) {
+            let statusDiv = document.getElementById('journalSaveStatus');
+
+            if (!statusDiv) {
+                // Create status indicator if it doesn't exist
+                statusDiv = document.createElement('div');
+                statusDiv.id = 'journalSaveStatus';
+                statusDiv.className = 'journal-save-status';
+
+                const saveBtn = document.querySelector('.save-journal-btn');
+                if (saveBtn) {
+                    saveBtn.parentNode.insertBefore(statusDiv, saveBtn);
+                }
+            }
+
+            if (status === 'saved') {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                statusDiv.innerHTML = `<span style="color: #28a745;">✓</span> Last saved at ${timeStr}`;
+                statusDiv.style.display = 'block';
+            } else if (status === 'empty') {
+                statusDiv.style.display = 'none';
+            }
+        }
+
+        // Auto-save journal entry
+        let journalAutoSaveTimeout = null;
+        let journalAutoSaveSetup = false;
+        function setupJournalAutoSave() {
+            const textarea = document.getElementById('journalTodayEntry');
+            if (!textarea || journalAutoSaveSetup) return;
+
+            textarea.addEventListener('input', function() {
+                // Clear existing timeout
+                if (journalAutoSaveTimeout) {
+                    clearTimeout(journalAutoSaveTimeout);
+                }
+
+                // Set new timeout for auto-save (2 seconds after user stops typing)
+                journalAutoSaveTimeout = setTimeout(() => {
+                    saveJournalEntry(getTodayKey(), true); // Silent save
+                }, 2000);
+            });
+
+            // Also save on blur (when user clicks away)
+            textarea.addEventListener('blur', function() {
+                if (textarea.value.trim()) {
+                    saveJournalEntry(getTodayKey(), true);
+                }
+            });
+
+            journalAutoSaveSetup = true;
         }
 
         // Render the journal section
@@ -4229,9 +4326,15 @@
                 const textarea = document.getElementById('journalTodayEntry');
                 if (textarea && entries[todayKey]) {
                     textarea.value = entries[todayKey].content;
+                    // Show saved status if entry exists
+                    updateJournalSaveStatus('saved');
                 } else if (textarea) {
                     textarea.value = '';
+                    updateJournalSaveStatus('empty');
                 }
+
+                // Set up auto-save for the journal
+                setupJournalAutoSave();
 
                 // Render past entries
                 renderJournalEntries();
