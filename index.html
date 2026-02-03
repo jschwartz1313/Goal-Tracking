@@ -4802,9 +4802,9 @@
                 });
                 scoresHTML += '</div>';
 
-                // Get goals for this date
+                // Get goals for this date (exclude recurring goals)
                 const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
-                const dateGoals = allGoals[date] || [];
+                const dateGoals = (allGoals[date] || []).filter(goal => !goal.isRecurring);
                 let goalsHTML = '';
 
                 if (dateGoals.length > 0) {
