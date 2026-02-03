@@ -1840,6 +1840,39 @@
         .input-with-dictation textarea {
             flex: 1;
         }
+
+        /* Collapsible section styles */
+        .collapsible-header {
+            cursor: pointer;
+            user-select: none;
+            transition: opacity 0.2s;
+        }
+
+        .collapsible-header:hover {
+            opacity: 0.8;
+        }
+
+        .collapse-arrow {
+            font-size: 14px;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .collapse-arrow.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            max-height: 5000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 1;
+        }
+
+        .collapsible-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -1877,51 +1910,71 @@
 
                 <!-- Overdue Goals Section -->
                 <div id="overdueGoalsSection" class="overdue-goals-section" style="display: none;">
-                    <div class="overdue-goals-header">
-                        <h3 class="overdue-goals-title">⚠️ Overdue Goals</h3>
-                        <span class="overdue-count" id="overdueCount">0</span>
+                    <div class="overdue-goals-header collapsible-header" onclick="toggleSection('overdue')">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="collapse-arrow" id="overdueArrow">▼</span>
+                            <h3 class="overdue-goals-title">⚠️ Overdue Goals</h3>
+                            <span class="overdue-count" id="overdueCount">0</span>
+                        </div>
                     </div>
-                    <div id="overdueGoalsList"></div>
+                    <div id="overdueGoalsList" class="collapsible-content"></div>
                 </div>
 
-                <div class="goal-input-container">
-                    <div class="goal-input-row">
-                        <input type="text" id="goalInput" class="goal-input" placeholder="Add a goal..." />
-                        <input type="number" id="goalTimeInput" class="goal-time-input" placeholder="min" min="0" title="Duration in minutes">
-                        <input type="date" id="goalDateInput" class="goal-date-input" title="Select date for this goal">
-                        <select id="goalLinkSelect" class="goal-link-select">
-                            <option value="">No linked goal</option>
-                        </select>
+                <!-- Today's Goals Section -->
+                <div class="todays-goals-wrapper">
+                    <h3 class="collapsible-header" onclick="toggleSection('todayGoals')" style="cursor: pointer; display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                        <span class="collapse-arrow" id="todayGoalsArrow">▼</span>
+                        <span>Today's Goals</span>
+                    </h3>
+                    <div id="todayGoalsContent" class="collapsible-content">
+                        <div class="goal-input-container">
+                            <div class="goal-input-row">
+                                <input type="text" id="goalInput" class="goal-input" placeholder="Add a goal..." />
+                                <input type="number" id="goalTimeInput" class="goal-time-input" placeholder="min" min="0" title="Duration in minutes">
+                                <input type="date" id="goalDateInput" class="goal-date-input" title="Select date for this goal">
+                                <select id="goalLinkSelect" class="goal-link-select">
+                                    <option value="">No linked goal</option>
+                                </select>
+                            </div>
+                            <button class="add-goal-btn" onclick="addGoal()">Add Goal</button>
+                        </div>
+                        <ul id="goalsList" class="goals-list"></ul>
                     </div>
-                    <button class="add-goal-btn" onclick="addGoal()">Add Goal</button>
                 </div>
-                <ul id="goalsList" class="goals-list"></ul>
 
                 <!-- Upcoming Goals Section -->
                 <div id="upcomingGoalsSection" class="upcoming-goals-section" style="display: none;">
-                    <h3 class="upcoming-goals-title">Upcoming Goals</h3>
-                    <ul id="upcomingGoalsList" class="goals-list"></ul>
+                    <h3 class="collapsible-header upcoming-goals-title" onclick="toggleSection('upcomingGoals')" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                        <span class="collapse-arrow" id="upcomingGoalsArrow">▼</span>
+                        <span>Upcoming Goals</span>
+                    </h3>
+                    <ul id="upcomingGoalsList" class="goals-list collapsible-content"></ul>
                 </div>
 
                 <!-- Recurring Daily Goals Section -->
                 <div class="recurring-goals-section">
-                    <h3 class="recurring-goals-title">Daily Recurring Goals</h3>
-                    <p style="color: #666; font-size: 13px; margin-bottom: 15px;">These goals automatically appear every day.</p>
-                    <div class="recurring-input-container">
-                        <input type="text" id="recurringGoalInput" class="recurring-input" placeholder="Add a recurring daily goal..." />
-                        <input type="number" id="recurringGoalDurationInput" class="recurring-time-input" placeholder="min" min="0" title="Duration in minutes">
-                        <select id="recurringGoalTimeSelect" class="recurring-time-select">
-                            <option value="">Any time</option>
-                            <option value="morning">Morning</option>
-                            <option value="day">Day</option>
-                            <option value="night">Night</option>
-                        </select>
-                        <select id="recurringGoalLinkSelect" class="goal-link-select" style="border-color: #17a2b8;">
-                            <option value="">No linked goal</option>
-                        </select>
-                        <button class="add-recurring-btn" onclick="addRecurringGoal()">Add Recurring</button>
+                    <h3 class="collapsible-header recurring-goals-title" onclick="toggleSection('recurringGoals')" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                        <span class="collapse-arrow" id="recurringGoalsArrow">▼</span>
+                        <span>Daily Recurring Goals</span>
+                    </h3>
+                    <div id="recurringGoalsContent" class="collapsible-content">
+                        <p style="color: #666; font-size: 13px; margin-bottom: 15px;">These goals automatically appear every day.</p>
+                        <div class="recurring-input-container">
+                            <input type="text" id="recurringGoalInput" class="recurring-input" placeholder="Add a recurring daily goal..." />
+                            <input type="number" id="recurringGoalDurationInput" class="recurring-time-input" placeholder="min" min="0" title="Duration in minutes">
+                            <select id="recurringGoalTimeSelect" class="recurring-time-select">
+                                <option value="">Any time</option>
+                                <option value="morning">Morning</option>
+                                <option value="day">Day</option>
+                                <option value="night">Night</option>
+                            </select>
+                            <select id="recurringGoalLinkSelect" class="goal-link-select" style="border-color: #17a2b8;">
+                                <option value="">No linked goal</option>
+                            </select>
+                            <button class="add-recurring-btn" onclick="addRecurringGoal()">Add Recurring</button>
+                        </div>
+                        <ul id="recurringGoalsList" class="recurring-goals-list"></ul>
                     </div>
-                    <ul id="recurringGoalsList" class="recurring-goals-list"></ul>
                 </div>
             </div>
 
@@ -2238,6 +2291,71 @@
             inputElement.parentNode.insertBefore(wrapper, inputElement);
             wrapper.appendChild(inputElement);
             wrapper.appendChild(dictationBtn);
+        }
+
+        // Collapsible section toggle functionality
+        function toggleSection(sectionId) {
+            const contentId = sectionId === 'overdue' ? 'overdueGoalsList' :
+                            sectionId === 'todayGoals' ? 'todayGoalsContent' :
+                            sectionId === 'upcomingGoals' ? 'upcomingGoalsList' :
+                            sectionId === 'recurringGoals' ? 'recurringGoalsContent' : null;
+
+            const arrowId = sectionId === 'overdue' ? 'overdueArrow' :
+                          sectionId === 'todayGoals' ? 'todayGoalsArrow' :
+                          sectionId === 'upcomingGoals' ? 'upcomingGoalsArrow' :
+                          sectionId === 'recurringGoals' ? 'recurringGoalsArrow' : null;
+
+            if (!contentId || !arrowId) return;
+
+            const content = document.getElementById(contentId);
+            const arrow = document.getElementById(arrowId);
+
+            if (!content || !arrow) return;
+
+            // Toggle collapsed state
+            const isCollapsed = content.classList.contains('collapsed');
+
+            if (isCollapsed) {
+                content.classList.remove('collapsed');
+                arrow.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                arrow.classList.add('collapsed');
+            }
+
+            // Save state to localStorage
+            const collapseState = JSON.parse(localStorage.getItem('sectionCollapseState') || '{}');
+            collapseState[sectionId] = !isCollapsed;
+            localStorage.setItem('sectionCollapseState', JSON.stringify(collapseState));
+        }
+
+        // Restore collapse state from localStorage
+        function restoreCollapseState() {
+            const collapseState = JSON.parse(localStorage.getItem('sectionCollapseState') || '{}');
+
+            Object.keys(collapseState).forEach(sectionId => {
+                if (collapseState[sectionId]) { // If collapsed
+                    const contentId = sectionId === 'overdue' ? 'overdueGoalsList' :
+                                    sectionId === 'todayGoals' ? 'todayGoalsContent' :
+                                    sectionId === 'upcomingGoals' ? 'upcomingGoalsList' :
+                                    sectionId === 'recurringGoals' ? 'recurringGoalsContent' : null;
+
+                    const arrowId = sectionId === 'overdue' ? 'overdueArrow' :
+                                  sectionId === 'todayGoals' ? 'todayGoalsArrow' :
+                                  sectionId === 'upcomingGoals' ? 'upcomingGoalsArrow' :
+                                  sectionId === 'recurringGoals' ? 'recurringGoalsArrow' : null;
+
+                    if (contentId && arrowId) {
+                        const content = document.getElementById(contentId);
+                        const arrow = document.getElementById(arrowId);
+
+                        if (content && arrow) {
+                            content.classList.add('collapsed');
+                            arrow.classList.add('collapsed');
+                        }
+                    }
+                }
+            });
         }
 
         function initializeDictation() {
@@ -5492,6 +5610,7 @@
         // Initialize
         initializeData();
         initializeDictation(); // Add dictation buttons to all inputs
+        restoreCollapseState(); // Restore section collapse states
         updateDate();
         renderMetrics();
         updateGoalLinkDropdown();
