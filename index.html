@@ -581,6 +581,10 @@
             background: #28a745;
         }
 
+        .goal-status-btn.skipped {
+            background: #6c757d;
+        }
+
         .goal-status-btn:hover {
             opacity: 0.8;
         }
@@ -2777,7 +2781,7 @@
             Object.keys(allGoals).forEach(dateKey => {
                 if (dateKey < todayKey) { // Past date
                     allGoals[dateKey].forEach(goal => {
-                        if (goal.status === 'incomplete' || goal.status === 'partial') {
+                        if (goal.status === 'incomplete' || goal.status === 'partial' || goal.status === 'skipped') {
                             overdueGoals.push({
                                 ...goal,
                                 originalDate: dateKey
@@ -2855,7 +2859,7 @@
                     skipBtn.textContent = 'Skip';
                     skipBtn.title = 'Accept not completing this goal';
                     skipBtn.onclick = function() {
-                        markOverdueGoalComplete(goal.id, goal.originalDate);
+                        markOverdueGoalSkipped(goal.id, goal.originalDate);
                     };
 
                     // Complete button (for goals actually completed in the past)
@@ -2950,6 +2954,26 @@
                 }
             } catch (e) {
                 console.error('Error marking overdue goal complete:', e);
+            }
+        }
+
+        // Mark overdue goal as skipped (stays on original date, still shows as overdue)
+        function markOverdueGoalSkipped(goalId, originalDate) {
+            try {
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+                const goals = allGoals[originalDate] || [];
+                const goal = goals.find(g => g.id === goalId);
+
+                if (goal) {
+                    goal.status = 'skipped';
+                    localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+
+                    // Refresh display
+                    renderOverdueGoals();
+                }
+            } catch (e) {
+                console.error('Error marking overdue goal skipped:', e);
             }
         }
 
@@ -4802,9 +4826,9 @@
                 });
                 scoresHTML += '</div>';
 
-                // Get goals for this date (exclude recurring goals)
+                // Get goals for this date
                 const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
-                const dateGoals = (allGoals[date] || []).filter(goal => !goal.isRecurring);
+                const dateGoals = allGoals[date] || [];
                 let goalsHTML = '';
 
                 if (dateGoals.length > 0) {
@@ -4813,7 +4837,8 @@
                         const statusEmoji = {
                             'incomplete': '🔴',
                             'partial': '🟡',
-                            'complete': '🟢'
+                            'complete': '🟢',
+                            'skipped': '⏭️'
                         };
                         goalsHTML += `<li style="margin: 5px 0;">${statusEmoji[goal.status]} ${goal.text}</li>`;
                     });
@@ -4893,6 +4918,7 @@
                                 <option value="incomplete" ${goal.status === 'incomplete' ? 'selected' : ''}>🔴 Incomplete</option>
                                 <option value="partial" ${goal.status === 'partial' ? 'selected' : ''}>🟡 Partial</option>
                                 <option value="complete" ${goal.status === 'complete' ? 'selected' : ''}>🟢 Complete</option>
+                                <option value="skipped" ${goal.status === 'skipped' ? 'selected' : ''}>⏭️ Skipped</option>
                             </select>
                             <span style="flex: 1;">${goal.text}</span>
                             <input type="date" class="goal-date-input" id="history-goal-date-${date}-${index}" value="${date}" title="Move to different day" style="min-width: 120px;">
