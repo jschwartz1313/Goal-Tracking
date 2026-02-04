@@ -2781,7 +2781,7 @@
             Object.keys(allGoals).forEach(dateKey => {
                 if (dateKey < todayKey) { // Past date
                     allGoals[dateKey].forEach(goal => {
-                        if (goal.status === 'incomplete' || goal.status === 'partial' || goal.status === 'skipped') {
+                        if (goal.status === 'incomplete' || goal.status === 'partial') {
                             overdueGoals.push({
                                 ...goal,
                                 originalDate: dateKey
