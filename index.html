@@ -2777,10 +2777,24 @@
             }
 
             // Collect all overdue goals (incomplete or partial from past dates)
+            // Exclude recurring goals - they exist every day so aren't "overdue"
             const overdueGoals = [];
+            const recurringGoals = getRecurringGoals();
+            const recurringGoalIds = new Set(recurringGoals.map(rg => rg.id));
+            const recurringGoalTexts = new Set(recurringGoals.map(rg => rg.text.toLowerCase().trim()));
+
             Object.keys(allGoals).forEach(dateKey => {
                 if (dateKey < todayKey) { // Past date
                     allGoals[dateKey].forEach(goal => {
+                        // Skip if goal is marked as recurring
+                        if (goal.isRecurring || goal.recurringId) return;
+
+                        // Skip if goal's recurringId matches a known recurring goal
+                        if (goal.recurringId && recurringGoalIds.has(goal.recurringId)) return;
+
+                        // Skip if goal text matches a recurring goal (for older data without recurringId)
+                        if (recurringGoalTexts.has(goal.text.toLowerCase().trim())) return;
+
                         if (goal.status === 'incomplete' || goal.status === 'partial') {
                             overdueGoals.push({
                                 ...goal,
