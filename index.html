@@ -1802,49 +1802,6 @@
             }
         }
 
-        /* Dictation button styles */
-        .dictation-btn {
-            padding: 8px 12px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 40px;
-            height: 40px;
-        }
-
-        .dictation-btn:hover {
-            background: #5568d3;
-        }
-
-        .dictation-btn.listening {
-            background: #dc3545;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .input-with-dictation {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            width: 100%;
-        }
-
-        .input-with-dictation input,
-        .input-with-dictation textarea {
-            flex: 1;
-        }
-
         /* Collapsible section styles */
         .collapsible-header {
             cursor: pointer;
@@ -2182,121 +2139,6 @@
     </div>
 
     <script>
-        // Speech Recognition / Dictation System
-        let recognition = null;
-        let currentDictationTarget = null;
-
-        // Initialize Speech Recognition if available
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.continuous = false;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-
-            recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                if (currentDictationTarget) {
-                    // Append to existing text or replace based on field type
-                    if (currentDictationTarget.value) {
-                        // For textareas and longer content, append
-                        if (currentDictationTarget.tagName === 'TEXTAREA') {
-                            currentDictationTarget.value += ' ' + transcript;
-                        } else {
-                            // For short inputs, replace
-                            currentDictationTarget.value = transcript;
-                        }
-                    } else {
-                        currentDictationTarget.value = transcript;
-                    }
-                    // Trigger any change events
-                    currentDictationTarget.dispatchEvent(new Event('input', { bubbles: true }));
-                }
-            };
-
-            recognition.onerror = function(event) {
-                console.error('Speech recognition error:', event.error);
-                stopDictation();
-            };
-
-            recognition.onend = function() {
-                stopDictation();
-            };
-        }
-
-        function startDictation(inputElement, buttonElement) {
-            if (!recognition) {
-                alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
-                return;
-            }
-
-            currentDictationTarget = inputElement;
-            buttonElement.classList.add('listening');
-            buttonElement.textContent = '⏹';
-            buttonElement.title = 'Stop dictation';
-
-            try {
-                recognition.start();
-            } catch (e) {
-                console.error('Failed to start recognition:', e);
-            }
-        }
-
-        function stopDictation() {
-            if (recognition) {
-                try {
-                    recognition.stop();
-                } catch (e) {
-                    // Ignore errors if already stopped
-                }
-            }
-
-            // Reset all dictation buttons
-            document.querySelectorAll('.dictation-btn').forEach(btn => {
-                btn.classList.remove('listening');
-                btn.textContent = '🎤';
-                btn.title = 'Start dictation';
-            });
-
-            currentDictationTarget = null;
-        }
-
-        function addDictationToInput(inputElement) {
-            // Skip if already has dictation button
-            if (inputElement.parentElement?.classList.contains('input-with-dictation')) {
-                return;
-            }
-
-            // Create wrapper
-            const wrapper = document.createElement('div');
-            wrapper.className = 'input-with-dictation';
-
-            // Create dictation button
-            const dictationBtn = document.createElement('button');
-            dictationBtn.className = 'dictation-btn';
-            dictationBtn.textContent = '🎤';
-            dictationBtn.title = 'Start dictation';
-            dictationBtn.type = 'button';
-
-            dictationBtn.onclick = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (dictationBtn.classList.contains('listening')) {
-                    stopDictation();
-                } else {
-                    // Stop any other dictation first
-                    stopDictation();
-                    startDictation(inputElement, dictationBtn);
-                }
-            };
-
-            // Wrap the input
-            inputElement.parentNode.insertBefore(wrapper, inputElement);
-            wrapper.appendChild(inputElement);
-            wrapper.appendChild(dictationBtn);
-        }
-
         // Collapsible section toggle functionality
         function toggleSection(sectionId) {
             const contentId = sectionId === 'overdue' ? 'overdueGoalsList' :
@@ -2360,52 +2202,6 @@
                     }
                 }
             });
-        }
-
-        function initializeDictation() {
-            // Add dictation to all text inputs and textareas
-            const selectors = [
-                '#goalInput',
-                '#recurringGoalInput',
-                '#dailyNotes',
-                '#lessonsLearned',
-                '#journalTodayEntry',
-                '#ltGoalTitle',
-                '#ltGoalDescription',
-                '#ltGoalSubgoals',
-                '#newMetricName'
-            ];
-
-            selectors.forEach(selector => {
-                const element = document.querySelector(selector);
-                if (element) {
-                    addDictationToInput(element);
-                }
-            });
-
-            // Also add to any dynamically created inputs (with a slight delay to ensure they're in DOM)
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    mutation.addedNodes.forEach(function(node) {
-                        if (node.nodeType === 1) { // Element node
-                            // Check if it's an input or textarea
-                            if ((node.tagName === 'INPUT' && node.type === 'text') || node.tagName === 'TEXTAREA') {
-                                if (!node.parentElement?.classList.contains('input-with-dictation')) {
-                                    addDictationToInput(node);
-                                }
-                            }
-                            // Check children
-                            node.querySelectorAll('input[type="text"], textarea').forEach(input => {
-                                if (!input.parentElement?.classList.contains('input-with-dictation')) {
-                                    addDictationToInput(input);
-                                }
-                            });
-                        }
-                    });
-                });
-            });
-
-            observer.observe(document.body, { childList: true, subtree: true });
         }
 
         // Default metrics
@@ -5690,7 +5486,6 @@
 
         // Initialize
         initializeData();
-        initializeDictation(); // Add dictation buttons to all inputs
         restoreCollapseState(); // Restore section collapse states
         updateDate();
         renderMetrics();
