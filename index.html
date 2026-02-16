@@ -2052,6 +2052,15 @@
                 <button class="save-journal-btn" onclick="saveJournalEntry(getTodayKey())">Save Entry</button>
             </div>
 
+            <!-- Add Past Entry -->
+            <div class="journal-add-past" style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 12px;">
+                <h3 style="margin: 0 0 15px 0; color: #333;">Add Entry for Past Date</h3>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <input type="date" id="pastJournalDatePicker" class="goal-date-input" style="padding: 10px; font-size: 16px;">
+                    <button onclick="createPastJournalEntry()" class="save-journal-btn" style="margin: 0;">Create Entry</button>
+                </div>
+            </div>
+
             <!-- Past Journal Entries -->
             <div class="journal-history">
                 <div class="category-header" style="margin-top: 30px;">
@@ -4528,6 +4537,60 @@
                 renderJournalEntries();
             } catch (e) {
                 console.error('Error deleting journal entry:', e);
+            }
+        }
+
+        // Create a journal entry for a past date
+        window.createPastJournalEntry = function() {
+            try {
+                const datePicker = document.getElementById('pastJournalDatePicker');
+                if (!datePicker || !datePicker.value) {
+                    alert('Please select a date');
+                    return;
+                }
+
+                const selectedDate = datePicker.value;
+                const todayKey = getTodayKey();
+
+                if (selectedDate >= todayKey) {
+                    alert('Please select a past date. Use the "Today\'s Entry" section for today.');
+                    return;
+                }
+
+                const entries = getJournalEntries();
+
+                // Check if entry already exists
+                if (entries[selectedDate] && entries[selectedDate].trim()) {
+                    // Entry exists, scroll to it and start editing
+                    renderJournalEntries();
+                    setTimeout(() => {
+                        startEditJournalEntry(selectedDate);
+                        const card = document.querySelector(`.journal-entry-card[data-date="${selectedDate}"]`);
+                        if (card) {
+                            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, 100);
+                    return;
+                }
+
+                // Create empty entry for this date
+                entries[selectedDate] = '';
+                saveJournalEntries(entries);
+
+                // Re-render and open edit mode for the new entry
+                renderJournalEntries();
+                setTimeout(() => {
+                    startEditJournalEntry(selectedDate);
+                    const card = document.querySelector(`.journal-entry-card[data-date="${selectedDate}"]`);
+                    if (card) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
+
+                // Clear the date picker
+                datePicker.value = '';
+            } catch (e) {
+                console.error('Error creating past journal entry:', e);
             }
         }
 
