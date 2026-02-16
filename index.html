@@ -4951,6 +4951,19 @@
                     ${metricsEditHTML}
                     ${goalsEditHTML}
                     <div style="margin-top: 15px;">
+                        <strong>Add Goal:</strong>
+                        <div style="display: flex; gap: 8px; margin-top: 5px;">
+                            <input type="text" id="history-new-goal-${date}" placeholder="Enter a goal for this day..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            <select id="history-new-goal-status-${date}" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="incomplete">🔴 Incomplete</option>
+                                <option value="partial">🟡 Partial</option>
+                                <option value="complete">🟢 Complete</option>
+                                <option value="skipped">⏭️ Skipped</option>
+                            </select>
+                            <button onclick="addGoalToHistoryEntry('${date}')" style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">Add</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
                         <strong>Notes:</strong>
                         <textarea class="history-edit-notes" id="history-notes-${date}">${data.notes || ''}</textarea>
                     </div>
@@ -5040,6 +5053,34 @@
 
             // Re-render history
             renderHistory();
+        }
+
+        // Add a new goal to a history entry
+        function addGoalToHistoryEntry(date) {
+            const input = document.getElementById(`history-new-goal-${date}`);
+            const statusSelect = document.getElementById(`history-new-goal-status-${date}`);
+
+            if (!input || !input.value.trim()) {
+                alert('Please enter a goal');
+                return;
+            }
+
+            const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+            if (!allGoals[date]) {
+                allGoals[date] = [];
+            }
+
+            const newGoal = {
+                id: Date.now() + Math.random(),
+                text: input.value.trim(),
+                status: statusSelect ? statusSelect.value : 'incomplete'
+            };
+
+            allGoals[date].push(newGoal);
+            localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+
+            // Re-render the edit form to show the new goal
+            startEditHistory(date);
         }
 
         // Chart instances (to destroy before re-rendering)
@@ -5811,6 +5852,10 @@
             const notesText = data && data.notes ? data.notes : '';
             const lessonsText = data && data.lessonsLearned ? data.lessonsLearned : '';
 
+            const todayKey = getTodayKey();
+            const isPastDate = dateKey < todayKey;
+            const isFutureDate = dateKey > todayKey;
+
             calendarDetail.innerHTML = `
                 <h4>${formattedDate}</h4>
                 <div>${avgText}</div>
@@ -5821,6 +5866,7 @@
                     <button class="btn" onclick="showOnlyHistoryDate('${dateKey}')">Show Only This Day</button>
                     <button class="btn" onclick="showAllHistory()">Show All Days</button>
                     ${data ? `<button class="btn" onclick="startEditHistory('${dateKey}')">Edit This Day</button>` : ''}
+                    ${!data && isPastDate ? `<button class="btn" onclick="createPastEntry('${dateKey}')" style="background: #28a745;">Create Entry</button>` : ''}
                 </div>
             `;
             calendarDetail.style.display = 'block';
@@ -5851,6 +5897,39 @@
             selectedCalendarDate = getTodayKey();
             renderCalendar();
             renderCalendarDetail(selectedCalendarDate);
+        }
+
+        // Create a new entry for a past date that doesn't have data yet
+        function createPastEntry(dateKey) {
+            // Initialize empty history entry for this date
+            const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
+            const metrics = JSON.parse(localStorage.getItem('habitMetrics') || '[]');
+
+            if (!history[dateKey]) {
+                history[dateKey] = {};
+                // Initialize all metrics with default value of 5
+                metrics.forEach(metric => {
+                    history[dateKey][metric.id] = 5;
+                });
+                history[dateKey].notes = '';
+                history[dateKey].lessonsLearned = '';
+                localStorage.setItem('habitHistory', JSON.stringify(history));
+            }
+
+            // Initialize empty goals array for this date if it doesn't exist
+            const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+            if (!allGoals[dateKey]) {
+                allGoals[dateKey] = [];
+                localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+            }
+
+            // Render history and then open the edit form
+            renderHistory(dateKey);
+
+            // Small delay to ensure DOM is updated before starting edit
+            setTimeout(() => {
+                startEditHistory(dateKey);
+            }, 100);
         }
 
         function showOnlyHistoryDate(dateKey) {
