@@ -4447,7 +4447,7 @@
 
                 const entries = getJournalEntries();
                 const entry = entries[dateKey];
-                if (!entry) return;
+                if (entry === undefined) return;
 
                 // Replace content with edit form
                 card.innerHTML = '';
@@ -4472,7 +4472,7 @@
 
                 const textarea = document.createElement('textarea');
                 textarea.className = 'journal-edit-textarea';
-                textarea.value = entry.content;
+                textarea.value = entry || '';
                 textarea.id = `edit-journal-${dateKey}`;
 
                 const actions = document.createElement('div');
