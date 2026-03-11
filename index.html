@@ -3599,6 +3599,24 @@
                 recurringGoals = recurringGoals.filter(g => g.id !== goalId);
                 saveRecurringGoals(recurringGoals);
 
+                // Remove all instances of this recurring goal from daily goals
+                const todayKey = getTodayKey();
+                const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+                let changed = false;
+
+                Object.keys(allGoals).forEach(dateKey => {
+                    // Remove from today and future dates; leave past dates as-is
+                    if (dateKey >= todayKey) {
+                        const before = allGoals[dateKey].length;
+                        allGoals[dateKey] = allGoals[dateKey].filter(g => g.recurringId !== goalId);
+                        if (allGoals[dateKey].length !== before) changed = true;
+                    }
+                });
+
+                if (changed) {
+                    localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                }
+
                 renderRecurringGoals();
                 renderGoals();
             } catch (e) {
