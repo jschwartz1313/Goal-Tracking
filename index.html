@@ -2499,8 +2499,7 @@
             try {
                 const todayKey = getTodayKey();
                 const recurringGoals = getRecurringGoals();
-
-                if (recurringGoals.length === 0) return;
+                const recurringGoalIds = new Set(recurringGoals.map(g => g.id));
 
                 let allGoals = {};
                 try {
@@ -2517,6 +2516,21 @@
                 }
 
                 let needsSave = false;
+
+                // Remove any recurring goal instances that no longer have a definition
+                const before = allGoals[todayKey].length;
+                allGoals[todayKey] = allGoals[todayKey].filter(g => {
+                    if ((g.isRecurring || g.recurringId) && !recurringGoalIds.has(g.recurringId)) {
+                        return false; // Orphaned - definition was deleted
+                    }
+                    return true;
+                });
+                if (allGoals[todayKey].length !== before) needsSave = true;
+
+                if (recurringGoals.length === 0) {
+                    if (needsSave) localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                    return;
+                }
 
                 // Check each recurring goal and add if not already present for today
                 recurringGoals.forEach(recurring => {
