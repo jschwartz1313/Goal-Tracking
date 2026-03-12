@@ -2870,7 +2870,7 @@
                     console.error('Error parsing goals:', e);
                 }
 
-                const todayGoals = allGoals[todayKey] || [];
+                const todayGoals = (allGoals[todayKey] || []).filter(g => g.status !== 'deleted');
 
                 // Calculate and display total time for today (only incomplete and partial goals)
                 const totalMinutes = todayGoals.reduce((sum, goal) => {
@@ -3364,7 +3364,14 @@
                     return;
                 }
 
-                allGoals[todayKey] = allGoals[todayKey].filter(g => g.id !== goalId);
+                const goal = allGoals[todayKey].find(g => g.id === goalId);
+                if (goal && (goal.isRecurring || goal.recurringId)) {
+                    // Mark recurring goal instances as deleted so ensureRecurringGoalsForToday
+                    // doesn't re-add them on the next render
+                    goal.status = 'deleted';
+                } else {
+                    allGoals[todayKey] = allGoals[todayKey].filter(g => g.id !== goalId);
+                }
                 localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
                 renderGoals();
             } catch (e) {
