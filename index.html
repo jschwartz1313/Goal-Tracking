@@ -1331,6 +1331,17 @@
             background: #5a6268;
         }
 
+        .goal-streak-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #ff9800;
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+
         .edit-recurring-btn {
             padding: 6px 12px;
             background: #17a2b8;
@@ -2935,12 +2946,20 @@
                         textDiv.className = 'goal-text';
                         textDiv.textContent = goal.text;
 
-                        // Add recurring badge if applicable
+                        // Add recurring badge and streak if applicable
                         if (goal.isRecurring) {
                             const recurringBadge = document.createElement('span');
                             recurringBadge.className = 'goal-recurring-badge';
                             recurringBadge.textContent = 'Daily';
                             textDiv.appendChild(recurringBadge);
+
+                            const streak = calculateRecurringStreak(goal.recurringId);
+                            if (streak > 0) {
+                                const streakBadge = document.createElement('span');
+                                streakBadge.className = 'goal-streak-badge';
+                                streakBadge.textContent = `🔥 ${streak}d`;
+                                textDiv.appendChild(streakBadge);
+                            }
                         }
 
                         // Add time of day badge if applicable
@@ -3645,6 +3664,40 @@
             }
         }
 
+        // Calculate consecutive completed days streak for a recurring goal
+        function calculateRecurringStreak(recurringId) {
+            const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+            function toDateKey(d) {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${day}`;
+            }
+
+            let streak = 0;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // If today is already complete, include it; otherwise start from yesterday
+            const todayKey = toDateKey(today);
+            const todayInstance = (allGoals[todayKey] || []).find(g => g.recurringId === recurringId);
+            const checkDate = new Date(today);
+            if (!todayInstance || todayInstance.status !== 'complete') {
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+
+            while (true) {
+                const key = toDateKey(checkDate);
+                const instance = (allGoals[key] || []).find(g => g.recurringId === recurringId);
+                if (!instance || instance.status !== 'complete') break;
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+
+            return streak;
+        }
+
         // Render the recurring goals management list
         function renderRecurringGoals() {
             try {
@@ -3673,6 +3726,15 @@
                     const textDiv = document.createElement('div');
                     textDiv.className = 'recurring-goal-text';
                     textDiv.textContent = goal.text;
+
+                    // Add streak badge
+                    const streak = calculateRecurringStreak(goal.id);
+                    if (streak > 0) {
+                        const streakBadge = document.createElement('span');
+                        streakBadge.className = 'goal-streak-badge';
+                        streakBadge.textContent = `🔥 ${streak}d`;
+                        textDiv.appendChild(streakBadge);
+                    }
 
                     // Add time of day badge if applicable
                     if (goal.timeOfDay) {
