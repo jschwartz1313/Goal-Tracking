@@ -3162,8 +3162,8 @@
 
                 // Calculate and display total time for today (only incomplete and partial goals)
                 const totalMinutes = todayGoals.reduce((sum, goal) => {
-                    // Only add time if goal is incomplete or partial (not complete)
-                    if (goal.status !== 'complete') {
+                    // Only add time for active goals that still matter today
+                    if (goal.status !== 'complete' && goal.status !== 'skipped') {
                         return sum + (goal.duration || 0);
                     }
                     return sum;
@@ -3218,7 +3218,8 @@
                         const statusBtn = document.createElement('button');
                         statusBtn.className = `goal-status-btn ${goal.status}`;
                         statusBtn.textContent = goal.status === 'incomplete' ? 'Incomplete' :
-                                               goal.status === 'partial' ? 'Partial' : 'Complete';
+                                               goal.status === 'partial' ? 'Partial' :
+                                               goal.status === 'skipped' ? 'Skipped' : 'Complete';
                         statusBtn.onclick = function() { cycleGoalStatus(goal.id); };
 
                         // Goal text with linked badge
@@ -3299,7 +3300,14 @@
                         deleteBtn.textContent = 'Delete';
                         deleteBtn.onclick = function() { deleteGoal(goal.id); };
 
+                        const skipBtn = document.createElement('button');
+                        skipBtn.className = 'skip-overdue-btn';
+                        skipBtn.textContent = 'Skip';
+                        skipBtn.title = 'Mark this goal as not relevant for today';
+                        skipBtn.onclick = function() { skipGoal(goal.id); };
+
                         actionsDiv.appendChild(editBtn);
+                        actionsDiv.appendChild(skipBtn);
                         actionsDiv.appendChild(deleteBtn);
 
                         li.appendChild(statusBtn);
@@ -3704,6 +3712,28 @@
                 renderGoals();
             } catch (e) {
                 console.error('Error in cycleGoalStatus:', e);
+            }
+        }
+
+        function skipGoal(goalId) {
+            try {
+                const todayKey = getTodayKey();
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+                if (!allGoals[todayKey]) {
+                    return;
+                }
+
+                const goal = allGoals[todayKey].find(g => g.id === goalId);
+                if (!goal) {
+                    return;
+                }
+
+                goal.status = 'skipped';
+                localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                renderGoals();
+            } catch (e) {
+                console.error('Error in skipGoal:', e);
             }
         }
 
