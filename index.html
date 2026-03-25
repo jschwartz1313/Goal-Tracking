@@ -585,9 +585,18 @@
             border-radius: 8px;
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 15px;
             border-left: 4px solid #ddd;
             transition: all 0.3s;
+        }
+
+        .goal-item.editing {
+            align-items: stretch;
+        }
+
+        .goal-item.editing > * {
+            flex: 1 1 160px;
         }
 
         .goal-item.incomplete {
@@ -637,6 +646,7 @@
 
         .goal-text {
             flex: 1;
+            min-width: 0;
             font-size: 16px;
             color: #333;
         }
@@ -679,10 +689,13 @@
         .goal-actions {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .goal-edit-input {
             flex: 1;
+            min-width: 180px;
             padding: 8px 12px;
             border: 2px solid #667eea;
             border-radius: 6px;
@@ -1908,6 +1921,21 @@
             .goal-link-select {
                 min-width: 100%;
             }
+            .goal-item,
+            .goal-item.editing {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .goal-item.editing > * {
+                flex: 1 1 auto;
+                width: 100%;
+            }
+            .goal-actions {
+                justify-content: stretch;
+            }
+            .goal-actions button {
+                flex: 1 1 auto;
+            }
         }
 
         /* Collapsible section styles */
@@ -1933,7 +1961,7 @@
 
         .collapsible-content {
             max-height: 5000px;
-            overflow: hidden;
+            overflow: visible;
             transition: max-height 0.3s ease, opacity 0.3s ease;
             opacity: 1;
         }
@@ -1941,6 +1969,7 @@
         .collapsible-content.collapsed {
             max-height: 0;
             opacity: 0;
+            overflow: hidden;
         }
     </style>
 </head>
