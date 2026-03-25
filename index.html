@@ -495,8 +495,33 @@
 
         .goal-input-container {
             display: flex;
+            flex-direction: column;
             gap: 10px;
             margin-bottom: 20px;
+        }
+
+        .goal-options-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .goal-repeat-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #eef4ff;
+            border: 1px solid #c9d9ff;
+            border-radius: 999px;
+            color: #35559a;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .goal-repeat-toggle input {
+            margin: 0;
         }
 
         .goal-input {
@@ -1239,6 +1264,17 @@
             white-space: nowrap;
         }
 
+        .goal-carryover-badge {
+            font-size: 11px;
+            background: #dff6eb;
+            color: #1f7a4d;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
         .recurring-goals-section {
             margin-top: 30px;
             padding-top: 20px;
@@ -1908,6 +1944,12 @@
                                     <option value="">No linked goal</option>
                                 </select>
                             </div>
+                            <div class="goal-options-row">
+                                <label class="goal-repeat-toggle" for="goalCarryForwardInput">
+                                    <input type="checkbox" id="goalCarryForwardInput">
+                                    <span>Stay until complete</span>
+                                </label>
+                            </div>
                             <button class="add-goal-btn" onclick="addGoal()">Add Goal</button>
                         </div>
                         <ul id="goalsList" class="goals-list"></ul>
@@ -2273,6 +2315,69 @@
             return dateKey;
         }
 
+        function isActiveCarryForwardGoal(goal) {
+            return goal && goal.stayUntilComplete && (goal.status === 'incomplete' || goal.status === 'partial');
+        }
+
+        function getPersistentGoalSeriesId(goal) {
+            return goal ? (goal.persistentGoalId || null) : null;
+        }
+
+        function ensureCarryForwardGoalsForToday() {
+            try {
+                const todayKey = getTodayKey();
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+                if (!allGoals[todayKey]) {
+                    allGoals[todayKey] = [];
+                }
+
+                const todaySeriesIds = new Set(
+                    allGoals[todayKey]
+                        .map(goal => getPersistentGoalSeriesId(goal))
+                        .filter(Boolean)
+                );
+
+                const latestCarryForwardBySeries = {};
+
+                Object.keys(allGoals)
+                    .filter(dateKey => dateKey < todayKey)
+                    .sort()
+                    .forEach(dateKey => {
+                        (allGoals[dateKey] || []).forEach(goal => {
+                            const seriesId = getPersistentGoalSeriesId(goal);
+                            if (!seriesId) return;
+                            latestCarryForwardBySeries[seriesId] = { dateKey, goal };
+                        });
+                    });
+
+                let needsSave = false;
+
+                Object.values(latestCarryForwardBySeries).forEach(({ dateKey, goal }) => {
+                    const seriesId = getPersistentGoalSeriesId(goal);
+                    if (!seriesId || todaySeriesIds.has(seriesId) || !isActiveCarryForwardGoal(goal)) {
+                        return;
+                    }
+
+                    const newGoal = {
+                        ...goal,
+                        id: Date.now() + Math.random(),
+                        carriedFromDate: dateKey
+                    };
+
+                    allGoals[todayKey].push(newGoal);
+                    todaySeriesIds.add(seriesId);
+                    needsSave = true;
+                });
+
+                if (needsSave) {
+                    localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                }
+            } catch (e) {
+                console.error('Error in ensureCarryForwardGoalsForToday:', e);
+            }
+        }
+
         // Update date display
         function updateDate() {
             const dateElement = document.getElementById('currentDate');
@@ -2439,6 +2544,7 @@
                 const linkSelect = document.getElementById('goalLinkSelect');
                 const dateInput = document.getElementById('goalDateInput');
                 const timeInput = document.getElementById('goalTimeInput');
+                const carryForwardInput = document.getElementById('goalCarryForwardInput');
                 if (!input) {
                     alert('Error: Goal input not found');
                     return;
@@ -2473,13 +2579,17 @@
                 const linkedGoalId = linkSelect && linkSelect.value ? parseInt(linkSelect.value) : null;
                 // Get duration in minutes
                 const duration = timeInput && timeInput.value ? parseInt(timeInput.value) : null;
+                const stayUntilComplete = !!(carryForwardInput && carryForwardInput.checked);
+                const goalId = Date.now();
 
                 const newGoal = {
-                    id: Date.now(),
+                    id: goalId,
                     text: goalText,
                     status: 'incomplete',
                     linkedGoalId: linkedGoalId,
-                    duration: duration
+                    duration: duration,
+                    stayUntilComplete: stayUntilComplete,
+                    persistentGoalId: stayUntilComplete ? goalId : null
                 };
 
                 allGoals[selectedDate].push(newGoal);
@@ -2496,6 +2606,7 @@
                 input.value = '';
                 if (linkSelect) linkSelect.value = '';
                 if (timeInput) timeInput.value = '';
+                if (carryForwardInput) carryForwardInput.checked = false;
                 // Reset date to today after adding
                 if (dateInput) dateInput.value = getTodayKey();
                 renderGoals();
@@ -2618,6 +2729,7 @@
                     allGoals[dateKey].forEach(goal => {
                         // Skip if goal is marked as recurring
                         if (goal.isRecurring || goal.recurringId) return;
+                        if (goal.stayUntilComplete) return;
 
                         // Skip if goal's recurringId matches a known recurring goal
                         if (goal.recurringId && recurringGoalIds.has(goal.recurringId)) return;
@@ -2854,6 +2966,8 @@
 
         function renderGoals() {
             try {
+                ensureCarryForwardGoalsForToday();
+
                 // First ensure recurring goals are added to today
                 ensureRecurringGoalsForToday();
 
@@ -2960,6 +3074,13 @@
                                 streakBadge.textContent = `🔥 ${streak}d`;
                                 textDiv.appendChild(streakBadge);
                             }
+                        }
+
+                        if (goal.stayUntilComplete) {
+                            const carryoverBadge = document.createElement('span');
+                            carryoverBadge.className = 'goal-carryover-badge';
+                            carryoverBadge.textContent = 'Until Complete';
+                            textDiv.appendChild(carryoverBadge);
                         }
 
                         // Add time of day badge if applicable
@@ -3069,6 +3190,13 @@
                                 dateBadge.className = 'goal-date-badge';
                                 dateBadge.textContent = formatDateShort(date);
                                 textDiv.appendChild(dateBadge);
+
+                                if (goal.stayUntilComplete) {
+                                    const carryoverBadge = document.createElement('span');
+                                    carryoverBadge.className = 'goal-carryover-badge';
+                                    carryoverBadge.textContent = 'Until Complete';
+                                    textDiv.appendChild(carryoverBadge);
+                                }
 
                                 // Add linked goal badge if applicable
                                 if (goal.linkedGoalId) {
@@ -3224,6 +3352,20 @@
                     dateInput.value = sourceDate;
                     dateInput.id = `edit-upcoming-date-${goalId}`;
 
+                    const carryForwardLabel = document.createElement('label');
+                    carryForwardLabel.className = 'goal-repeat-toggle';
+
+                    const carryForwardInput = document.createElement('input');
+                    carryForwardInput.type = 'checkbox';
+                    carryForwardInput.id = `edit-upcoming-carry-${goalId}`;
+                    carryForwardInput.checked = !!goal.stayUntilComplete;
+
+                    const carryForwardText = document.createElement('span');
+                    carryForwardText.textContent = 'Stay until complete';
+
+                    carryForwardLabel.appendChild(carryForwardInput);
+                    carryForwardLabel.appendChild(carryForwardText);
+
                     // Link dropdown
                     const select = document.createElement('select');
                     select.className = 'goal-link-select';
@@ -3259,6 +3401,7 @@
                     li.appendChild(input);
                     li.appendChild(durationInput);
                     li.appendChild(dateInput);
+                    li.appendChild(carryForwardLabel);
                     li.appendChild(select);
                     li.appendChild(actionsDiv);
 
@@ -3285,6 +3428,7 @@
                 const select = document.getElementById(`edit-upcoming-link-${goalId}`);
                 const dateInput = document.getElementById(`edit-upcoming-date-${goalId}`);
                 const durationInput = document.getElementById(`edit-upcoming-duration-${goalId}`);
+                const carryForwardInput = document.getElementById(`edit-upcoming-carry-${goalId}`);
 
                 if (!input) {
                     console.error('Edit input not found');
@@ -3309,9 +3453,12 @@
 
                 // Get the goal and update it
                 const goal = allGoals[sourceDate][goalIndex];
+                const previousPersistentId = getPersistentGoalSeriesId(goal);
                 goal.text = newText;
                 goal.linkedGoalId = select && select.value ? parseInt(select.value) : null;
                 goal.duration = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
+                goal.stayUntilComplete = !!(carryForwardInput && carryForwardInput.checked);
+                goal.persistentGoalId = goal.stayUntilComplete ? (previousPersistentId || goal.id) : null;
 
                 // If date changed, move the goal
                 if (newDate !== sourceDate) {
@@ -3384,6 +3531,31 @@
                 }
 
                 const goal = allGoals[todayKey].find(g => g.id === goalId);
+                const persistentGoalId = getPersistentGoalSeriesId(goal);
+
+                if (persistentGoalId) {
+                    Object.keys(allGoals).forEach(dateKey => {
+                        allGoals[dateKey] = (allGoals[dateKey] || []).map(g => {
+                            if (getPersistentGoalSeriesId(g) !== persistentGoalId) {
+                                return g;
+                            }
+
+                            return {
+                                ...g,
+                                stayUntilComplete: false,
+                                persistentGoalId: null
+                            };
+                        });
+
+                        if (dateKey === todayKey) {
+                            allGoals[dateKey] = allGoals[dateKey].filter(g => g.id !== goalId);
+                        }
+
+                        if (allGoals[dateKey].length === 0) {
+                            delete allGoals[dateKey];
+                        }
+                    });
+                } else
                 if (goal && (goal.isRecurring || goal.recurringId)) {
                     // Mark recurring goal instances as deleted so ensureRecurringGoalsForToday
                     // doesn't re-add them on the next render
@@ -3445,6 +3617,20 @@
                     dateInput.id = `edit-date-${goalId}`;
                     dateInput.title = 'Change date to move goal';
 
+                    const carryForwardLabel = document.createElement('label');
+                    carryForwardLabel.className = 'goal-repeat-toggle';
+
+                    const carryForwardInput = document.createElement('input');
+                    carryForwardInput.type = 'checkbox';
+                    carryForwardInput.id = `edit-carry-${goalId}`;
+                    carryForwardInput.checked = !!goal.stayUntilComplete;
+
+                    const carryForwardText = document.createElement('span');
+                    carryForwardText.textContent = 'Stay until complete';
+
+                    carryForwardLabel.appendChild(carryForwardInput);
+                    carryForwardLabel.appendChild(carryForwardText);
+
                     // Link dropdown
                     const select = document.createElement('select');
                     select.className = 'goal-link-select';
@@ -3480,6 +3666,7 @@
                     li.appendChild(input);
                     li.appendChild(durationInput);
                     li.appendChild(dateInput);
+                    li.appendChild(carryForwardLabel);
                     li.appendChild(select);
                     li.appendChild(actionsDiv);
 
@@ -3506,6 +3693,7 @@
                 const select = document.getElementById(`edit-link-${goalId}`);
                 const dateInput = document.getElementById(`edit-date-${goalId}`);
                 const durationInput = document.getElementById(`edit-duration-${goalId}`);
+                const carryForwardInput = document.getElementById(`edit-carry-${goalId}`);
 
                 if (!input) {
                     console.error('Edit input not found');
@@ -3531,9 +3719,12 @@
 
                 // Get the goal and update it
                 const goal = allGoals[originalDate][goalIndex];
+                const previousPersistentId = getPersistentGoalSeriesId(goal);
                 goal.text = newText;
                 goal.linkedGoalId = select && select.value ? parseInt(select.value) : null;
                 goal.duration = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
+                goal.stayUntilComplete = !!(carryForwardInput && carryForwardInput.checked);
+                goal.persistentGoalId = goal.stayUntilComplete ? (previousPersistentId || goal.id) : null;
 
                 // If date changed, move the goal
                 if (newDate !== originalDate) {
