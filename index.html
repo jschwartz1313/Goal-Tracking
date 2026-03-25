@@ -1591,6 +1591,22 @@
             background: #218838;
         }
 
+        .carry-overdue-btn {
+            padding: 8px 16px;
+            background: #198754;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+            white-space: nowrap;
+        }
+
+        .carry-overdue-btn:hover {
+            background: #157347;
+        }
+
         .skip-overdue-btn {
             padding: 8px 16px;
             background: #6c757d;
@@ -2809,6 +2825,15 @@
                         moveOverdueGoalToToday(goal.id, goal.originalDate);
                     };
 
+                    // Keep until complete button
+                    const carryBtn = document.createElement('button');
+                    carryBtn.className = 'carry-overdue-btn';
+                    carryBtn.textContent = 'Keep Until Done';
+                    carryBtn.title = 'Show this goal every day until it is completed';
+                    carryBtn.onclick = function() {
+                        markOverdueGoalStayUntilComplete(goal.id, goal.originalDate);
+                    };
+
                     // Skip button
                     const skipBtn = document.createElement('button');
                     skipBtn.className = 'skip-overdue-btn';
@@ -2836,6 +2861,7 @@
                     };
 
                     actionsDiv.appendChild(moveBtn);
+                    actionsDiv.appendChild(carryBtn);
                     actionsDiv.appendChild(skipBtn);
                     actionsDiv.appendChild(completeBtn);
                     actionsDiv.appendChild(deleteBtn);
@@ -2910,6 +2936,25 @@
                 }
             } catch (e) {
                 console.error('Error marking overdue goal complete:', e);
+            }
+        }
+
+        function markOverdueGoalStayUntilComplete(goalId, originalDate) {
+            try {
+                let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+                const goals = allGoals[originalDate] || [];
+                const goal = goals.find(g => g.id === goalId);
+
+                if (goal) {
+                    goal.stayUntilComplete = true;
+                    goal.persistentGoalId = goal.persistentGoalId || goal.id;
+
+                    localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+                    renderGoals();
+                }
+            } catch (e) {
+                console.error('Error marking overdue goal as stay until complete:', e);
             }
         }
 
