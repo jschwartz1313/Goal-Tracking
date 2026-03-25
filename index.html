@@ -507,6 +507,27 @@
             flex-wrap: wrap;
         }
 
+        .goal-toolbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .goal-priority-select {
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            color: #333;
+        }
+
+        .goal-priority-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
         .goal-repeat-toggle {
             display: inline-flex;
             align-items: center;
@@ -1275,6 +1296,30 @@
             font-weight: 600;
         }
 
+        .goal-priority-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            white-space: nowrap;
+            font-weight: 700;
+        }
+
+        .goal-priority-badge.priority-1 {
+            background: #ffe3e3;
+            color: #c92a2a;
+        }
+
+        .goal-priority-badge.priority-2 {
+            background: #fff3bf;
+            color: #8f5b00;
+        }
+
+        .goal-priority-badge.priority-3 {
+            background: #e7f5ff;
+            color: #1864ab;
+        }
+
         .recurring-goals-section {
             margin-top: 30px;
             padding-top: 20px;
@@ -1919,12 +1964,19 @@
             <div class="goals-section">
                 <div class="category-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <h2>Goals</h2>
-                    <select id="goalFilterSelect" class="goal-filter-select" onchange="renderGoals()">
-                        <option value="all">Show All</option>
-                        <option value="incomplete">Incomplete Only</option>
-                        <option value="partial">Partial Only</option>
-                        <option value="complete">Complete Only</option>
-                    </select>
+                    <div class="goal-toolbar-controls">
+                        <select id="goalSortSelect" class="goal-filter-select" onchange="renderGoals()">
+                            <option value="priority">Sort: Priority</option>
+                            <option value="duration">Sort: Duration</option>
+                            <option value="alphabetical">Sort: A-Z</option>
+                        </select>
+                        <select id="goalFilterSelect" class="goal-filter-select" onchange="renderGoals()">
+                            <option value="all">Show All</option>
+                            <option value="incomplete">Incomplete Only</option>
+                            <option value="partial">Partial Only</option>
+                            <option value="complete">Complete Only</option>
+                        </select>
+                    </div>
                 </div>
                 <!-- Total Time Counter -->
                 <div class="total-time-container">
@@ -1954,6 +2006,11 @@
                         <div class="goal-input-container">
                             <div class="goal-input-row">
                                 <input type="text" id="goalInput" class="goal-input" placeholder="Add a goal..." />
+                                <select id="goalPriorityInput" class="goal-priority-select" title="Priority">
+                                    <option value="1">P1</option>
+                                    <option value="2">P2</option>
+                                    <option value="3" selected>P3</option>
+                                </select>
                                 <input type="number" id="goalTimeInput" class="goal-time-input" placeholder="min" min="0" title="Duration in minutes">
                                 <input type="date" id="goalDateInput" class="goal-date-input" title="Select date for this goal">
                                 <select id="goalLinkSelect" class="goal-link-select">
@@ -1991,6 +2048,11 @@
                         <p style="color: #666; font-size: 13px; margin-bottom: 15px;">These goals automatically appear every day.</p>
                         <div class="recurring-input-container">
                             <input type="text" id="recurringGoalInput" class="recurring-input" placeholder="Add a recurring daily goal..." />
+                            <select id="recurringGoalPrioritySelect" class="goal-priority-select" title="Priority" style="border-color: #17a2b8;">
+                                <option value="1">P1</option>
+                                <option value="2">P2</option>
+                                <option value="3" selected>P3</option>
+                            </select>
                             <input type="number" id="recurringGoalDurationInput" class="recurring-time-input" placeholder="min" min="0" title="Duration in minutes">
                             <select id="recurringGoalTimeSelect" class="recurring-time-select">
                                 <option value="">Any time</option>
@@ -2339,6 +2401,47 @@
             return goal ? (goal.persistentGoalId || null) : null;
         }
 
+        function getGoalPriority(goal) {
+            const priority = parseInt(goal && goal.priority, 10);
+            return priority >= 1 && priority <= 3 ? priority : 3;
+        }
+
+        function compareGoalText(a, b) {
+            return (a.text || '').localeCompare(b.text || '', undefined, { sensitivity: 'base' });
+        }
+
+        function compareGoalDuration(a, b) {
+            const aDuration = a.duration ?? Number.MAX_SAFE_INTEGER;
+            const bDuration = b.duration ?? Number.MAX_SAFE_INTEGER;
+
+            if (aDuration !== bDuration) {
+                return aDuration - bDuration;
+            }
+
+            return compareGoalText(a, b);
+        }
+
+        function sortGoals(goals, sortMode) {
+            const mode = sortMode || 'priority';
+            return [...goals].sort((a, b) => {
+                if (mode === 'duration') {
+                    const durationCompare = compareGoalDuration(a, b);
+                    if (durationCompare !== 0) return durationCompare;
+                } else if (mode === 'alphabetical') {
+                    const textCompare = compareGoalText(a, b);
+                    if (textCompare !== 0) return textCompare;
+                }
+
+                const priorityCompare = getGoalPriority(a) - getGoalPriority(b);
+                if (priorityCompare !== 0) return priorityCompare;
+
+                const durationCompare = compareGoalDuration(a, b);
+                if (durationCompare !== 0) return durationCompare;
+
+                return compareGoalText(a, b);
+            });
+        }
+
         function ensureCarryForwardGoalsForToday() {
             try {
                 const todayKey = getTodayKey();
@@ -2561,6 +2664,7 @@
                 const dateInput = document.getElementById('goalDateInput');
                 const timeInput = document.getElementById('goalTimeInput');
                 const carryForwardInput = document.getElementById('goalCarryForwardInput');
+                const priorityInput = document.getElementById('goalPriorityInput');
                 if (!input) {
                     alert('Error: Goal input not found');
                     return;
@@ -2596,6 +2700,7 @@
                 // Get duration in minutes
                 const duration = timeInput && timeInput.value ? parseInt(timeInput.value) : null;
                 const stayUntilComplete = !!(carryForwardInput && carryForwardInput.checked);
+                const priority = priorityInput ? parseInt(priorityInput.value, 10) : 3;
                 const goalId = Date.now();
 
                 const newGoal = {
@@ -2604,6 +2709,7 @@
                     status: 'incomplete',
                     linkedGoalId: linkedGoalId,
                     duration: duration,
+                    priority: priority,
                     stayUntilComplete: stayUntilComplete,
                     persistentGoalId: stayUntilComplete ? goalId : null
                 };
@@ -2623,6 +2729,7 @@
                 if (linkSelect) linkSelect.value = '';
                 if (timeInput) timeInput.value = '';
                 if (carryForwardInput) carryForwardInput.checked = false;
+                if (priorityInput) priorityInput.value = '3';
                 // Reset date to today after adding
                 if (dateInput) dateInput.value = getTodayKey();
                 renderGoals();
@@ -2684,6 +2791,7 @@
                             linkedGoalId: recurring.linkedGoalId,
                             timeOfDay: recurring.timeOfDay,
                             duration: recurring.duration,
+                            priority: getGoalPriority(recurring),
                             recurringId: recurring.id, // Link back to the recurring goal definition
                             isRecurring: true
                         };
@@ -2695,11 +2803,13 @@
                         if (existingGoal.text !== recurring.text ||
                             existingGoal.duration !== recurring.duration ||
                             existingGoal.timeOfDay !== recurring.timeOfDay ||
-                            existingGoal.linkedGoalId !== recurring.linkedGoalId) {
+                            existingGoal.linkedGoalId !== recurring.linkedGoalId ||
+                            getGoalPriority(existingGoal) !== getGoalPriority(recurring)) {
                             existingGoal.text = recurring.text;
                             existingGoal.duration = recurring.duration;
                             existingGoal.timeOfDay = recurring.timeOfDay;
                             existingGoal.linkedGoalId = recurring.linkedGoalId;
+                            existingGoal.priority = getGoalPriority(recurring);
                             needsSave = true;
                         }
                     }
@@ -2765,6 +2875,9 @@
 
             // Sort by date (oldest first)
             overdueGoals.sort((a, b) => a.originalDate.localeCompare(b.originalDate));
+            const sortSelect = document.getElementById('goalSortSelect');
+            const sortValue = sortSelect ? sortSelect.value : 'priority';
+            const sortedOverdueGoals = sortGoals(overdueGoals, sortValue);
 
             // Update UI
             if (overdueGoals.length === 0) {
@@ -2776,7 +2889,7 @@
 
                 const longTermGoals = getLongTermGoals();
 
-                overdueGoals.forEach(goal => {
+                sortedOverdueGoals.forEach(goal => {
                     const div = document.createElement('div');
                     div.className = 'overdue-goal-item';
 
@@ -2790,6 +2903,11 @@
                     const textDiv = document.createElement('div');
                     textDiv.className = 'overdue-goal-text';
                     textDiv.textContent = goal.text;
+
+                    const priorityBadge = document.createElement('span');
+                    priorityBadge.className = `goal-priority-badge priority-${getGoalPriority(goal)}`;
+                    priorityBadge.textContent = `P${getGoalPriority(goal)}`;
+                    textDiv.appendChild(priorityBadge);
 
                     // Add badges
                     if (goal.duration) {
@@ -3064,11 +3182,14 @@
                 // Get filter value
                 const filterSelect = document.getElementById('goalFilterSelect');
                 const filterValue = filterSelect ? filterSelect.value : 'all';
+                const sortSelect = document.getElementById('goalSortSelect');
+                const sortValue = sortSelect ? sortSelect.value : 'priority';
 
                 // Filter goals based on selection
                 const filteredGoals = filterValue === 'all'
                     ? todayGoals
                     : todayGoals.filter(g => g.status === filterValue);
+                const sortedFilteredGoals = sortGoals(filteredGoals, sortValue);
 
                 // Clear existing content
                 goalsList.innerHTML = '';
@@ -3078,7 +3199,7 @@
                     emptyDiv.className = 'empty-goals';
                     emptyDiv.textContent = 'No goals for today yet. Add one above!';
                     goalsList.appendChild(emptyDiv);
-                } else if (filteredGoals.length === 0) {
+                } else if (sortedFilteredGoals.length === 0) {
                     const emptyDiv = document.createElement('div');
                     emptyDiv.className = 'empty-goals';
                     emptyDiv.textContent = `No ${filterValue} goals for today.`;
@@ -3088,7 +3209,7 @@
                     const longTermGoals = getLongTermGoals();
 
                     // Render each filtered goal
-                    filteredGoals.forEach((goal, index) => {
+                    sortedFilteredGoals.forEach(goal => {
                         const li = document.createElement('li');
                         li.className = `goal-item ${goal.status}`;
                         li.dataset.goalId = goal.id;
@@ -3104,6 +3225,11 @@
                         const textDiv = document.createElement('div');
                         textDiv.className = 'goal-text';
                         textDiv.textContent = goal.text;
+
+                        const priorityBadge = document.createElement('span');
+                        priorityBadge.className = `goal-priority-badge priority-${getGoalPriority(goal)}`;
+                        priorityBadge.textContent = `P${getGoalPriority(goal)}`;
+                        textDiv.appendChild(priorityBadge);
 
                         // Add recurring badge and streak if applicable
                         if (goal.isRecurring) {
@@ -3200,7 +3326,7 @@
                     futureDates.forEach(date => {
                         const dateGoals = allGoals[date];
                         const filtered = filterValue === 'all' ? dateGoals : dateGoals.filter(g => g.status === filterValue);
-                        if (filtered.length > 0) hasUpcomingGoals = true;
+                        if (sortGoals(filtered, sortValue).length > 0) hasUpcomingGoals = true;
                     });
 
                     if (futureDates.length === 0 || !hasUpcomingGoals) {
@@ -3212,7 +3338,8 @@
                             const dateGoals = allGoals[date];
                             // Apply same filter to upcoming goals
                             const filteredDateGoals = filterValue === 'all' ? dateGoals : dateGoals.filter(g => g.status === filterValue);
-                            filteredDateGoals.forEach(goal => {
+                            const sortedUpcomingGoals = sortGoals(filteredDateGoals, sortValue);
+                            sortedUpcomingGoals.forEach(goal => {
                                 const li = document.createElement('li');
                                 li.className = `goal-item ${goal.status}`;
                                 li.dataset.goalId = goal.id;
@@ -3229,6 +3356,11 @@
                                 const textDiv = document.createElement('div');
                                 textDiv.className = 'goal-text';
                                 textDiv.textContent = goal.text;
+
+                                const priorityBadge = document.createElement('span');
+                                priorityBadge.className = `goal-priority-badge priority-${getGoalPriority(goal)}`;
+                                priorityBadge.textContent = `P${getGoalPriority(goal)}`;
+                                textDiv.appendChild(priorityBadge);
 
                                 // Add date badge
                                 const dateBadge = document.createElement('span');
@@ -3390,6 +3522,16 @@
                     durationInput.id = `edit-upcoming-duration-${goalId}`;
                     durationInput.title = 'Duration in minutes';
 
+                    const prioritySelect = document.createElement('select');
+                    prioritySelect.className = 'goal-priority-select';
+                    prioritySelect.id = `edit-upcoming-priority-${goalId}`;
+                    prioritySelect.innerHTML = `
+                        <option value="1">P1</option>
+                        <option value="2">P2</option>
+                        <option value="3">P3</option>
+                    `;
+                    prioritySelect.value = String(getGoalPriority(goal));
+
                     // Date input
                     const dateInput = document.createElement('input');
                     dateInput.type = 'date';
@@ -3444,6 +3586,7 @@
                     actionsDiv.appendChild(cancelBtn);
 
                     li.appendChild(input);
+                    li.appendChild(prioritySelect);
                     li.appendChild(durationInput);
                     li.appendChild(dateInput);
                     li.appendChild(carryForwardLabel);
@@ -3474,6 +3617,7 @@
                 const dateInput = document.getElementById(`edit-upcoming-date-${goalId}`);
                 const durationInput = document.getElementById(`edit-upcoming-duration-${goalId}`);
                 const carryForwardInput = document.getElementById(`edit-upcoming-carry-${goalId}`);
+                const prioritySelect = document.getElementById(`edit-upcoming-priority-${goalId}`);
 
                 if (!input) {
                     console.error('Edit input not found');
@@ -3502,6 +3646,7 @@
                 goal.text = newText;
                 goal.linkedGoalId = select && select.value ? parseInt(select.value) : null;
                 goal.duration = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
+                goal.priority = prioritySelect ? parseInt(prioritySelect.value, 10) : getGoalPriority(goal);
                 goal.stayUntilComplete = !!(carryForwardInput && carryForwardInput.checked);
                 goal.persistentGoalId = goal.stayUntilComplete ? (previousPersistentId || goal.id) : null;
 
@@ -3654,6 +3799,16 @@
                     durationInput.id = `edit-duration-${goalId}`;
                     durationInput.title = 'Duration in minutes';
 
+                    const prioritySelect = document.createElement('select');
+                    prioritySelect.className = 'goal-priority-select';
+                    prioritySelect.id = `edit-priority-${goalId}`;
+                    prioritySelect.innerHTML = `
+                        <option value="1">P1</option>
+                        <option value="2">P2</option>
+                        <option value="3">P3</option>
+                    `;
+                    prioritySelect.value = String(getGoalPriority(goal));
+
                     // Date input for moving goal to different day
                     const dateInput = document.createElement('input');
                     dateInput.type = 'date';
@@ -3709,6 +3864,7 @@
                     actionsDiv.appendChild(cancelBtn);
 
                     li.appendChild(input);
+                    li.appendChild(prioritySelect);
                     li.appendChild(durationInput);
                     li.appendChild(dateInput);
                     li.appendChild(carryForwardLabel);
@@ -3739,6 +3895,7 @@
                 const dateInput = document.getElementById(`edit-date-${goalId}`);
                 const durationInput = document.getElementById(`edit-duration-${goalId}`);
                 const carryForwardInput = document.getElementById(`edit-carry-${goalId}`);
+                const prioritySelect = document.getElementById(`edit-priority-${goalId}`);
 
                 if (!input) {
                     console.error('Edit input not found');
@@ -3768,6 +3925,7 @@
                 goal.text = newText;
                 goal.linkedGoalId = select && select.value ? parseInt(select.value) : null;
                 goal.duration = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
+                goal.priority = prioritySelect ? parseInt(prioritySelect.value, 10) : getGoalPriority(goal);
                 goal.stayUntilComplete = !!(carryForwardInput && carryForwardInput.checked);
                 goal.persistentGoalId = goal.stayUntilComplete ? (previousPersistentId || goal.id) : null;
 
@@ -3823,6 +3981,7 @@
                 const linkSelect = document.getElementById('recurringGoalLinkSelect');
                 const timeSelect = document.getElementById('recurringGoalTimeSelect');
                 const durationInput = document.getElementById('recurringGoalDurationInput');
+                const prioritySelect = document.getElementById('recurringGoalPrioritySelect');
 
                 if (!input) {
                     alert('Error: Recurring goal input not found');
@@ -3839,13 +3998,15 @@
                 const linkedGoalId = linkSelect && linkSelect.value ? parseInt(linkSelect.value) : null;
                 const timeOfDay = timeSelect && timeSelect.value ? timeSelect.value : null;
                 const duration = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
+                const priority = prioritySelect ? parseInt(prioritySelect.value, 10) : 3;
 
                 const newGoal = {
                     id: Date.now(),
                     text: goalText,
                     linkedGoalId: linkedGoalId,
                     timeOfDay: timeOfDay,
-                    duration: duration
+                    duration: duration,
+                    priority: priority
                 };
 
                 recurringGoals.push(newGoal);
@@ -3855,6 +4016,7 @@
                 if (linkSelect) linkSelect.value = '';
                 if (timeSelect) timeSelect.value = '';
                 if (durationInput) durationInput.value = '';
+                if (prioritySelect) prioritySelect.value = '3';
 
                 renderRecurringGoals();
                 renderGoals(); // Re-render to show the new recurring goal in today's list
@@ -3954,7 +4116,7 @@
                     return;
                 }
 
-                recurringGoals.forEach(goal => {
+                sortGoals(recurringGoals, 'priority').forEach(goal => {
                     const li = document.createElement('li');
                     li.className = 'recurring-goal-item';
                     li.dataset.goalId = goal.id;
@@ -3962,6 +4124,11 @@
                     const textDiv = document.createElement('div');
                     textDiv.className = 'recurring-goal-text';
                     textDiv.textContent = goal.text;
+
+                    const priorityBadge = document.createElement('span');
+                    priorityBadge.className = `goal-priority-badge priority-${getGoalPriority(goal)}`;
+                    priorityBadge.textContent = `P${getGoalPriority(goal)}`;
+                    textDiv.appendChild(priorityBadge);
 
                     // Add streak badge
                     const streak = calculateRecurringStreak(goal.id);
@@ -4075,6 +4242,17 @@
                 durationInput.id = `edit-recurring-duration-${goalId}`;
                 durationInput.title = 'Duration in minutes';
 
+                const prioritySelect = document.createElement('select');
+                prioritySelect.className = 'goal-priority-select';
+                prioritySelect.style.borderColor = '#17a2b8';
+                prioritySelect.id = `edit-recurring-priority-${goalId}`;
+                prioritySelect.innerHTML = `
+                    <option value="1">P1</option>
+                    <option value="2">P2</option>
+                    <option value="3">P3</option>
+                `;
+                prioritySelect.value = String(getGoalPriority(goal));
+
                 const linkSelect = document.createElement('select');
                 linkSelect.className = 'goal-link-select';
                 linkSelect.style.borderColor = '#17a2b8';
@@ -4106,6 +4284,7 @@
                 actionsDiv.appendChild(cancelBtn);
 
                 formDiv.appendChild(input);
+                formDiv.appendChild(prioritySelect);
                 formDiv.appendChild(durationInput);
                 formDiv.appendChild(timeSelect);
                 formDiv.appendChild(linkSelect);
@@ -4135,6 +4314,7 @@
                 const timeSelect = document.getElementById(`edit-recurring-time-${goalId}`);
                 const linkSelect = document.getElementById(`edit-recurring-link-${goalId}`);
                 const durationInput = document.getElementById(`edit-recurring-duration-${goalId}`);
+                const prioritySelect = document.getElementById(`edit-recurring-priority-${goalId}`);
 
                 if (!input) {
                     console.error('Edit input not found');
@@ -4156,6 +4336,7 @@
                 recurringGoals[goalIndex].timeOfDay = timeSelect && timeSelect.value ? timeSelect.value : null;
                 recurringGoals[goalIndex].linkedGoalId = linkSelect && linkSelect.value ? parseInt(linkSelect.value) : null;
                 recurringGoals[goalIndex].duration = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
+                recurringGoals[goalIndex].priority = prioritySelect ? parseInt(prioritySelect.value, 10) : getGoalPriority(recurringGoals[goalIndex]);
 
                 saveRecurringGoals(recurringGoals);
                 renderRecurringGoals();
