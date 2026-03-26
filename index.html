@@ -5202,10 +5202,14 @@
         function renderHistory(filterDate = null) {
             const history = JSON.parse(localStorage.getItem('habitHistory'));
             const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
+            const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
             const container = document.getElementById('historyContainer');
             container.innerHTML = '';
 
-            let dates = Object.keys(history).sort().reverse();
+            let dates = Array.from(new Set([
+                ...Object.keys(history),
+                ...Object.keys(allGoals)
+            ])).sort().reverse();
             if (filterDate) {
                 dates = dates.filter(date => date === filterDate);
             }
@@ -5219,7 +5223,7 @@
             }
 
             dates.forEach(date => {
-                const data = history[date];
+                const data = history[date] || {};
                 // Parse date as local date (not UTC) to avoid timezone issues
                 const [year, month, day] = date.split('-').map(Number);
                 const dateObj = new Date(year, month - 1, day);
@@ -5260,7 +5264,6 @@
                 scoresHTML += '</div>';
 
                 // Get goals for this date
-                const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
                 const dateGoals = allGoals[date] || [];
                 let goalsHTML = '';
 
@@ -5303,10 +5306,24 @@
             const history = JSON.parse(localStorage.getItem('habitHistory'));
             const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
             const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+
+            if (!history[date]) {
+                history[date] = {};
+                metrics.forEach(metric => {
+                    history[date][metric.id] = 5;
+                });
+                history[date].notes = '';
+                history[date].lessonsLearned = '';
+                localStorage.setItem('habitHistory', JSON.stringify(history));
+            }
+
+            if (!allGoals[date]) {
+                allGoals[date] = [];
+                localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+            }
+
             const data = history[date];
             const dateGoals = allGoals[date] || [];
-
-            if (!data) return;
 
             const container = document.getElementById('historyContainer');
             let entryDiv = container.querySelector(`[data-date="${date}"]`);
@@ -5409,6 +5426,30 @@
             }
 
             renderHistory();
+        }
+
+        function openHistoryEditor(dateKey) {
+            selectedCalendarDate = dateKey;
+            const calendarDetail = document.getElementById('calendarDetail');
+            const historyContainer = document.getElementById('historyContainer');
+
+            if (calendarDetail) {
+                calendarDetail.style.display = 'none';
+            }
+
+            if (historyContainer) {
+                historyContainer.style.display = 'block';
+            }
+
+            renderHistory(dateKey);
+
+            setTimeout(() => {
+                const entry = document.getElementById(`history-entry-${dateKey}`);
+                if (entry) {
+                    entry.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                startEditHistory(dateKey);
+            }, 50);
         }
 
         // Save edited history entry
@@ -6299,8 +6340,8 @@
                 <div class="calendar-detail-actions">
                     <button class="btn" onclick="showOnlyHistoryDate('${dateKey}')">Show Only This Day</button>
                     <button class="btn" onclick="showAllHistory()">Show All Days</button>
-                    ${data ? `<button class="btn" onclick="startEditHistory('${dateKey}')">Edit This Day</button>` : ''}
-                    ${!data && isPastDate ? `<button class="btn" onclick="createPastEntry('${dateKey}')" style="background: #28a745;">Create Entry</button>` : ''}
+                    ${isPastDate || data || dateGoals.length > 0 ? `<button class="btn" onclick="openHistoryEditor('${dateKey}')">Edit This Day</button>` : ''}
+                    ${!data && dateGoals.length === 0 && isPastDate ? `<button class="btn" onclick="createPastEntry('${dateKey}')" style="background: #28a745;">Create Entry</button>` : ''}
                 </div>
             `;
             calendarDetail.style.display = 'block';
@@ -6357,13 +6398,7 @@
                 localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
             }
 
-            // Render history and then open the edit form
-            renderHistory(dateKey);
-
-            // Small delay to ensure DOM is updated before starting edit
-            setTimeout(() => {
-                startEditHistory(dateKey);
-            }, 100);
+            openHistoryEditor(dateKey);
         }
 
         function showOnlyHistoryDate(dateKey) {
@@ -6376,8 +6411,6 @@
             const entry = document.getElementById(`history-entry-${dateKey}`);
             if (entry) {
                 entry.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                entry.classList.add('editing');
-                setTimeout(() => entry.classList.remove('editing'), 1200);
             }
         }
 
