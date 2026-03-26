@@ -5309,7 +5309,11 @@
             if (!data) return;
 
             const container = document.getElementById('historyContainer');
-            const entryDiv = container.querySelector(`[data-date="${date}"]`);
+            let entryDiv = container.querySelector(`[data-date="${date}"]`);
+            if (!entryDiv) {
+                renderHistory(date);
+                entryDiv = container.querySelector(`[data-date="${date}"]`);
+            }
             if (!entryDiv) return;
 
             // Parse date for display
@@ -5392,10 +5396,19 @@
                     </div>
                     <div class="history-edit-actions">
                         <button class="save-goal-btn" onclick="saveEditHistory('${date}')">Save Changes</button>
-                        <button class="cancel-edit-btn" onclick="renderHistory()">Cancel</button>
+                        <button class="cancel-edit-btn" onclick="cancelEditHistory('${date}')">Cancel</button>
                     </div>
                 </div>
             `;
+        }
+
+        function cancelEditHistory(date) {
+            if (selectedCalendarDate === date) {
+                renderHistory(date);
+                return;
+            }
+
+            renderHistory();
         }
 
         // Save edited history entry
@@ -5470,7 +5483,11 @@
                 localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
             }
 
-            // Re-render history
+            if (selectedCalendarDate === date) {
+                renderHistory(date);
+                return;
+            }
+
             renderHistory();
         }
 
@@ -5499,6 +5516,9 @@
             localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
 
             // Re-render the edit form to show the new goal
+            if (selectedCalendarDate === date) {
+                renderHistory(date);
+            }
             startEditHistory(date);
         }
 
