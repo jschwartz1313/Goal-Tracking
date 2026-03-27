@@ -1999,6 +1999,12 @@
                             <option value="duration">Sort: Duration</option>
                             <option value="alphabetical">Sort: A-Z</option>
                         </select>
+                        <select id="goalPriorityFilterSelect" class="goal-filter-select" onchange="renderGoals()">
+                            <option value="all">All Priorities</option>
+                            <option value="1">P1 Only</option>
+                            <option value="2">P2 Only</option>
+                            <option value="3">P3 Only</option>
+                        </select>
                         <select id="goalFilterSelect" class="goal-filter-select" onchange="renderGoals()">
                             <option value="all">Show All</option>
                             <option value="incomplete">Incomplete Only</option>
@@ -2909,18 +2915,23 @@
                 }
             });
 
-            // Sort by date (oldest first)
-            overdueGoals.sort((a, b) => a.originalDate.localeCompare(b.originalDate));
-            const sortSelect = document.getElementById('goalSortSelect');
-            const sortValue = sortSelect ? sortSelect.value : 'priority';
-            const sortedOverdueGoals = sortGoals(overdueGoals, sortValue);
+                // Sort by date (oldest first)
+                overdueGoals.sort((a, b) => a.originalDate.localeCompare(b.originalDate));
+                const sortSelect = document.getElementById('goalSortSelect');
+                const sortValue = sortSelect ? sortSelect.value : 'priority';
+                const priorityFilterSelect = document.getElementById('goalPriorityFilterSelect');
+                const priorityFilterValue = priorityFilterSelect ? priorityFilterSelect.value : 'all';
+                const filteredOverdueGoals = priorityFilterValue === 'all'
+                    ? overdueGoals
+                    : overdueGoals.filter(goal => String(getGoalPriority(goal)) === priorityFilterValue);
+                const sortedOverdueGoals = sortGoals(filteredOverdueGoals, sortValue);
 
             // Update UI
-            if (overdueGoals.length === 0) {
+            if (sortedOverdueGoals.length === 0) {
                 overdueSection.style.display = 'none';
             } else {
                 overdueSection.style.display = 'block';
-                overdueCount.textContent = overdueGoals.length;
+                overdueCount.textContent = sortedOverdueGoals.length;
                 overdueList.innerHTML = '';
 
                 const longTermGoals = getLongTermGoals();
@@ -3216,11 +3227,15 @@
                 const filterValue = filterSelect ? filterSelect.value : 'all';
                 const sortSelect = document.getElementById('goalSortSelect');
                 const sortValue = sortSelect ? sortSelect.value : 'priority';
+                const priorityFilterSelect = document.getElementById('goalPriorityFilterSelect');
+                const priorityFilterValue = priorityFilterSelect ? priorityFilterSelect.value : 'all';
 
                 // Filter goals based on selection
-                const filteredGoals = filterValue === 'all'
-                    ? todayGoals
-                    : todayGoals.filter(g => g.status === filterValue);
+                const filteredGoals = todayGoals.filter(goal => {
+                    const matchesStatus = filterValue === 'all' || goal.status === filterValue;
+                    const matchesPriority = priorityFilterValue === 'all' || String(getGoalPriority(goal)) === priorityFilterValue;
+                    return matchesStatus && matchesPriority;
+                });
                 const sortedFilteredGoals = sortGoals(filteredGoals, sortValue);
 
                 // Clear existing content
@@ -3234,7 +3249,13 @@
                 } else if (sortedFilteredGoals.length === 0) {
                     const emptyDiv = document.createElement('div');
                     emptyDiv.className = 'empty-goals';
-                    emptyDiv.textContent = `No ${filterValue} goals for today.`;
+                    if (filterValue !== 'all' && priorityFilterValue !== 'all') {
+                        emptyDiv.textContent = `No ${filterValue} P${priorityFilterValue} goals for today.`;
+                    } else if (filterValue !== 'all') {
+                        emptyDiv.textContent = `No ${filterValue} goals for today.`;
+                    } else {
+                        emptyDiv.textContent = `No P${priorityFilterValue} goals for today.`;
+                    }
                     goalsList.appendChild(emptyDiv);
                 } else {
                     // Get long-term goals for badge display
@@ -3365,7 +3386,11 @@
                     let hasUpcomingGoals = false;
                     futureDates.forEach(date => {
                         const dateGoals = allGoals[date];
-                        const filtered = filterValue === 'all' ? dateGoals : dateGoals.filter(g => g.status === filterValue);
+                        const filtered = dateGoals.filter(goal => {
+                            const matchesStatus = filterValue === 'all' || goal.status === filterValue;
+                            const matchesPriority = priorityFilterValue === 'all' || String(getGoalPriority(goal)) === priorityFilterValue;
+                            return matchesStatus && matchesPriority;
+                        });
                         if (sortGoals(filtered, sortValue).length > 0) hasUpcomingGoals = true;
                     });
 
@@ -3377,7 +3402,11 @@
                         futureDates.forEach(date => {
                             const dateGoals = allGoals[date];
                             // Apply same filter to upcoming goals
-                            const filteredDateGoals = filterValue === 'all' ? dateGoals : dateGoals.filter(g => g.status === filterValue);
+                            const filteredDateGoals = dateGoals.filter(goal => {
+                                const matchesStatus = filterValue === 'all' || goal.status === filterValue;
+                                const matchesPriority = priorityFilterValue === 'all' || String(getGoalPriority(goal)) === priorityFilterValue;
+                                return matchesStatus && matchesPriority;
+                            });
                             const sortedUpcomingGoals = sortGoals(filteredDateGoals, sortValue);
                             sortedUpcomingGoals.forEach(goal => {
                                 const li = document.createElement('li');
