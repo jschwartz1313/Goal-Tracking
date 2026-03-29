@@ -2064,6 +2064,10 @@
                             <h4 style="margin-bottom: 10px; color: #1f7a4d;">Until Complete Goals</h4>
                             <ul id="carryForwardGoalsList" class="goals-list"></ul>
                         </div>
+                        <div id="recurringTodayGoalsSection" style="display: none; margin-bottom: 20px;">
+                            <h4 style="margin-bottom: 10px; color: #17a2b8;">Daily Recurring Goals</h4>
+                            <ul id="recurringTodayGoalsList" class="goals-list"></ul>
+                        </div>
                         <h4 style="margin-bottom: 10px; color: #333;">Daily Goals</h4>
                         <ul id="goalsList" class="goals-list"></ul>
                     </div>
@@ -3286,10 +3290,12 @@
                 const goalsList = document.getElementById('goalsList');
                 const carryForwardGoalsList = document.getElementById('carryForwardGoalsList');
                 const carryForwardGoalsSection = document.getElementById('carryForwardGoalsSection');
+                const recurringTodayGoalsList = document.getElementById('recurringTodayGoalsList');
+                const recurringTodayGoalsSection = document.getElementById('recurringTodayGoalsSection');
                 const upcomingSection = document.getElementById('upcomingGoalsSection');
                 const upcomingList = document.getElementById('upcomingGoalsList');
 
-                if (!goalsList || !carryForwardGoalsList || !carryForwardGoalsSection) {
+                if (!goalsList || !carryForwardGoalsList || !carryForwardGoalsSection || !recurringTodayGoalsList || !recurringTodayGoalsSection) {
                     console.error('Goals list element not found!');
                     return;
                 }
@@ -3342,15 +3348,19 @@
                     const matchesPriority = priorityFilterValue === 'all' || String(getGoalPriority(goal)) === priorityFilterValue;
                     return matchesStatus && matchesPriority;
                 });
-                const regularTodayGoals = filteredGoals.filter(goal => !goal.stayUntilComplete);
+                const regularTodayGoals = filteredGoals.filter(goal => !goal.stayUntilComplete && !goal.isRecurring);
                 const carryForwardTodayGoals = filteredGoals.filter(goal => goal.stayUntilComplete);
+                const recurringTodayGoals = filteredGoals.filter(goal => goal.isRecurring && !goal.stayUntilComplete);
                 const sortedRegularTodayGoals = sortGoals(regularTodayGoals, sortValue);
                 const sortedCarryForwardTodayGoals = sortGoals(carryForwardTodayGoals, sortValue);
+                const sortedRecurringTodayGoals = sortGoals(recurringTodayGoals, sortValue);
 
                 // Clear existing content
                 goalsList.innerHTML = '';
                 carryForwardGoalsList.innerHTML = '';
+                recurringTodayGoalsList.innerHTML = '';
                 carryForwardGoalsSection.style.display = sortedCarryForwardTodayGoals.length > 0 ? 'block' : 'none';
+                recurringTodayGoalsSection.style.display = sortedRecurringTodayGoals.length > 0 ? 'block' : 'none';
 
                 if (todayGoals.length === 0) {
                     const emptyDiv = document.createElement('div');
@@ -3373,10 +3383,14 @@
                         carryForwardGoalsList.appendChild(createTodayGoalListItem(goal, longTermGoals));
                     });
 
+                    sortedRecurringTodayGoals.forEach(goal => {
+                        recurringTodayGoalsList.appendChild(createTodayGoalListItem(goal, longTermGoals));
+                    });
+
                     if (sortedRegularTodayGoals.length === 0) {
                         const emptyDiv = document.createElement('div');
                         emptyDiv.className = 'empty-goals';
-                        emptyDiv.textContent = 'No regular daily goals match the current filters.';
+                        emptyDiv.textContent = 'No non-recurring daily goals match the current filters.';
                         goalsList.appendChild(emptyDiv);
                     } else {
                         sortedRegularTodayGoals.forEach(goal => {
