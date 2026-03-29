@@ -2060,6 +2060,11 @@
                             </div>
                             <button class="add-goal-btn" onclick="addGoal()">Add Goal</button>
                         </div>
+                        <div id="carryForwardGoalsSection" style="display: none; margin-bottom: 20px;">
+                            <h4 style="margin-bottom: 10px; color: #1f7a4d;">Until Complete Goals</h4>
+                            <ul id="carryForwardGoalsList" class="goals-list"></ul>
+                        </div>
+                        <h4 style="margin-bottom: 10px; color: #333;">Daily Goals</h4>
                         <ul id="goalsList" class="goals-list"></ul>
                     </div>
                 </div>
@@ -3170,6 +3175,104 @@
             }
         }
 
+        function createTodayGoalListItem(goal, longTermGoals) {
+            const li = document.createElement('li');
+            li.className = `goal-item ${goal.status}`;
+            li.dataset.goalId = goal.id;
+
+            const statusBtn = document.createElement('button');
+            statusBtn.className = `goal-status-btn ${goal.status}`;
+            statusBtn.textContent = goal.status === 'incomplete' ? 'Incomplete' :
+                                   goal.status === 'partial' ? 'Partial' :
+                                   goal.status === 'skipped' ? 'Skipped' : 'Complete';
+            statusBtn.onclick = function() { cycleGoalStatus(goal.id); };
+
+            const textDiv = document.createElement('div');
+            textDiv.className = 'goal-text';
+            textDiv.textContent = goal.text;
+
+            const priorityBadge = document.createElement('span');
+            priorityBadge.className = `goal-priority-badge priority-${getGoalPriority(goal)}`;
+            priorityBadge.textContent = `P${getGoalPriority(goal)}`;
+            textDiv.appendChild(priorityBadge);
+
+            if (goal.isRecurring) {
+                const recurringBadge = document.createElement('span');
+                recurringBadge.className = 'goal-recurring-badge';
+                recurringBadge.textContent = 'Daily';
+                textDiv.appendChild(recurringBadge);
+
+                const streak = calculateRecurringStreak(goal.recurringId);
+                if (streak > 0) {
+                    const streakBadge = document.createElement('span');
+                    streakBadge.className = 'goal-streak-badge';
+                    streakBadge.textContent = `🔥 ${streak}d`;
+                    textDiv.appendChild(streakBadge);
+                }
+            }
+
+            if (goal.stayUntilComplete) {
+                const carryoverBadge = document.createElement('span');
+                carryoverBadge.className = 'goal-carryover-badge';
+                carryoverBadge.textContent = 'Until Complete';
+                textDiv.appendChild(carryoverBadge);
+            }
+
+            if (goal.timeOfDay) {
+                const timeBadge = document.createElement('span');
+                timeBadge.className = `goal-time-badge ${goal.timeOfDay}`;
+                timeBadge.textContent = goal.timeOfDay.charAt(0).toUpperCase() + goal.timeOfDay.slice(1);
+                textDiv.appendChild(timeBadge);
+            }
+
+            if (goal.linkedGoalId) {
+                const linkedGoal = longTermGoals.find(g => g.id === goal.linkedGoalId);
+                if (linkedGoal) {
+                    const badge = document.createElement('span');
+                    badge.className = 'goal-linked-badge';
+                    badge.textContent = linkedGoal.title.length > 15 ? linkedGoal.title.substring(0, 15) + '...' : linkedGoal.title;
+                    textDiv.appendChild(badge);
+                }
+            }
+
+            if (goal.duration) {
+                const durationBadge = document.createElement('span');
+                durationBadge.className = 'goal-duration-badge';
+                durationBadge.textContent = goal.duration >= 60
+                    ? `${Math.floor(goal.duration / 60)}h ${goal.duration % 60}m`
+                    : `${goal.duration} min`;
+                textDiv.appendChild(durationBadge);
+            }
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'goal-actions';
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'edit-goal-btn';
+            editBtn.textContent = 'Edit';
+            editBtn.onclick = function() { startEditGoal(goal.id); };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-goal-btn';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = function() { deleteGoal(goal.id); };
+
+            const skipBtn = document.createElement('button');
+            skipBtn.className = 'skip-overdue-btn';
+            skipBtn.textContent = 'Skip';
+            skipBtn.title = 'Mark this goal as not relevant for today';
+            skipBtn.onclick = function() { skipGoal(goal.id); };
+
+            actionsDiv.appendChild(editBtn);
+            actionsDiv.appendChild(skipBtn);
+            actionsDiv.appendChild(deleteBtn);
+
+            li.appendChild(statusBtn);
+            li.appendChild(textDiv);
+            li.appendChild(actionsDiv);
+            return li;
+        }
+
         function renderGoals() {
             try {
                 ensureCarryForwardGoalsForToday();
@@ -3181,10 +3284,12 @@
                 renderOverdueGoals();
 
                 const goalsList = document.getElementById('goalsList');
+                const carryForwardGoalsList = document.getElementById('carryForwardGoalsList');
+                const carryForwardGoalsSection = document.getElementById('carryForwardGoalsSection');
                 const upcomingSection = document.getElementById('upcomingGoalsSection');
                 const upcomingList = document.getElementById('upcomingGoalsList');
 
-                if (!goalsList) {
+                if (!goalsList || !carryForwardGoalsList || !carryForwardGoalsSection) {
                     console.error('Goals list element not found!');
                     return;
                 }
@@ -3229,6 +3334,7 @@
                 const sortValue = sortSelect ? sortSelect.value : 'priority';
                 const priorityFilterSelect = document.getElementById('goalPriorityFilterSelect');
                 const priorityFilterValue = priorityFilterSelect ? priorityFilterSelect.value : 'all';
+                const longTermGoals = getLongTermGoals();
 
                 // Filter goals based on selection
                 const filteredGoals = todayGoals.filter(goal => {
@@ -3236,17 +3342,22 @@
                     const matchesPriority = priorityFilterValue === 'all' || String(getGoalPriority(goal)) === priorityFilterValue;
                     return matchesStatus && matchesPriority;
                 });
-                const sortedFilteredGoals = sortGoals(filteredGoals, sortValue);
+                const regularTodayGoals = filteredGoals.filter(goal => !goal.stayUntilComplete);
+                const carryForwardTodayGoals = filteredGoals.filter(goal => goal.stayUntilComplete);
+                const sortedRegularTodayGoals = sortGoals(regularTodayGoals, sortValue);
+                const sortedCarryForwardTodayGoals = sortGoals(carryForwardTodayGoals, sortValue);
 
                 // Clear existing content
                 goalsList.innerHTML = '';
+                carryForwardGoalsList.innerHTML = '';
+                carryForwardGoalsSection.style.display = sortedCarryForwardTodayGoals.length > 0 ? 'block' : 'none';
 
                 if (todayGoals.length === 0) {
                     const emptyDiv = document.createElement('div');
                     emptyDiv.className = 'empty-goals';
                     emptyDiv.textContent = 'No goals for today yet. Add one above!';
                     goalsList.appendChild(emptyDiv);
-                } else if (sortedFilteredGoals.length === 0) {
+                } else if (filteredGoals.length === 0) {
                     const emptyDiv = document.createElement('div');
                     emptyDiv.className = 'empty-goals';
                     if (filterValue !== 'all' && priorityFilterValue !== 'all') {
@@ -3258,116 +3369,20 @@
                     }
                     goalsList.appendChild(emptyDiv);
                 } else {
-                    // Get long-term goals for badge display
-                    const longTermGoals = getLongTermGoals();
-
-                    // Render each filtered goal
-                    sortedFilteredGoals.forEach(goal => {
-                        const li = document.createElement('li');
-                        li.className = `goal-item ${goal.status}`;
-                        li.dataset.goalId = goal.id;
-
-                        // Status button
-                        const statusBtn = document.createElement('button');
-                        statusBtn.className = `goal-status-btn ${goal.status}`;
-                        statusBtn.textContent = goal.status === 'incomplete' ? 'Incomplete' :
-                                               goal.status === 'partial' ? 'Partial' :
-                                               goal.status === 'skipped' ? 'Skipped' : 'Complete';
-                        statusBtn.onclick = function() { cycleGoalStatus(goal.id); };
-
-                        // Goal text with linked badge
-                        const textDiv = document.createElement('div');
-                        textDiv.className = 'goal-text';
-                        textDiv.textContent = goal.text;
-
-                        const priorityBadge = document.createElement('span');
-                        priorityBadge.className = `goal-priority-badge priority-${getGoalPriority(goal)}`;
-                        priorityBadge.textContent = `P${getGoalPriority(goal)}`;
-                        textDiv.appendChild(priorityBadge);
-
-                        // Add recurring badge and streak if applicable
-                        if (goal.isRecurring) {
-                            const recurringBadge = document.createElement('span');
-                            recurringBadge.className = 'goal-recurring-badge';
-                            recurringBadge.textContent = 'Daily';
-                            textDiv.appendChild(recurringBadge);
-
-                            const streak = calculateRecurringStreak(goal.recurringId);
-                            if (streak > 0) {
-                                const streakBadge = document.createElement('span');
-                                streakBadge.className = 'goal-streak-badge';
-                                streakBadge.textContent = `🔥 ${streak}d`;
-                                textDiv.appendChild(streakBadge);
-                            }
-                        }
-
-                        if (goal.stayUntilComplete) {
-                            const carryoverBadge = document.createElement('span');
-                            carryoverBadge.className = 'goal-carryover-badge';
-                            carryoverBadge.textContent = 'Until Complete';
-                            textDiv.appendChild(carryoverBadge);
-                        }
-
-                        // Add time of day badge if applicable
-                        if (goal.timeOfDay) {
-                            const timeBadge = document.createElement('span');
-                            timeBadge.className = `goal-time-badge ${goal.timeOfDay}`;
-                            timeBadge.textContent = goal.timeOfDay.charAt(0).toUpperCase() + goal.timeOfDay.slice(1);
-                            textDiv.appendChild(timeBadge);
-                        }
-
-                        // Add linked goal badge if applicable
-                        if (goal.linkedGoalId) {
-                            const linkedGoal = longTermGoals.find(g => g.id === goal.linkedGoalId);
-                            if (linkedGoal) {
-                                const badge = document.createElement('span');
-                                badge.className = 'goal-linked-badge';
-                                badge.textContent = linkedGoal.title.length > 15 ? linkedGoal.title.substring(0, 15) + '...' : linkedGoal.title;
-                                textDiv.appendChild(badge);
-                            }
-                        }
-
-                        // Add duration badge if applicable
-                        if (goal.duration) {
-                            const durationBadge = document.createElement('span');
-                            durationBadge.className = 'goal-duration-badge';
-                            durationBadge.textContent = goal.duration >= 60
-                                ? `${Math.floor(goal.duration / 60)}h ${goal.duration % 60}m`
-                                : `${goal.duration} min`;
-                            textDiv.appendChild(durationBadge);
-                        }
-
-                        // Actions container
-                        const actionsDiv = document.createElement('div');
-                        actionsDiv.className = 'goal-actions';
-
-                        // Edit button
-                        const editBtn = document.createElement('button');
-                        editBtn.className = 'edit-goal-btn';
-                        editBtn.textContent = 'Edit';
-                        editBtn.onclick = function() { startEditGoal(goal.id); };
-
-                        // Delete button
-                        const deleteBtn = document.createElement('button');
-                        deleteBtn.className = 'delete-goal-btn';
-                        deleteBtn.textContent = 'Delete';
-                        deleteBtn.onclick = function() { deleteGoal(goal.id); };
-
-                        const skipBtn = document.createElement('button');
-                        skipBtn.className = 'skip-overdue-btn';
-                        skipBtn.textContent = 'Skip';
-                        skipBtn.title = 'Mark this goal as not relevant for today';
-                        skipBtn.onclick = function() { skipGoal(goal.id); };
-
-                        actionsDiv.appendChild(editBtn);
-                        actionsDiv.appendChild(skipBtn);
-                        actionsDiv.appendChild(deleteBtn);
-
-                        li.appendChild(statusBtn);
-                        li.appendChild(textDiv);
-                        li.appendChild(actionsDiv);
-                        goalsList.appendChild(li);
+                    sortedCarryForwardTodayGoals.forEach(goal => {
+                        carryForwardGoalsList.appendChild(createTodayGoalListItem(goal, longTermGoals));
                     });
+
+                    if (sortedRegularTodayGoals.length === 0) {
+                        const emptyDiv = document.createElement('div');
+                        emptyDiv.className = 'empty-goals';
+                        emptyDiv.textContent = 'No regular daily goals match the current filters.';
+                        goalsList.appendChild(emptyDiv);
+                    } else {
+                        sortedRegularTodayGoals.forEach(goal => {
+                            goalsList.appendChild(createTodayGoalListItem(goal, longTermGoals));
+                        });
+                    }
 
                     console.log(`Rendered ${todayGoals.length} goals successfully`);
                 }
