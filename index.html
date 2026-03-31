@@ -6399,22 +6399,12 @@
             const notesText = data && data.notes ? data.notes : '';
             const lessonsText = data && data.lessonsLearned ? data.lessonsLearned : '';
 
-            const todayKey = getTodayKey();
-            const isPastDate = dateKey < todayKey;
-            const isFutureDate = dateKey > todayKey;
-
             calendarDetail.innerHTML = `
                 <h4>${formattedDate}</h4>
                 <div>${avgText}</div>
                 <div style="margin-top: 6px;">${goalsText}</div>
                 ${notesText ? `<div style="margin-top: 6px;"><strong>Notes:</strong> ${notesText}</div>` : ''}
                 ${lessonsText ? `<div style="margin-top: 6px;"><strong>Lessons Learned:</strong> ${lessonsText}</div>` : ''}
-                <div class="calendar-detail-actions">
-                    <button class="btn" onclick="showOnlyHistoryDate('${dateKey}')">Show Only This Day</button>
-                    <button class="btn" onclick="showAllHistory()">Show All Days</button>
-                    ${isPastDate || data || dateGoals.length > 0 ? `<button class="btn" onclick="openHistoryEditor('${dateKey}')">Edit This Day</button>` : ''}
-                    ${!data && dateGoals.length === 0 && isPastDate ? `<button class="btn" onclick="createPastEntry('${dateKey}')" style="background: #28a745;">Create Entry</button>` : ''}
-                </div>
             `;
             calendarDetail.style.display = 'block';
         }
