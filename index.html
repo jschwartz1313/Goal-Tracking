@@ -2584,7 +2584,7 @@
                     }
                     renderHistory(selectedCalendarDate);
                     if (calendarDetail) {
-                        renderCalendarDetail(selectedCalendarDate);
+                        calendarDetail.style.display = 'none';
                     }
                 } else {
                     if (historyContainer) {
@@ -6466,7 +6466,7 @@
             focusCalendarOnDate(dateKey);
             const calendarDetail = document.getElementById('calendarDetail');
             if (calendarDetail) {
-                renderCalendarDetail(dateKey);
+                calendarDetail.style.display = 'none';
             }
             document.getElementById('historyContainer').style.display = 'block';
             renderHistory(dateKey);
