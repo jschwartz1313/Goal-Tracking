@@ -457,6 +457,37 @@
             font-size: 13px;
         }
 
+        .history-goal-text-input {
+            flex: 1;
+            min-width: 180px;
+            padding: 8px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .history-goal-quick-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .history-goal-quick-btn {
+            padding: 7px 10px;
+            border: none;
+            border-radius: 6px;
+            background: #eef1ff;
+            color: #4459b4;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .history-goal-quick-btn.delete {
+            background: #f8d7da;
+            color: #9b1c31;
+        }
+
         .history-scores {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -467,6 +498,33 @@
             display: flex;
             justify-content: space-between;
             padding: 5px;
+        }
+
+        .history-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .history-summary-pill {
+            background: white;
+            border: 1px solid #e6e9f7;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .history-summary-value {
+            display: block;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .history-summary-label {
+            display: block;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
         }
 
         .notes-section {
@@ -514,6 +572,22 @@
             flex-wrap: wrap;
         }
 
+        .goal-toolbar-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .goal-toolbar-toggle input {
+            margin: 0;
+        }
+
         .goal-priority-select {
             padding: 10px 12px;
             border: 2px solid #ddd;
@@ -543,6 +617,27 @@
 
         .goal-repeat-toggle input {
             margin: 0;
+        }
+
+        .goal-templates {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .goal-template-btn {
+            padding: 8px 12px;
+            border: 1px solid #d7ddff;
+            border-radius: 999px;
+            background: #f5f7ff;
+            color: #4459b4;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .goal-template-btn:hover {
+            background: #e9eeff;
         }
 
         .goal-input {
@@ -741,6 +836,63 @@
             color: #999;
             padding: 30px;
             font-style: italic;
+        }
+
+        .goal-section-card {
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 20px;
+        }
+
+        .goal-section-card.until-complete {
+            background: linear-gradient(135deg, #effaf4 0%, #f7fffb 100%);
+            border: 1px solid #c9efd7;
+        }
+
+        .goal-section-card.recurring {
+            background: linear-gradient(135deg, #eef9fc 0%, #f9feff 100%);
+            border: 1px solid #cceff6;
+        }
+
+        .goal-section-card.one-off {
+            background: #fafafa;
+            border: 1px solid #ececec;
+        }
+
+        .goal-section-card h4 {
+            margin-bottom: 6px;
+        }
+
+        .goal-section-note {
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .goal-aging-badge {
+            font-size: 11px;
+            background: #fff3cd;
+            color: #8a5a00;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .goal-postpone-btn {
+            padding: 8px 16px;
+            background: #f1f3f5;
+            color: #495057;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .goal-postpone-btn:hover {
+            background: #e2e6ea;
         }
 
         .danger-zone {
@@ -955,12 +1107,65 @@
             gap: 30px;
         }
 
+        .insight-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            padding: 18px;
+            margin-bottom: 18px;
+        }
+
+        .insight-card h3 {
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .insight-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .insight-stat {
+            background: white;
+            border-radius: 10px;
+            padding: 14px;
+            border: 1px solid #ececec;
+        }
+
+        .insight-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .insight-stat-label {
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 4px;
+        }
+
+        .insight-list {
+            margin-top: 12px;
+            padding-left: 18px;
+            color: #444;
+        }
+
+        .insight-list li {
+            margin-bottom: 6px;
+        }
+
         @media (max-width: 768px) {
             .chart-row {
                 grid-template-columns: 1fr;
             }
             .chart-wrapper {
                 height: 250px;
+            }
+            .history-goal-item-edit {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
 
@@ -1958,6 +2163,50 @@
             font-style: italic;
         }
 
+        .undo-toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            max-width: 360px;
+            background: #1f2937;
+            color: white;
+            padding: 14px 16px;
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 1000;
+        }
+
+        .undo-toast.show {
+            display: flex;
+        }
+
+        .undo-toast-message {
+            flex: 1;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .undo-toast button {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .undo-toast .undo-btn {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .undo-toast .dismiss-btn {
+            background: #374151;
+            color: white;
+        }
+
         @media (max-width: 600px) {
             .goal-input-row {
                 flex-direction: column;
@@ -1979,6 +2228,11 @@
             }
             .goal-actions button {
                 flex: 1 1 auto;
+            }
+            .undo-toast {
+                left: 16px;
+                right: 16px;
+                max-width: none;
             }
         }
 
@@ -2055,6 +2309,10 @@
                             <option value="partial">Partial Only</option>
                             <option value="complete">Complete Only</option>
                         </select>
+                        <label class="goal-toolbar-toggle" for="goalActiveOnlyToggle">
+                            <input type="checkbox" id="goalActiveOnlyToggle" onchange="renderGoals()">
+                            <span>Show Active Only</span>
+                        </label>
                     </div>
                 </div>
                 <!-- Total Time Counter -->
@@ -2102,18 +2360,33 @@
                                     <span>Stay until complete</span>
                                 </label>
                             </div>
+                            <div class="goal-templates">
+                                <button type="button" class="goal-template-btn" onclick="applyGoalTemplate('admin')">Admin Task</button>
+                                <button type="button" class="goal-template-btn" onclick="applyGoalTemplate('health')">Health Task</button>
+                                <button type="button" class="goal-template-btn" onclick="applyGoalTemplate('deep')">Deep Work</button>
+                                <button type="button" class="goal-template-btn" onclick="applyGoalTemplate('errand')">Errand</button>
+                            </div>
                             <button class="add-goal-btn" onclick="addGoal()">Add Goal</button>
                         </div>
-                        <div id="carryForwardGoalsSection" style="display: none; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 10px; color: #1f7a4d;">Until Complete Goals</h4>
+                        <div id="staleGoalsSection" class="insight-card" style="display: none;">
+                            <h3>Needs Attention</h3>
+                            <div id="staleGoalsContent"></div>
+                        </div>
+                        <div id="carryForwardGoalsSection" class="goal-section-card until-complete" style="display: none;">
+                            <h4 style="color: #1f7a4d;">Until Complete Goals</h4>
+                            <div class="goal-section-note">Persistent tasks that stay in view until you finish them.</div>
                             <ul id="carryForwardGoalsList" class="goals-list"></ul>
                         </div>
-                        <div id="recurringTodayGoalsSection" style="display: none; margin-bottom: 20px;">
-                            <h4 style="margin-bottom: 10px; color: #17a2b8;">Daily Recurring Goals</h4>
+                        <div id="recurringTodayGoalsSection" class="goal-section-card recurring" style="display: none;">
+                            <h4 style="color: #17a2b8;">Daily Recurring Goals</h4>
+                            <div class="goal-section-note">Habits and routines that are supposed to show up every day.</div>
                             <ul id="recurringTodayGoalsList" class="goals-list"></ul>
                         </div>
+                        <div class="goal-section-card one-off">
                         <h4 style="margin-bottom: 10px; color: #333;">Daily Goals</h4>
+                        <div class="goal-section-note">One-off tasks that matter only for the selected day.</div>
                         <ul id="goalsList" class="goals-list"></ul>
+                        </div>
                     </div>
                 </div>
 
@@ -2210,6 +2483,7 @@
             </div>
 
             <div id="historyContainer"></div>
+            <div id="weeklyReviewContainer" class="insight-card" style="display: none;"></div>
 
             <!-- Charts Section -->
             <div class="charts-section">
@@ -2370,6 +2644,12 @@
                 <button class="btn-clear-all" onclick="clearAllData()">Clear All Data</button>
             </div>
         </div>
+    </div>
+
+    <div id="undoToast" class="undo-toast">
+        <div id="undoToastMessage" class="undo-toast-message"></div>
+        <button type="button" class="undo-btn" onclick="runUndoAction()">Undo</button>
+        <button type="button" class="dismiss-btn" onclick="dismissUndoToast()">Dismiss</button>
     </div>
 
     <script>
@@ -2541,6 +2821,389 @@
 
                 return compareGoalText(a, b);
             });
+        }
+
+        const goalTemplates = {
+            admin: { text: '', duration: 15, priority: 2, stayUntilComplete: false },
+            health: { text: '', duration: 30, priority: 1, stayUntilComplete: true },
+            deep: { text: '', duration: 60, priority: 1, stayUntilComplete: false },
+            errand: { text: '', duration: 20, priority: 2, stayUntilComplete: false }
+        };
+
+        let pendingUndoAction = null;
+        let undoToastTimeout = null;
+
+        function cloneData(value) {
+            return JSON.parse(JSON.stringify(value));
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function parseDateKey(dateKey) {
+            const [year, month, day] = String(dateKey).split('-').map(Number);
+            return new Date(year, month - 1, day);
+        }
+
+        function shiftDateKey(dateKey, amount) {
+            const date = parseDateKey(dateKey);
+            date.setDate(date.getDate() + amount);
+            return toLocalDateKey(date);
+        }
+
+        function getTomorrowKey(dateKey = getTodayKey()) {
+            return shiftDateKey(dateKey, 1);
+        }
+
+        function getDaysBetween(startDateKey, endDateKey = getTodayKey()) {
+            const start = parseDateKey(startDateKey);
+            const end = parseDateKey(endDateKey);
+            start.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+            return Math.max(0, Math.round((end - start) / (1000 * 60 * 60 * 24)));
+        }
+
+        function getAllGoals() {
+            try {
+                return JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+            } catch (e) {
+                console.error('Error reading daily goals:', e);
+                return {};
+            }
+        }
+
+        function saveAllGoals(allGoals) {
+            localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
+        }
+
+        function captureStorageSnapshot(keys) {
+            const snapshot = {};
+            keys.forEach(key => {
+                snapshot[key] = localStorage.getItem(key);
+            });
+            return snapshot;
+        }
+
+        function restoreStorageSnapshot(snapshot) {
+            Object.entries(snapshot).forEach(([key, value]) => {
+                if (value === null || value === undefined) {
+                    localStorage.removeItem(key);
+                } else {
+                    localStorage.setItem(key, value);
+                }
+            });
+        }
+
+        function dismissUndoToast() {
+            const toast = document.getElementById('undoToast');
+            if (toast) {
+                toast.classList.remove('show');
+            }
+            pendingUndoAction = null;
+            if (undoToastTimeout) {
+                clearTimeout(undoToastTimeout);
+                undoToastTimeout = null;
+            }
+        }
+
+        function runUndoAction() {
+            if (!pendingUndoAction) return;
+            try {
+                pendingUndoAction();
+            } finally {
+                dismissUndoToast();
+            }
+        }
+
+        function queueUndoSnapshot(message, keys) {
+            const snapshot = captureStorageSnapshot(keys);
+            return function() {
+                pendingUndoAction = function() {
+                    restoreStorageSnapshot(snapshot);
+                    refreshAllViews();
+                };
+                const toast = document.getElementById('undoToast');
+                const messageNode = document.getElementById('undoToastMessage');
+                if (toast && messageNode) {
+                    messageNode.textContent = message;
+                    toast.classList.add('show');
+                    if (undoToastTimeout) clearTimeout(undoToastTimeout);
+                    undoToastTimeout = setTimeout(() => {
+                        dismissUndoToast();
+                    }, 8000);
+                }
+            };
+        }
+
+        function refreshAllViews() {
+            updateGoalLinkDropdown();
+            updateRecurringGoalLinkDropdown();
+            renderRecurringGoals();
+            renderLongTermGoals();
+            renderJournalEntries();
+            renderMetricsList();
+            renderGoals();
+            updateStats();
+            if (document.getElementById('history-section')?.classList.contains('active') || selectedCalendarDate) {
+                renderHistory(selectedCalendarDate);
+            } else {
+                renderCalendar();
+            }
+        }
+
+        function moveGoalBetweenDates(goalId, sourceDate, targetDate) {
+            if (!targetDate || targetDate === sourceDate) return false;
+            const allGoals = getAllGoals();
+            const sourceGoals = allGoals[sourceDate] || [];
+            const goalIndex = sourceGoals.findIndex(g => g.id === goalId);
+
+            if (goalIndex === -1) return false;
+
+            const goal = sourceGoals[goalIndex];
+            sourceGoals.splice(goalIndex, 1);
+
+            if (sourceGoals.length === 0) {
+                delete allGoals[sourceDate];
+            } else {
+                allGoals[sourceDate] = sourceGoals;
+            }
+
+            if (!allGoals[targetDate]) {
+                allGoals[targetDate] = [];
+            }
+
+            allGoals[targetDate].push(goal);
+            saveAllGoals(allGoals);
+            return true;
+        }
+
+        function promptForGoalDate(defaultDate) {
+            const pickedDate = prompt('Move goal to this date (YYYY-MM-DD):', defaultDate || getTodayKey());
+            if (!pickedDate) return null;
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(pickedDate)) {
+                alert('Please use the YYYY-MM-DD format.');
+                return null;
+            }
+            return pickedDate;
+        }
+
+        function postponeGoal(goalId, sourceDate, targetDate = null) {
+            const destination = targetDate || promptForGoalDate(getTomorrowKey(sourceDate));
+            if (!destination) return;
+
+            const showUndo = queueUndoSnapshot('Goal moved to a later date.', ['dailyGoals']);
+            if (moveGoalBetweenDates(goalId, sourceDate, destination)) {
+                refreshAllViews();
+                showUndo();
+            }
+        }
+
+        function applyGoalTemplate(templateKey) {
+            const template = goalTemplates[templateKey];
+            if (!template) return;
+
+            const durationInput = document.getElementById('goalTimeInput');
+            const priorityInput = document.getElementById('goalPriorityInput');
+            const carryForwardInput = document.getElementById('goalCarryForwardInput');
+            const input = document.getElementById('goalInput');
+
+            if (durationInput && template.duration != null) {
+                durationInput.value = template.duration;
+            }
+            if (priorityInput) {
+                priorityInput.value = String(template.priority);
+            }
+            if (carryForwardInput) {
+                carryForwardInput.checked = !!template.stayUntilComplete;
+            }
+            if (input) {
+                input.focus();
+            }
+        }
+
+        function getCarryForwardStartDate(goal, allGoals = getAllGoals()) {
+            const seriesId = getPersistentGoalSeriesId(goal);
+            if (!seriesId) {
+                return goal?.carriedFromDate || getTodayKey();
+            }
+
+            let earliest = null;
+            Object.keys(allGoals).forEach(dateKey => {
+                (allGoals[dateKey] || []).forEach(existingGoal => {
+                    if (getPersistentGoalSeriesId(existingGoal) === seriesId) {
+                        if (!earliest || dateKey < earliest) {
+                            earliest = dateKey;
+                        }
+                    }
+                });
+            });
+
+            return earliest || goal?.carriedFromDate || getTodayKey();
+        }
+
+        function getCarryForwardAgeDays(goal, allGoals = getAllGoals()) {
+            return getDaysBetween(getCarryForwardStartDate(goal, allGoals), getTodayKey());
+        }
+
+        function getGoalSummary(goals) {
+            const summary = {
+                total: goals.length,
+                complete: 0,
+                partial: 0,
+                incomplete: 0,
+                skipped: 0,
+                p1Total: 0,
+                p1Complete: 0
+            };
+
+            goals.forEach(goal => {
+                const status = goal.status || 'incomplete';
+                if (summary[status] !== undefined) {
+                    summary[status] += 1;
+                }
+                if (getGoalPriority(goal) === 1) {
+                    summary.p1Total += 1;
+                    if (status === 'complete') summary.p1Complete += 1;
+                }
+            });
+
+            return summary;
+        }
+
+        function renderStaleGoalsSection(allGoals) {
+            const section = document.getElementById('staleGoalsSection');
+            const content = document.getElementById('staleGoalsContent');
+            if (!section || !content) return;
+
+            const todayKey = getTodayKey();
+            const overdue = [];
+            const carryForward = [];
+
+            Object.keys(allGoals).forEach(dateKey => {
+                (allGoals[dateKey] || []).forEach(goal => {
+                    if (goal.stayUntilComplete) {
+                        const ageDays = getCarryForwardAgeDays(goal, allGoals);
+                        if (dateKey === todayKey && ageDays >= 7 && goal.status !== 'complete') {
+                            carryForward.push({ goal, ageDays });
+                        }
+                    } else if (dateKey < todayKey && (goal.status === 'incomplete' || goal.status === 'partial') && !goal.isRecurring && !goal.recurringId) {
+                        const overdueDays = getDaysBetween(dateKey, todayKey);
+                        if (overdueDays >= 3) {
+                            overdue.push({ goal, overdueDays, dateKey });
+                        }
+                    }
+                });
+            });
+
+            if (carryForward.length === 0 && overdue.length === 0) {
+                section.style.display = 'none';
+                content.innerHTML = '';
+                return;
+            }
+
+            section.style.display = 'block';
+            let html = '';
+
+            if (carryForward.length > 0) {
+                html += `<p><strong>Long-running until-complete goals:</strong></p><ul class="insight-list">`;
+                carryForward
+                    .sort((a, b) => b.ageDays - a.ageDays)
+                    .slice(0, 5)
+                    .forEach(item => {
+                        html += `<li>${escapeHtml(item.goal.text)} has been open for ${item.ageDays} days.</li>`;
+                    });
+                html += '</ul>';
+            }
+
+            if (overdue.length > 0) {
+                html += `<p><strong>Older overdue goals:</strong></p><ul class="insight-list">`;
+                overdue
+                    .sort((a, b) => b.overdueDays - a.overdueDays)
+                    .slice(0, 5)
+                    .forEach(item => {
+                        html += `<li>${escapeHtml(item.goal.text)} is ${item.overdueDays} days overdue.</li>`;
+                    });
+                html += '</ul>';
+            }
+
+            content.innerHTML = html;
+        }
+
+        function renderWeeklyReview() {
+            const container = document.getElementById('weeklyReviewContainer');
+            if (!container) return;
+
+            const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
+            const allGoals = getAllGoals();
+            const dates = [];
+
+            for (let i = 0; i < 7; i++) {
+                dates.push(shiftDateKey(getTodayKey(), -i));
+            }
+
+            const reviewGoals = dates.flatMap(date => allGoals[date] || []);
+            const summary = getGoalSummary(reviewGoals);
+            const avgScores = dates
+                .map(date => {
+                    const data = history[date];
+                    if (!data) return null;
+                    const scores = Object.keys(data)
+                        .filter(key => key !== 'notes' && key !== 'lessonsLearned')
+                        .map(key => data[key])
+                        .filter(value => typeof value === 'number' && !isNaN(value));
+                    if (scores.length === 0) return null;
+                    return scores.reduce((a, b) => a + b, 0) / scores.length;
+                })
+                .filter(value => value !== null);
+
+            const weeklyAverage = avgScores.length > 0
+                ? (avgScores.reduce((a, b) => a + b, 0) / avgScores.length).toFixed(1)
+                : '0.0';
+
+            const missedP1 = reviewGoals.filter(goal => getGoalPriority(goal) === 1 && goal.status !== 'complete');
+            const skippedGoals = reviewGoals.filter(goal => goal.status === 'skipped');
+            const staleCarryForward = reviewGoals.filter(goal => goal.stayUntilComplete && getCarryForwardAgeDays(goal, allGoals) >= 7);
+
+            if (reviewGoals.length === 0 && avgScores.length === 0) {
+                container.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+
+            container.style.display = 'block';
+            container.innerHTML = `
+                <h3>Weekly Review</h3>
+                <p>Last 7 days at a glance so you can see what is actually slipping.</p>
+                <div class="insight-grid">
+                    <div class="insight-stat">
+                        <div class="insight-stat-value">${weeklyAverage}</div>
+                        <div class="insight-stat-label">Average score</div>
+                    </div>
+                    <div class="insight-stat">
+                        <div class="insight-stat-value">${summary.p1Complete}/${summary.p1Total}</div>
+                        <div class="insight-stat-label">P1 goals finished</div>
+                    </div>
+                    <div class="insight-stat">
+                        <div class="insight-stat-value">${skippedGoals.length}</div>
+                        <div class="insight-stat-label">Goals skipped</div>
+                    </div>
+                    <div class="insight-stat">
+                        <div class="insight-stat-value">${staleCarryForward.length}</div>
+                        <div class="insight-stat-label">Stale until-complete goals</div>
+                    </div>
+                </div>
+                <ul class="insight-list">
+                    <li>${missedP1.length} priority-1 goals were not completed.</li>
+                    <li>${summary.partial} goals were left partial.</li>
+                    <li>${summary.incomplete} goals were left incomplete.</li>
+                </ul>
+            `;
         }
 
         function ensureCarryForwardGoalsForToday() {
@@ -3126,7 +3789,23 @@
                         deleteOverdueGoal(goal.id, goal.originalDate);
                     };
 
+                    const tomorrowBtn = document.createElement('button');
+                    tomorrowBtn.className = 'goal-postpone-btn';
+                    tomorrowBtn.textContent = 'Tomorrow';
+                    tomorrowBtn.onclick = function() {
+                        postponeGoal(goal.id, goal.originalDate, getTomorrowKey(goal.originalDate));
+                    };
+
+                    const pickDateBtn = document.createElement('button');
+                    pickDateBtn.className = 'goal-postpone-btn';
+                    pickDateBtn.textContent = 'Pick Date';
+                    pickDateBtn.onclick = function() {
+                        postponeGoal(goal.id, goal.originalDate);
+                    };
+
                     actionsDiv.appendChild(moveBtn);
+                    actionsDiv.appendChild(tomorrowBtn);
+                    actionsDiv.appendChild(pickDateBtn);
                     actionsDiv.appendChild(carryBtn);
                     actionsDiv.appendChild(skipBtn);
                     actionsDiv.appendChild(completeBtn);
@@ -3144,6 +3823,7 @@
         // Move overdue goal to today
         function moveOverdueGoalToToday(goalId, originalDate) {
             try {
+                const showUndo = queueUndoSnapshot('Overdue goal moved to today.', ['dailyGoals']);
                 const todayKey = getTodayKey();
                 let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
@@ -3178,8 +3858,8 @@
                 localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
 
                 // Refresh displays
-                renderOverdueGoals();
-                renderGoals();
+                refreshAllViews();
+                showUndo();
             } catch (e) {
                 console.error('Error moving goal to today:', e);
             }
@@ -3188,6 +3868,7 @@
         // Mark overdue goal as complete
         function markOverdueGoalComplete(goalId, originalDate) {
             try {
+                const showUndo = queueUndoSnapshot('Overdue goal marked complete.', ['dailyGoals']);
                 let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
                 const goals = allGoals[originalDate] || [];
@@ -3198,7 +3879,8 @@
                     localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
 
                     // Refresh display
-                    renderOverdueGoals();
+                    refreshAllViews();
+                    showUndo();
                 }
             } catch (e) {
                 console.error('Error marking overdue goal complete:', e);
@@ -3207,6 +3889,7 @@
 
         function markOverdueGoalStayUntilComplete(goalId, originalDate) {
             try {
+                const showUndo = queueUndoSnapshot('Goal will now stay visible until it is complete.', ['dailyGoals']);
                 let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
                 const goals = allGoals[originalDate] || [];
@@ -3217,7 +3900,8 @@
                     goal.persistentGoalId = goal.persistentGoalId || goal.id;
 
                     localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
-                    renderGoals();
+                    refreshAllViews();
+                    showUndo();
                 }
             } catch (e) {
                 console.error('Error marking overdue goal as stay until complete:', e);
@@ -3227,6 +3911,7 @@
         // Mark overdue goal as skipped (stays on original date, still shows as overdue)
         function markOverdueGoalSkipped(goalId, originalDate) {
             try {
+                const showUndo = queueUndoSnapshot('Overdue goal skipped.', ['dailyGoals']);
                 let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
                 const goals = allGoals[originalDate] || [];
@@ -3237,7 +3922,8 @@
                     localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
 
                     // Refresh display
-                    renderOverdueGoals();
+                    refreshAllViews();
+                    showUndo();
                 }
             } catch (e) {
                 console.error('Error marking overdue goal skipped:', e);
@@ -3247,6 +3933,7 @@
         // Delete overdue goal
         function deleteOverdueGoal(goalId, originalDate) {
             try {
+                const showUndo = queueUndoSnapshot('Overdue goal deleted.', ['dailyGoals']);
                 let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
                 const goals = allGoals[originalDate] || [];
@@ -3264,7 +3951,8 @@
                     localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
 
                     // Refresh display
-                    renderOverdueGoals();
+                    refreshAllViews();
+                    showUndo();
                 }
             } catch (e) {
                 console.error('Error deleting overdue goal:', e);
@@ -3312,6 +4000,14 @@
                 carryoverBadge.className = 'goal-carryover-badge';
                 carryoverBadge.textContent = 'Until Complete';
                 textDiv.appendChild(carryoverBadge);
+
+                const ageDays = getCarryForwardAgeDays(goal);
+                if (ageDays > 0) {
+                    const agingBadge = document.createElement('span');
+                    agingBadge.className = 'goal-aging-badge';
+                    agingBadge.textContent = `${ageDays}d open`;
+                    textDiv.appendChild(agingBadge);
+                }
             }
 
             if (goal.timeOfDay) {
@@ -3359,7 +4055,19 @@
             skipBtn.title = 'Mark this goal as not relevant for today';
             skipBtn.onclick = function() { skipGoal(goal.id); };
 
+            const tomorrowBtn = document.createElement('button');
+            tomorrowBtn.className = 'goal-postpone-btn';
+            tomorrowBtn.textContent = 'Tomorrow';
+            tomorrowBtn.onclick = function() { postponeGoal(goal.id, getTodayKey(), getTomorrowKey()); };
+
+            const pickDateBtn = document.createElement('button');
+            pickDateBtn.className = 'goal-postpone-btn';
+            pickDateBtn.textContent = 'Pick Date';
+            pickDateBtn.onclick = function() { postponeGoal(goal.id, getTodayKey()); };
+
             actionsDiv.appendChild(editBtn);
+            actionsDiv.appendChild(tomorrowBtn);
+            actionsDiv.appendChild(pickDateBtn);
             actionsDiv.appendChild(skipBtn);
             actionsDiv.appendChild(deleteBtn);
 
@@ -3432,13 +4140,16 @@
                 const sortValue = sortSelect ? sortSelect.value : 'priority';
                 const priorityFilterSelect = document.getElementById('goalPriorityFilterSelect');
                 const priorityFilterValue = priorityFilterSelect ? priorityFilterSelect.value : 'all';
+                const activeOnlyToggle = document.getElementById('goalActiveOnlyToggle');
+                const activeOnly = !!(activeOnlyToggle && activeOnlyToggle.checked);
                 const longTermGoals = getLongTermGoals();
 
                 // Filter goals based on selection
                 const filteredGoals = todayGoals.filter(goal => {
                     const matchesStatus = filterValue === 'all' || goal.status === filterValue;
                     const matchesPriority = priorityFilterValue === 'all' || String(getGoalPriority(goal)) === priorityFilterValue;
-                    return matchesStatus && matchesPriority;
+                    const matchesActiveOnly = !activeOnly || (goal.status !== 'complete' && goal.status !== 'skipped');
+                    return matchesStatus && matchesPriority && matchesActiveOnly;
                 });
                 const regularTodayGoals = filteredGoals.filter(goal => !goal.stayUntilComplete && !goal.isRecurring);
                 const carryForwardTodayGoals = filteredGoals.filter(goal => goal.stayUntilComplete);
@@ -3492,6 +4203,8 @@
 
                     console.log(`Rendered ${todayGoals.length} goals successfully`);
                 }
+
+                renderStaleGoalsSection(allGoals);
 
                 // Render upcoming goals (future dates only)
                 if (upcomingSection && upcomingList) {
@@ -3650,6 +4363,7 @@
         // Delete goal for a specific date
         function deleteGoalForDate(goalId, date) {
             try {
+                const showUndo = queueUndoSnapshot('Goal deleted from history.', ['dailyGoals']);
                 let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
                 if (!allGoals[date]) {
@@ -3664,7 +4378,8 @@
                 }
 
                 localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
-                renderGoals();
+                refreshAllViews();
+                showUndo();
             } catch (e) {
                 console.error('Error in deleteGoalForDate:', e);
             }
@@ -3895,6 +4610,7 @@
 
         function skipGoal(goalId) {
             try {
+                const showUndo = queueUndoSnapshot('Goal skipped for today.', ['dailyGoals']);
                 const todayKey = getTodayKey();
                 let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
@@ -3909,7 +4625,8 @@
 
                 goal.status = 'skipped';
                 localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
-                renderGoals();
+                refreshAllViews();
+                showUndo();
             } catch (e) {
                 console.error('Error in skipGoal:', e);
             }
@@ -3917,6 +4634,7 @@
 
         function deleteGoal(goalId) {
             try {
+                const showUndo = queueUndoSnapshot('Goal deleted.', ['dailyGoals']);
                 const todayKey = getTodayKey();
                 let allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
@@ -3958,7 +4676,8 @@
                     allGoals[todayKey] = allGoals[todayKey].filter(g => g.id !== goalId);
                 }
                 localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
-                renderGoals();
+                refreshAllViews();
+                showUndo();
             } catch (e) {
                 console.error('Error in deleteGoal:', e);
             }
@@ -4233,6 +4952,7 @@
         // Delete a recurring daily goal
         function deleteRecurringGoal(goalId) {
             try {
+                const showUndo = queueUndoSnapshot('Recurring goal removed.', ['recurringDailyGoals', 'dailyGoals']);
                 let recurringGoals = getRecurringGoals();
                 recurringGoals = recurringGoals.filter(g => g.id !== goalId);
                 saveRecurringGoals(recurringGoals);
@@ -4257,6 +4977,7 @@
 
                 renderRecurringGoals();
                 renderGoals();
+                showUndo();
             } catch (e) {
                 console.error('Error in deleteRecurringGoal:', e);
             }
@@ -4729,12 +5450,14 @@
         // Delete a long-term goal
         function deleteLongTermGoal(goalId) {
             try {
+                const showUndo = queueUndoSnapshot('Long-term goal deleted.', ['longTermGoals']);
                 let goals = getLongTermGoals();
                 goals = goals.filter(g => g.id !== goalId);
                 saveLongTermGoals(goals);
                 renderLongTermGoals();
                 updateGoalLinkDropdown();
                 updateRecurringGoalLinkDropdown();
+                showUndo();
             } catch (e) {
                 console.error('Error deleting long-term goal:', e);
             }
@@ -4845,7 +5568,7 @@
                                     <input type="checkbox" class="subgoal-checkbox"
                                            ${sg.completed ? 'checked' : ''}
                                            onchange="toggleSubgoal(${goal.id}, ${sg.id})">
-                                    <span class="subgoal-text ${sg.completed ? 'completed' : ''}">${sg.text}</span>
+                                    <span class="subgoal-text ${sg.completed ? 'completed' : ''}">${escapeHtml(sg.text)}</span>
                                 </div>
                             `).join('')}
                         </div>
@@ -4861,7 +5584,7 @@
                             ${linkedGoals.slice(-5).map(lg => `
                                 <div class="linked-goal-item">
                                     <span class="linked-goal-status ${lg.status}"></span>
-                                    <span>${lg.text}</span>
+                                    <span>${escapeHtml(lg.text)}</span>
                                     <span style="color: #999; font-size: 12px;">(${lg.date})</span>
                                 </div>
                             `).join('')}
@@ -4872,10 +5595,10 @@
 
                 card.innerHTML = `
                     <div class="longterm-goal-header">
-                        <div class="longterm-goal-title">${goal.title}</div>
+                        <div class="longterm-goal-title">${escapeHtml(goal.title)}</div>
                         <span class="longterm-goal-status ${goal.status}">${statusLabels[goal.status]}</span>
                     </div>
-                    ${goal.description ? `<div class="longterm-goal-description">${goal.description}</div>` : ''}
+                    ${goal.description ? `<div class="longterm-goal-description">${escapeHtml(goal.description)}</div>` : ''}
                     <div class="longterm-goal-meta">
                         ${goal.targetDate ? `<div class="longterm-goal-meta-item"><strong>Target:</strong> ${formatDate(goal.targetDate)} ${daysRemaining ? `(${daysRemaining})` : ''}</div>` : ''}
                         <div class="longterm-goal-meta-item"><strong>Created:</strong> ${formatDate(goal.createdAt)}</div>
@@ -5314,10 +6037,12 @@
         // Delete a journal entry
         function deleteJournalEntry(dateKey) {
             try {
+                const showUndo = queueUndoSnapshot('Journal entry deleted.', ['journalEntries']);
                 const entries = getJournalEntries();
                 delete entries[dateKey];
                 saveJournalEntries(entries);
                 renderJournalEntries();
+                showUndo();
             } catch (e) {
                 console.error('Error deleting journal entry:', e);
             }
@@ -5444,6 +6169,11 @@
                 container.innerHTML = filterDate
                     ? '<div class="empty-state">No history for this day yet.</div>'
                     : '<div class="empty-state">No history yet. Start tracking today!</div>';
+                const weeklyReviewContainer = document.getElementById('weeklyReviewContainer');
+                if (weeklyReviewContainer) {
+                    weeklyReviewContainer.style.display = 'none';
+                    weeklyReviewContainer.innerHTML = '';
+                }
                 renderCalendar();
                 return;
             }
@@ -5492,6 +6222,7 @@
                 // Get goals for this date
                 const dateGoals = allGoals[date] || [];
                 let goalsHTML = '';
+                const goalSummary = getGoalSummary(dateGoals);
 
                 if (dateGoals.length > 0) {
                     goalsHTML = '<div style="margin-top: 15px;"><strong>Goals:</strong><ul style="margin: 5px 0; padding-left: 20px;">';
@@ -5502,10 +6233,35 @@
                             'complete': '🟢',
                             'skipped': '⏭️'
                         };
-                        goalsHTML += `<li style="margin: 5px 0;">${statusEmoji[goal.status]} ${goal.text}</li>`;
+                        goalsHTML += `<li style="margin: 5px 0;">${statusEmoji[goal.status]} ${escapeHtml(goal.text)}</li>`;
                     });
                     goalsHTML += '</ul></div>';
                 }
+
+                const summaryHTML = `
+                    <div class="history-summary-grid">
+                        <div class="history-summary-pill">
+                            <span class="history-summary-value">${goalSummary.total}</span>
+                            <span class="history-summary-label">Total Goals</span>
+                        </div>
+                        <div class="history-summary-pill">
+                            <span class="history-summary-value">${goalSummary.complete}</span>
+                            <span class="history-summary-label">Completed</span>
+                        </div>
+                        <div class="history-summary-pill">
+                            <span class="history-summary-value">${goalSummary.skipped}</span>
+                            <span class="history-summary-label">Skipped</span>
+                        </div>
+                        <div class="history-summary-pill">
+                            <span class="history-summary-value">${goalSummary.incomplete + goalSummary.partial}</span>
+                            <span class="history-summary-label">Still Open</span>
+                        </div>
+                        <div class="history-summary-pill">
+                            <span class="history-summary-value">${goalSummary.p1Complete}/${goalSummary.p1Total}</span>
+                            <span class="history-summary-label">P1 Done</span>
+                        </div>
+                    </div>
+                `;
 
                 entryDiv.innerHTML = `
                     <div class="history-header">
@@ -5513,9 +6269,10 @@
                         <button class="history-edit-btn" onclick="startEditHistory('${date}')">Edit</button>
                     </div>
                     ${scoresHTML}
+                    ${summaryHTML}
                     ${goalsHTML}
-                    ${data.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${data.notes}</div>` : ''}
-                    ${data.lessonsLearned ? `<div style="margin-top: 10px; font-style: italic; color: #667eea;"><strong>Lessons Learned:</strong> ${data.lessonsLearned}</div>` : ''}
+                    ${data.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${escapeHtml(data.notes)}</div>` : ''}
+                    ${data.lessonsLearned ? `<div style="margin-top: 10px; font-style: italic; color: #667eea;"><strong>Lessons Learned:</strong> ${escapeHtml(data.lessonsLearned)}</div>` : ''}
                 `;
                 container.appendChild(entryDiv);
             });
@@ -5524,6 +6281,7 @@
             if (!filterDate) {
                 renderCharts();
             }
+            renderWeeklyReview();
             renderCalendar();
         }
 
@@ -5600,8 +6358,13 @@
                                 <option value="complete" ${goal.status === 'complete' ? 'selected' : ''}>🟢 Complete</option>
                                 <option value="skipped" ${goal.status === 'skipped' ? 'selected' : ''}>⏭️ Skipped</option>
                             </select>
-                            <span style="flex: 1;">${goal.text}</span>
+                            <input type="text" class="history-goal-text-input" id="history-goal-text-${date}-${index}" value="${escapeHtml(goal.text)}">
                             <input type="date" class="goal-date-input" id="history-goal-date-${date}-${index}" value="${date}" title="Move to different day" style="min-width: 120px;">
+                            <div class="history-goal-quick-actions">
+                                <button type="button" class="history-goal-quick-btn" onclick="setHistoryGoalDate('${date}', ${index}, '${getTomorrowKey(date)}')">Tomorrow</button>
+                                <button type="button" class="history-goal-quick-btn" onclick="pickHistoryGoalDate('${date}', ${index})">Pick Date</button>
+                                <button type="button" class="history-goal-quick-btn delete" onclick="removeHistoryGoalDraft('${date}', ${index})">Delete</button>
+                            </div>
                         </div>
                     `;
                 });
@@ -5631,11 +6394,11 @@
                     </div>
                     <div style="margin-top: 15px;">
                         <strong>Notes:</strong>
-                        <textarea class="history-edit-notes" id="history-notes-${date}">${data.notes || ''}</textarea>
+                        <textarea class="history-edit-notes" id="history-notes-${date}">${escapeHtml(data.notes || '')}</textarea>
                     </div>
                     <div style="margin-top: 15px;">
                         <strong>Lessons Learned:</strong>
-                        <textarea class="history-edit-notes" id="history-lessons-${date}">${data.lessonsLearned || ''}</textarea>
+                        <textarea class="history-edit-notes" id="history-lessons-${date}">${escapeHtml(data.lessonsLearned || '')}</textarea>
                     </div>
                     <div class="history-edit-actions">
                         <button class="save-goal-btn" onclick="saveEditHistory('${date}')">Save Changes</button>
@@ -5679,8 +6442,32 @@
             }, 50);
         }
 
+        function setHistoryGoalDate(date, index, targetDate) {
+            const input = document.getElementById(`history-goal-date-${date}-${index}`);
+            if (input) {
+                input.value = targetDate;
+            }
+        }
+
+        function pickHistoryGoalDate(date, index) {
+            const input = document.getElementById(`history-goal-date-${date}-${index}`);
+            if (!input) return;
+            const chosenDate = promptForGoalDate(input.value || date);
+            if (chosenDate) {
+                input.value = chosenDate;
+            }
+        }
+
+        function removeHistoryGoalDraft(date, index) {
+            const row = document.getElementById(`history-goal-${date}-${index}`)?.closest('.history-goal-item-edit');
+            if (!row) return;
+            row.dataset.deleted = 'true';
+            row.style.display = 'none';
+        }
+
         // Save edited history entry
         function saveEditHistory(date) {
+            const showUndo = queueUndoSnapshot('History day updated.', ['habitHistory', 'dailyGoals']);
             const history = JSON.parse(localStorage.getItem('habitHistory'));
             const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
             const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
@@ -5720,9 +6507,19 @@
                     const goal = allGoals[date][index];
                     const statusSelect = document.getElementById(`history-goal-${date}-${index}`);
                     const dateInput = document.getElementById(`history-goal-date-${date}-${index}`);
+                    const textInput = document.getElementById(`history-goal-text-${date}-${index}`);
+                    const row = statusSelect ? statusSelect.closest('.history-goal-item-edit') : null;
+
+                    if (row && row.dataset.deleted === 'true') {
+                        allGoals[date].splice(index, 1);
+                        continue;
+                    }
 
                     if (statusSelect) {
                         goal.status = statusSelect.value;
+                    }
+                    if (textInput && textInput.value.trim()) {
+                        goal.text = textInput.value.trim();
                     }
 
                     // Check if date changed
@@ -5753,10 +6550,12 @@
 
             if (selectedCalendarDate === date) {
                 renderHistory(date);
+                showUndo();
                 return;
             }
 
             renderHistory();
+            showUndo();
         }
 
         // Add a new goal to a history entry
@@ -6329,6 +7128,7 @@
 
         // Delete metric
         function deleteMetric(id) {
+            const showUndo = queueUndoSnapshot('Metric deleted.', ['habitMetrics', 'habitHistory']);
             let metrics = JSON.parse(localStorage.getItem('habitMetrics'));
             metrics = metrics.filter(m => m.id !== id);
             localStorage.setItem('habitMetrics', JSON.stringify(metrics));
@@ -6340,7 +7140,8 @@
             });
             localStorage.setItem('habitHistory', JSON.stringify(history));
 
-            renderMetricsList();
+            refreshAllViews();
+            showUndo();
         }
 
         // Clear all data
@@ -6547,8 +7348,8 @@
                 <h4>${formattedDate}</h4>
                 <div>${avgText}</div>
                 <div style="margin-top: 6px;">${goalsText}</div>
-                ${notesText ? `<div style="margin-top: 6px;"><strong>Notes:</strong> ${notesText}</div>` : ''}
-                ${lessonsText ? `<div style="margin-top: 6px;"><strong>Lessons Learned:</strong> ${lessonsText}</div>` : ''}
+                ${notesText ? `<div style="margin-top: 6px;"><strong>Notes:</strong> ${escapeHtml(notesText)}</div>` : ''}
+                ${lessonsText ? `<div style="margin-top: 6px;"><strong>Lessons Learned:</strong> ${escapeHtml(lessonsText)}</div>` : ''}
             `;
             calendarDetail.style.display = 'block';
         }
