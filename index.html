@@ -6349,21 +6349,7 @@
 
                 // Click handler
                 cell.onclick = function() {
-                    if (selectedCalendarDate === dateKey) {
-                        // Clicking same date again - deselect and show all history
-                        selectedCalendarDate = null;
-                        if (calendarDetail) {
-                            calendarDetail.style.display = 'none';
-                        }
-                        document.getElementById('historyContainer').style.display = 'block';
-                        renderHistory();
-                        return;
-                    }
-
-                    // Selecting a date - show calendar detail only, hide history list
-                    selectedCalendarDate = dateKey;
-                    document.getElementById('historyContainer').style.display = 'none';
-                    renderCalendarDetail(dateKey);
+                    showOnlyHistoryDate(dateKey);
                 };
 
                 calendarGrid.appendChild(cell);
@@ -6455,9 +6441,7 @@
             const today = new Date();
             calendarMonth = today.getMonth();
             calendarYear = today.getFullYear();
-            selectedCalendarDate = getTodayKey();
-            renderCalendar();
-            renderCalendarDetail(selectedCalendarDate);
+            showOnlyHistoryDate(getTodayKey());
         }
 
         // Create a new entry for a past date that doesn't have data yet
@@ -6490,9 +6474,10 @@
         function showOnlyHistoryDate(dateKey) {
             selectedCalendarDate = dateKey;
             focusCalendarOnDate(dateKey);
-            // Hide calendar detail and show history
             const calendarDetail = document.getElementById('calendarDetail');
-            if (calendarDetail) calendarDetail.style.display = 'none';
+            if (calendarDetail) {
+                renderCalendarDetail(dateKey);
+            }
             document.getElementById('historyContainer').style.display = 'block';
             renderHistory(dateKey);
             const entry = document.getElementById(`history-entry-${dateKey}`);
