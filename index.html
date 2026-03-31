@@ -2556,6 +2556,13 @@
             dateElement.textContent = today.toLocaleDateString('en-US', options);
         }
 
+        function focusCalendarOnDate(dateKey) {
+            if (!dateKey) return;
+            const [year, month] = dateKey.split('-').map(Number);
+            calendarYear = year;
+            calendarMonth = month - 1;
+        }
+
         // Show section
         function showSection(section) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -2567,7 +2574,27 @@
             if (section === 'today') {
                 renderMetrics();
             } else if (section === 'history') {
-                renderHistory();
+                const historyContainer = document.getElementById('historyContainer');
+                const calendarDetail = document.getElementById('calendarDetail');
+
+                if (selectedCalendarDate) {
+                    focusCalendarOnDate(selectedCalendarDate);
+                    if (historyContainer) {
+                        historyContainer.style.display = 'block';
+                    }
+                    renderHistory(selectedCalendarDate);
+                    if (calendarDetail) {
+                        renderCalendarDetail(selectedCalendarDate);
+                    }
+                } else {
+                    if (historyContainer) {
+                        historyContainer.style.display = 'block';
+                    }
+                    if (calendarDetail) {
+                        calendarDetail.style.display = 'none';
+                    }
+                    renderHistory();
+                }
             } else if (section === 'manage') {
                 renderMetricsList();
             } else if (section === 'longterm') {
@@ -5488,6 +5515,7 @@
 
         function openHistoryEditor(dateKey) {
             selectedCalendarDate = dateKey;
+            focusCalendarOnDate(dateKey);
             const calendarDetail = document.getElementById('calendarDetail');
             const historyContainer = document.getElementById('historyContainer');
 
@@ -6461,6 +6489,7 @@
 
         function showOnlyHistoryDate(dateKey) {
             selectedCalendarDate = dateKey;
+            focusCalendarOnDate(dateKey);
             // Hide calendar detail and show history
             const calendarDetail = document.getElementById('calendarDetail');
             if (calendarDetail) calendarDetail.style.display = 'none';
