@@ -990,9 +990,53 @@
             gap: 15px;
         }
 
+        .subgoal-input-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .subgoal-input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .subgoal-input-field {
+            flex: 1;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .subgoal-input-field:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .subgoal-remove-btn {
+            padding: 10px 14px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .subgoal-add-btn {
+            align-self: flex-start;
+        }
+
         @media (max-width: 600px) {
             .form-row {
                 grid-template-columns: 1fr;
+            }
+
+            .subgoal-input-row {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
 
@@ -2273,8 +2317,14 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Sub-goals (one per line, optional)</label>
-                    <textarea id="ltGoalSubgoals" class="notes-textarea" placeholder="Complete Duolingo tree&#10;Watch 10 Spanish movies&#10;Have 5 conversations" style="min-height: 80px;"></textarea>
+                    <label>Sub-goals (optional)</label>
+                    <div id="ltSubgoalInputs" class="subgoal-input-list">
+                        <div class="subgoal-input-row">
+                            <input type="text" class="subgoal-input-field" placeholder="Enter a sub-goal">
+                            <button type="button" class="subgoal-remove-btn" onclick="removeLongTermSubgoalInput(this)">Remove</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn subgoal-add-btn" onclick="addLongTermSubgoalInput()" style="margin-top: 10px;">Add Sub-goal</button>
                 </div>
                 <button class="btn" onclick="addLongTermGoal()">Add Long-Term Goal</button>
             </div>
@@ -4540,13 +4590,72 @@
         }
 
         // Add a new long-term goal
+        function addLongTermSubgoalInput(value = '') {
+            const container = document.getElementById('ltSubgoalInputs');
+            if (!container) return;
+
+            const row = document.createElement('div');
+            row.className = 'subgoal-input-row';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'subgoal-input-field';
+            input.placeholder = 'Enter a sub-goal';
+            input.value = value;
+
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'subgoal-remove-btn';
+            button.textContent = 'Remove';
+            button.onclick = function() { removeLongTermSubgoalInput(this); };
+
+            row.appendChild(input);
+            row.appendChild(button);
+            container.appendChild(row);
+        }
+
+        function removeLongTermSubgoalInput(button) {
+            const container = document.getElementById('ltSubgoalInputs');
+            const row = button ? button.closest('.subgoal-input-row') : null;
+            if (!container || !row) return;
+
+            if (container.children.length === 1) {
+                const input = row.querySelector('.subgoal-input-field');
+                if (input) input.value = '';
+                return;
+            }
+
+            row.remove();
+        }
+
+        function getLongTermSubgoalValues() {
+            const container = document.getElementById('ltSubgoalInputs');
+            if (!container) return [];
+
+            return Array.from(container.querySelectorAll('.subgoal-input-field'))
+                .map(input => input.value.trim())
+                .filter(Boolean);
+        }
+
+        function resetLongTermSubgoalInputs() {
+            const container = document.getElementById('ltSubgoalInputs');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="subgoal-input-row">
+                    <input type="text" class="subgoal-input-field" placeholder="Enter a sub-goal">
+                    <button type="button" class="subgoal-remove-btn" onclick="removeLongTermSubgoalInput(this)">Remove</button>
+                </div>
+            `;
+        }
+
         function addLongTermGoal() {
             try {
                 const title = document.getElementById('ltGoalTitle').value.trim();
                 const description = document.getElementById('ltGoalDescription').value.trim();
                 const targetDate = document.getElementById('ltGoalTargetDate').value;
                 const progress = parseInt(document.getElementById('ltGoalProgress').value) || 0;
-                const subgoalsText = document.getElementById('ltGoalSubgoals').value.trim();
+                const subgoalValues = getLongTermSubgoalValues();
 
                 if (!title) {
                     alert('Please enter a goal title!');
@@ -4554,11 +4663,7 @@
                 }
 
                 // Parse subgoals from text
-                const subGoals = subgoalsText
-                    .split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0)
-                    .map(text => ({
+                const subGoals = subgoalValues.map(text => ({
                         id: Date.now() + Math.random(),
                         text: text,
                         completed: false
@@ -4584,7 +4689,7 @@
                 document.getElementById('ltGoalDescription').value = '';
                 document.getElementById('ltGoalTargetDate').value = '';
                 document.getElementById('ltGoalProgress').value = '0';
-                document.getElementById('ltGoalSubgoals').value = '';
+                resetLongTermSubgoalInputs();
 
                 renderLongTermGoals();
                 updateGoalLinkDropdown();
