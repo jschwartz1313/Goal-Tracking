@@ -1979,11 +1979,11 @@
         <div class="date" id="currentDate"></div>
 
         <div class="nav-buttons">
-            <button class="nav-btn active" onclick="showSection('today')">Today</button>
-            <button class="nav-btn" onclick="showSection('journal')">Journal</button>
-            <button class="nav-btn" onclick="showSection('longterm')">Long-Term Goals</button>
-            <button class="nav-btn" onclick="showSection('history')">History</button>
-            <button class="nav-btn" onclick="showSection('manage')">Manage Metrics</button>
+            <button class="nav-btn active" onclick="showSection('today', this)">Today</button>
+            <button class="nav-btn" onclick="showSection('journal', this)">Journal</button>
+            <button class="nav-btn" onclick="showSection('longterm', this)">Long-Term Goals</button>
+            <button class="nav-btn" onclick="showSection('history', this)">History</button>
+            <button class="nav-btn" onclick="showSection('manage', this)">Manage Metrics</button>
         </div>
 
         <!-- Today Section -->
@@ -2563,13 +2563,28 @@
             calendarMonth = month - 1;
         }
 
+        function toLocalDateKey(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         // Show section
-        function showSection(section) {
+        function showSection(section, trigger = null) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
 
             document.getElementById(`${section}-section`).classList.add('active');
-            event.target.classList.add('active');
+
+            if (trigger) {
+                trigger.classList.add('active');
+            } else {
+                const targetBtn = document.querySelector(`.nav-btn[onclick="showSection('${section}', this)"]`);
+                if (targetBtn) {
+                    targetBtn.classList.add('active');
+                }
+            }
 
             if (section === 'today') {
                 renderMetrics();
@@ -4816,7 +4831,25 @@
         // Get all journal entries
         function getJournalEntries() {
             try {
-                return JSON.parse(localStorage.getItem('journalEntries') || '{}');
+                const entries = JSON.parse(localStorage.getItem('journalEntries') || '{}');
+                let needsSave = false;
+
+                Object.keys(entries).forEach(dateKey => {
+                    const entry = entries[dateKey];
+                    if (typeof entry === 'string') {
+                        entries[dateKey] = {
+                            content: entry,
+                            updatedAt: null
+                        };
+                        needsSave = true;
+                    }
+                });
+
+                if (needsSave) {
+                    localStorage.setItem('journalEntries', JSON.stringify(entries));
+                }
+
+                return entries;
             } catch (e) {
                 console.error('Error getting journal entries:', e);
                 return {};
@@ -5205,7 +5238,7 @@
                 const entries = getJournalEntries();
 
                 // Check if entry already exists
-                if (entries[selectedDate] && entries[selectedDate].trim()) {
+                if (entries[selectedDate] && entries[selectedDate].content && entries[selectedDate].content.trim()) {
                     // Entry exists, scroll to it and start editing
                     renderJournalEntries();
                     setTimeout(() => {
@@ -5219,7 +5252,10 @@
                 }
 
                 // Create empty entry for this date
-                entries[selectedDate] = '';
+                entries[selectedDate] = {
+                    content: '',
+                    updatedAt: null
+                };
                 saveJournalEntries(entries);
 
                 // Re-render and open edit mode for the new entry
@@ -5263,7 +5299,7 @@
             for (let i = 0; i < 7; i++) {
                 const date = new Date();
                 date.setDate(date.getDate() - i);
-                const key = date.toISOString().split('T')[0];
+                const key = toLocalDateKey(date);
                 if (history[key]) {
                     const scores = Object.keys(history[key])
                         .filter(k => k !== 'notes' && k !== 'lessonsLearned')
@@ -6223,6 +6259,9 @@
                 localStorage.removeItem('habitHistory');
                 localStorage.removeItem('dailyGoals');
                 localStorage.removeItem('longTermGoals');
+                localStorage.removeItem('recurringDailyGoals');
+                localStorage.removeItem('journalEntries');
+                localStorage.removeItem('sectionCollapseState');
 
                 // Reinitialize with defaults
                 initializeData();
