@@ -20,7 +20,8 @@
         }
 
         .container {
-            max-width: 1000px;
+            width: min(1500px, calc(100vw - 40px));
+            max-width: 1500px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -3024,8 +3025,9 @@
 
             Object.keys(allGoals).forEach(dateKey => {
                 (allGoals[dateKey] || []).forEach(goal => {
-                    const inferred = getGoalCategory(goal);
-                    if (goal.category !== inferred) {
+                    const hasValidCategory = !!(goal.category && GOAL_CATEGORY_LABELS[goal.category]);
+                    if (!hasValidCategory) {
+                        const inferred = inferGoalCategory(goal?.text);
                         goal.category = inferred;
                         changed = true;
                     }
@@ -3038,8 +3040,9 @@
 
             let recurringChanged = false;
             const recurringGoals = getRecurringGoals().map(goal => {
-                const inferred = getGoalCategory(goal);
-                if (goal.category !== inferred) {
+                const hasValidCategory = !!(goal.category && GOAL_CATEGORY_LABELS[goal.category]);
+                if (!hasValidCategory) {
+                    const inferred = inferGoalCategory(goal?.text);
                     recurringChanged = true;
                     return { ...goal, category: inferred };
                 }
