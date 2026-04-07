@@ -905,6 +905,22 @@
 
         .goal-category-group {
             margin-bottom: 16px;
+            width: 100%;
+            display: block;
+            clear: both;
+        }
+
+        .goal-category-shell {
+            list-style: none;
+            margin: 0 0 16px 0;
+            padding: 0;
+            width: 100%;
+        }
+
+        .goal-category-group > ul,
+        .goal-category-shell > ul {
+            margin: 0;
+            padding: 0;
         }
 
         .goal-category-header {
@@ -1697,8 +1713,10 @@
             border-radius: 8px;
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 12px;
             border-left: 4px solid #17a2b8;
+            width: 100%;
         }
 
         .recurring-goal-text {
@@ -1908,9 +1926,11 @@
             border-radius: 8px;
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
             gap: 15px;
             border-left: 4px solid #ffc107;
             transition: all 0.3s;
+            width: 100%;
         }
 
         .overdue-goal-date {
@@ -1928,6 +1948,8 @@
         .overdue-actions {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .move-to-today-btn {
@@ -2988,8 +3010,9 @@
             }
 
             groupGoalsByCategory(goals).forEach(group => {
-                const groupWrap = document.createElement('div');
-                groupWrap.className = 'goal-category-group';
+                const wrapperTag = listElement.tagName === 'UL' ? 'li' : 'div';
+                const groupWrap = document.createElement(wrapperTag);
+                groupWrap.className = `${wrapperTag === 'li' ? 'goal-category-shell' : 'goal-category-group'}`;
 
                 const header = document.createElement('div');
                 header.className = 'goal-category-header';
@@ -5297,8 +5320,8 @@
                 }
 
                 groupGoalsByCategory(sortGoals(recurringGoals, 'priority')).forEach(group => {
-                    const groupWrap = document.createElement('div');
-                    groupWrap.className = 'goal-category-group';
+                    const groupWrap = document.createElement('li');
+                    groupWrap.className = 'goal-category-shell';
 
                     const header = document.createElement('div');
                     header.className = 'goal-category-header';
