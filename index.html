@@ -2119,6 +2119,42 @@
             gap: 15px;
         }
 
+        .multi-journal-form,
+        .multi-journal-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .multi-journal-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 4px solid #764ba2;
+        }
+
+        .multi-journal-meta {
+            color: #666;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        .multi-journal-title {
+            font-weight: 700;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .multi-journal-empty {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-style: italic;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
         .journal-entry-card {
             background: white;
             border: 1px solid #e0e0e0;
@@ -2626,6 +2662,24 @@
                 </div>
             </div>
 
+            <div class="journal-history">
+                <div class="category-header" style="margin-top: 30px;">
+                    <h2>Multi-Day Entries</h2>
+                </div>
+                <div class="journal-add-past" style="padding: 20px; background: #f8f9fa; border-radius: 12px;">
+                    <div class="multi-journal-form">
+                        <input type="text" id="multiJournalTitle" class="goal-edit-input" placeholder="Title, like: UNC trip or job search stretch">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="date" id="multiJournalStartDate" class="goal-date-input" title="Start date">
+                            <input type="date" id="multiJournalEndDate" class="goal-date-input" title="End date">
+                        </div>
+                        <textarea id="multiJournalContent" class="journal-textarea" placeholder="Write one extended entry that can span multiple days..."></textarea>
+                        <button onclick="addMultiDayJournalEntry()" class="save-journal-btn" style="margin: 0; align-self: flex-start;">Save Multi-Day Entry</button>
+                    </div>
+                </div>
+                <div id="multiJournalEntriesList" class="multi-journal-list" style="margin-top: 20px;"></div>
+            </div>
+
             <!-- Past Journal Entries -->
             <div class="journal-history">
                 <div class="category-header" style="margin-top: 30px;">
@@ -2821,6 +2875,9 @@
             }
             if (!localStorage.getItem('journalEntries')) {
                 localStorage.setItem('journalEntries', JSON.stringify({}));
+            }
+            if (!localStorage.getItem('multiDayJournalEntries')) {
+                localStorage.setItem('multiDayJournalEntries', JSON.stringify([]));
             }
         }
 
@@ -6005,6 +6062,32 @@
             }
         }
 
+        function getMultiDayJournalEntries() {
+            try {
+                const entries = JSON.parse(localStorage.getItem('multiDayJournalEntries') || '[]');
+                return Array.isArray(entries) ? entries : [];
+            } catch (e) {
+                console.error('Error getting multi-day journal entries:', e);
+                return [];
+            }
+        }
+
+        function saveMultiDayJournalEntries(entries) {
+            try {
+                localStorage.setItem('multiDayJournalEntries', JSON.stringify(entries));
+            } catch (e) {
+                console.error('Error saving multi-day journal entries:', e);
+            }
+        }
+
+        function formatJournalRange(startDate, endDate) {
+            if (!startDate && !endDate) return 'No dates set';
+            if (startDate && endDate && startDate !== endDate) {
+                return `${formatDate(startDate)} to ${formatDate(endDate)}`;
+            }
+            return formatDate(startDate || endDate);
+        }
+
         // Save a journal entry for a specific date
         window.saveJournalEntry = function(dateKey, silent = false) {
             try {
@@ -6147,9 +6230,108 @@
                 setupJournalAutoSave();
 
                 // Render past entries
+                renderMultiDayJournalEntries();
                 renderJournalEntries();
             } catch (e) {
                 console.error('Error rendering journal:', e);
+            }
+        }
+
+        function renderMultiDayJournalEntries() {
+            try {
+                const container = document.getElementById('multiJournalEntriesList');
+                if (!container) return;
+
+                const entries = getMultiDayJournalEntries()
+                    .sort((a, b) => {
+                        const aDate = a.updatedAt || a.endDate || a.startDate || '';
+                        const bDate = b.updatedAt || b.endDate || b.startDate || '';
+                        return String(bDate).localeCompare(String(aDate));
+                    });
+
+                container.innerHTML = '';
+
+                if (entries.length === 0) {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.className = 'multi-journal-empty';
+                    emptyDiv.textContent = 'No multi-day entries yet.';
+                    container.appendChild(emptyDiv);
+                    return;
+                }
+
+                entries.forEach(entry => {
+                    const card = document.createElement('div');
+                    card.className = 'multi-journal-card';
+                    card.dataset.entryId = entry.id;
+
+                    card.innerHTML = `
+                        <div class="journal-entry-header">
+                            <div>
+                                <div class="multi-journal-title">${escapeHtml(entry.title || 'Untitled')}</div>
+                                <div class="multi-journal-meta">${escapeHtml(formatJournalRange(entry.startDate, entry.endDate))}</div>
+                            </div>
+                            <div class="journal-entry-actions">
+                                <button class="edit-journal-btn" onclick="startEditMultiDayJournalEntry(${entry.id})">Edit</button>
+                                <button class="delete-journal-btn" onclick="deleteMultiDayJournalEntry(${entry.id})">Delete</button>
+                            </div>
+                        </div>
+                        <div class="journal-entry-content">${escapeHtml(entry.content || '')}</div>
+                    `;
+
+                    container.appendChild(card);
+                });
+            } catch (e) {
+                console.error('Error rendering multi-day journal entries:', e);
+            }
+        }
+
+        window.addMultiDayJournalEntry = function() {
+            try {
+                const titleInput = document.getElementById('multiJournalTitle');
+                const startDateInput = document.getElementById('multiJournalStartDate');
+                const endDateInput = document.getElementById('multiJournalEndDate');
+                const contentInput = document.getElementById('multiJournalContent');
+
+                const title = titleInput ? titleInput.value.trim() : '';
+                const startDate = startDateInput ? startDateInput.value : '';
+                const endDate = endDateInput ? endDateInput.value : '';
+                const content = contentInput ? contentInput.value.trim() : '';
+
+                if (!title) {
+                    alert('Please add a title for the multi-day entry.');
+                    return;
+                }
+
+                if (!content) {
+                    alert('Please write something for the multi-day entry.');
+                    return;
+                }
+
+                if (startDate && endDate && endDate < startDate) {
+                    alert('End date cannot be earlier than the start date.');
+                    return;
+                }
+
+                const entries = getMultiDayJournalEntries();
+                entries.push({
+                    id: Date.now(),
+                    title,
+                    startDate: startDate || null,
+                    endDate: endDate || startDate || null,
+                    content,
+                    updatedAt: new Date().toISOString()
+                });
+
+                saveMultiDayJournalEntries(entries);
+
+                if (titleInput) titleInput.value = '';
+                if (startDateInput) startDateInput.value = '';
+                if (endDateInput) endDateInput.value = '';
+                if (contentInput) contentInput.value = '';
+
+                renderMultiDayJournalEntries();
+            } catch (e) {
+                console.error('Error adding multi-day journal entry:', e);
             }
         }
 
@@ -6357,6 +6539,93 @@
                 showUndo();
             } catch (e) {
                 console.error('Error deleting journal entry:', e);
+            }
+        }
+
+        function startEditMultiDayJournalEntry(entryId) {
+            try {
+                const container = document.getElementById('multiJournalEntriesList');
+                const card = container ? container.querySelector(`[data-entry-id="${entryId}"]`) : null;
+                if (!card) return;
+
+                const entry = getMultiDayJournalEntries().find(item => item.id === entryId);
+                if (!entry) return;
+
+                card.innerHTML = `
+                    <div class="multi-journal-form">
+                        <input type="text" id="edit-multi-title-${entryId}" class="goal-edit-input" value="${escapeHtml(entry.title || '')}">
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <input type="date" id="edit-multi-start-${entryId}" class="goal-date-input" value="${entry.startDate || ''}">
+                            <input type="date" id="edit-multi-end-${entryId}" class="goal-date-input" value="${entry.endDate || ''}">
+                        </div>
+                        <textarea id="edit-multi-content-${entryId}" class="journal-edit-textarea">${escapeHtml(entry.content || '')}</textarea>
+                        <div class="journal-entry-actions">
+                            <button class="save-goal-btn" onclick="saveEditMultiDayJournalEntry(${entryId})">Save</button>
+                            <button class="cancel-edit-btn" onclick="renderMultiDayJournalEntries()">Cancel</button>
+                        </div>
+                    </div>
+                `;
+            } catch (e) {
+                console.error('Error editing multi-day journal entry:', e);
+            }
+        }
+
+        function saveEditMultiDayJournalEntry(entryId) {
+            try {
+                const titleInput = document.getElementById(`edit-multi-title-${entryId}`);
+                const startDateInput = document.getElementById(`edit-multi-start-${entryId}`);
+                const endDateInput = document.getElementById(`edit-multi-end-${entryId}`);
+                const contentInput = document.getElementById(`edit-multi-content-${entryId}`);
+
+                const title = titleInput ? titleInput.value.trim() : '';
+                const startDate = startDateInput ? startDateInput.value : '';
+                const endDate = endDateInput ? endDateInput.value : '';
+                const content = contentInput ? contentInput.value.trim() : '';
+
+                if (!title) {
+                    alert('Please add a title for the multi-day entry.');
+                    return;
+                }
+
+                if (!content) {
+                    alert('Please write something for the multi-day entry.');
+                    return;
+                }
+
+                if (startDate && endDate && endDate < startDate) {
+                    alert('End date cannot be earlier than the start date.');
+                    return;
+                }
+
+                const entries = getMultiDayJournalEntries();
+                const index = entries.findIndex(item => item.id === entryId);
+                if (index === -1) return;
+
+                entries[index] = {
+                    ...entries[index],
+                    title,
+                    startDate: startDate || null,
+                    endDate: endDate || startDate || null,
+                    content,
+                    updatedAt: new Date().toISOString()
+                };
+
+                saveMultiDayJournalEntries(entries);
+                renderMultiDayJournalEntries();
+            } catch (e) {
+                console.error('Error saving multi-day journal entry:', e);
+            }
+        }
+
+        function deleteMultiDayJournalEntry(entryId) {
+            try {
+                const showUndo = queueUndoSnapshot('Multi-day journal entry deleted.', ['multiDayJournalEntries']);
+                const entries = getMultiDayJournalEntries().filter(entry => entry.id !== entryId);
+                saveMultiDayJournalEntries(entries);
+                renderMultiDayJournalEntries();
+                showUndo();
+            } catch (e) {
+                console.error('Error deleting multi-day journal entry:', e);
             }
         }
 
@@ -7487,6 +7756,7 @@
                 localStorage.removeItem('longTermGoals');
                 localStorage.removeItem('recurringDailyGoals');
                 localStorage.removeItem('journalEntries');
+                localStorage.removeItem('multiDayJournalEntries');
                 localStorage.removeItem('sectionCollapseState');
 
                 // Reinitialize with defaults
