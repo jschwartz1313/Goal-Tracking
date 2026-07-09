@@ -2392,7 +2392,9 @@
 
         <!-- Today Section -->
         <div id="today-section" class="section active">
+            <!-- Metrics ratings section shelved.
             <div id="metricsContainer"></div>
+            -->
 
             <div class="goals-section">
                 <div class="category-header" style="display: flex; justify-content: space-between; align-items: center;">
@@ -3640,56 +3642,58 @@
             let needsSave = false;
 
             const container = document.getElementById('metricsContainer');
-            container.innerHTML = '';
+            if (container) {
+                container.innerHTML = '';
 
-            // Group by category
-            const categories = {};
-            metrics.forEach(metric => {
-                if (!categories[metric.category]) {
-                    categories[metric.category] = [];
-                }
-                categories[metric.category].push(metric);
-            });
-
-            // Render each category
-            Object.keys(categories).forEach(category => {
-                const categoryDiv = document.createElement('div');
-                categoryDiv.innerHTML = `
-                    <div class="category-header">
-                        <h2>${category}</h2>
-                    </div>
-                `;
-                container.appendChild(categoryDiv);
-
-                categories[category].forEach(metric => {
-                    // If metric doesn't have a value for today, initialize it to 5
-                    if (todayData[metric.id] === undefined) {
-                        todayData[metric.id] = 5;
-                        needsSave = true;
+                // Group by category
+                const categories = {};
+                metrics.forEach(metric => {
+                    if (!categories[metric.category]) {
+                        categories[metric.category] = [];
                     }
-                    const value = todayData[metric.id];
+                    categories[metric.category].push(metric);
+                });
 
-                    const metricDiv = document.createElement('div');
-                    metricDiv.className = 'metric-item';
-                    metricDiv.innerHTML = `
-                        <div class="metric-header">
-                            <div class="metric-name">${metric.name}</div>
-                            <div class="metric-score" id="score-${metric.id}">${value}/10</div>
-                        </div>
-                        <div class="slider-container">
-                            <input type="range" min="1" max="10" value="${value}"
-                                   class="slider" id="slider-${metric.id}"
-                                   oninput="updateScore(${metric.id}, this.value)">
-                        </div>
-                        <div class="slider-labels">
-                            <span>1 - Poor</span>
-                            <span>5 - Average</span>
-                            <span>10 - Excellent</span>
+                // Render each category
+                Object.keys(categories).forEach(category => {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.innerHTML = `
+                        <div class="category-header">
+                            <h2>${category}</h2>
                         </div>
                     `;
-                    container.appendChild(metricDiv);
+                    container.appendChild(categoryDiv);
+
+                    categories[category].forEach(metric => {
+                        // If metric doesn't have a value for today, initialize it to 5
+                        if (todayData[metric.id] === undefined) {
+                            todayData[metric.id] = 5;
+                            needsSave = true;
+                        }
+                        const value = todayData[metric.id];
+
+                        const metricDiv = document.createElement('div');
+                        metricDiv.className = 'metric-item';
+                        metricDiv.innerHTML = `
+                            <div class="metric-header">
+                                <div class="metric-name">${metric.name}</div>
+                                <div class="metric-score" id="score-${metric.id}">${value}/10</div>
+                            </div>
+                            <div class="slider-container">
+                                <input type="range" min="1" max="10" value="${value}"
+                                       class="slider" id="slider-${metric.id}"
+                                       oninput="updateScore(${metric.id}, this.value)">
+                            </div>
+                            <div class="slider-labels">
+                                <span>1 - Poor</span>
+                                <span>5 - Average</span>
+                                <span>10 - Excellent</span>
+                            </div>
+                        `;
+                        container.appendChild(metricDiv);
+                    });
                 });
-            });
+            }
 
             // Save if we initialized any default values
             if (needsSave) {
