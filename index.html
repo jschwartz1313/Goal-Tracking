@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Goal Tracker</title>
+    <title>Daily To-Dos</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -74,6 +74,10 @@
 
         .section.active {
             display: block;
+        }
+
+        .shelved-section {
+            display: none !important;
         }
 
         .category-header {
@@ -549,14 +553,18 @@
         }
 
         .goals-section {
-            margin-top: 20px;
+            margin-top: 8px;
         }
 
         .goal-input-container {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
+            padding: 16px;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
         }
 
         .goal-options-row {
@@ -667,18 +675,19 @@
 
         .add-goal-btn {
             padding: 12px 24px;
-            background: #667eea;
+            background: #2563eb;
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
+            font-weight: 700;
             cursor: pointer;
             transition: background 0.3s;
             white-space: nowrap;
         }
 
         .add-goal-btn:hover {
-            background: #5568d3;
+            background: #1d4ed8;
         }
 
         .goals-list {
@@ -1526,6 +1535,12 @@
             margin-bottom: 10px;
         }
 
+        .goal-quick-add-row {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
         .goal-link-select {
             padding: 12px;
             border: 2px solid #ddd;
@@ -2314,9 +2329,92 @@
         }
 
         @media (max-width: 600px) {
+            body {
+                padding: 0;
+                background: white;
+            }
+
+            .container {
+                width: 100%;
+                min-height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
+                padding: 14px;
+            }
+
+            h1 {
+                font-size: 24px;
+                text-align: left;
+            }
+
+            .date {
+                text-align: left;
+                margin-bottom: 16px;
+                font-size: 14px;
+            }
+
+            .nav-buttons {
+                justify-content: flex-start;
+                overflow-x: auto;
+                gap: 8px;
+                margin-bottom: 18px;
+                padding-bottom: 4px;
+            }
+
+            .nav-btn {
+                flex: 0 0 auto;
+                padding: 9px 12px;
+                font-size: 13px;
+            }
+
+            .category-header {
+                padding: 12px;
+                margin-top: 18px;
+                margin-bottom: 12px;
+            }
+
+            .category-header h2 {
+                font-size: 18px;
+            }
+
+            .goal-toolbar-controls {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .goal-filter-select,
+            .goal-toolbar-toggle {
+                flex: 1 1 44%;
+            }
+
+            .goal-quick-add-row {
+                flex-direction: column;
+            }
+
+            .goal-input-container {
+                padding: 12px;
+            }
+
             .goal-input-row {
                 flex-direction: column;
             }
+
+            .goal-options-row > * {
+                flex: 1 1 42%;
+            }
+
+            .goal-time-input,
+            .goal-date-input,
+            .goal-priority-select,
+            .goal-category-select {
+                width: 100%;
+                min-width: 0;
+            }
+
+            .add-goal-btn {
+                width: 100%;
+            }
+
             .goal-link-select {
                 min-width: 100%;
             }
@@ -2379,15 +2477,17 @@
 </head>
 <body>
     <div class="container">
-        <h1>Goal Tracker</h1>
+        <h1>Daily To-Dos</h1>
         <div class="date" id="currentDate"></div>
 
         <div class="nav-buttons">
             <button class="nav-btn active" onclick="showSection('today', this)">Today</button>
-            <button class="nav-btn" onclick="showSection('journal', this)">Journal</button>
-            <button class="nav-btn" onclick="showSection('history', this)">History</button>
+            <button class="nav-btn" onclick="showSection('history', this)">Past Days</button>
+            <button class="nav-btn" onclick="showSection('journal', this)">Notes</button>
+            <!-- Metrics management nav shelved.
             <button class="nav-btn" onclick="showSection('manage', this)">Manage Metrics</button>
-            <button class="nav-btn" onclick="showSection('longterm', this)">Long-Term Goals</button>
+            -->
+            <button class="nav-btn" onclick="showSection('longterm', this)">Projects</button>
         </div>
 
         <!-- Today Section -->
@@ -2398,7 +2498,7 @@
 
             <div class="goals-section">
                 <div class="category-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2>Goals</h2>
+                    <h2>Today's To-Dos</h2>
                     <div class="goal-toolbar-controls">
                         <select id="goalSortSelect" class="goal-filter-select" onchange="renderGoals()">
                             <option value="priority">Sort: Priority</option>
@@ -2418,14 +2518,14 @@
                             <option value="complete">Complete Only</option>
                         </select>
                         <label class="goal-toolbar-toggle" for="goalActiveOnlyToggle">
-                            <input type="checkbox" id="goalActiveOnlyToggle" onchange="renderGoals()">
-                            <span>Show Active Only</span>
+                            <input type="checkbox" id="goalActiveOnlyToggle" onchange="renderGoals()" checked>
+                            <span>Active</span>
                         </label>
                     </div>
                 </div>
                 <!-- Total Time Counter -->
                 <div class="total-time-container">
-                    <span class="total-time-label">Total Time for Today</span>
+                    <span class="total-time-label">Open Time Today</span>
                     <span class="total-time-value" id="totalTimeDisplay">0 min</span>
                 </div>
 
@@ -2449,25 +2549,29 @@
                     </h3>
                     <div id="todayGoalsContent" class="collapsible-content">
                         <div class="goal-input-container">
-                            <div class="goal-input-row">
-                                <input type="text" id="goalInput" class="goal-input" placeholder="Add a goal..." />
-                                <select id="goalCategoryInput" class="goal-category-select" title="Category"></select>
+                            <div class="goal-quick-add-row">
+                                <input type="text" id="goalInput" class="goal-input" placeholder="What needs to get done?" />
+                                <button class="add-goal-btn" onclick="addGoal()">Add</button>
+                            </div>
+                            <div class="goal-options-row">
+                                <input type="date" id="goalDateInput" class="goal-date-input" title="Select date for this to-do">
                                 <select id="goalPriorityInput" class="goal-priority-select" title="Priority">
                                     <option value="1">P1</option>
                                     <option value="2">P2</option>
                                     <option value="3" selected>P3</option>
                                 </select>
                                 <input type="number" id="goalTimeInput" class="goal-time-input" placeholder="min" min="0" title="Duration in minutes">
-                                <input type="date" id="goalDateInput" class="goal-date-input" title="Select date for this goal">
+                                <label class="goal-repeat-toggle" for="goalCarryForwardInput">
+                                    <input type="checkbox" id="goalCarryForwardInput">
+                                    <span>Until done</span>
+                                </label>
+                            </div>
+                            <!-- Advanced categorization/linking controls shelved.
+                            <div class="goal-input-row">
+                                <select id="goalCategoryInput" class="goal-category-select" title="Category"></select>
                                 <select id="goalLinkSelect" class="goal-link-select">
                                     <option value="">No linked goal</option>
                                 </select>
-                            </div>
-                            <div class="goal-options-row">
-                                <label class="goal-repeat-toggle" for="goalCarryForwardInput">
-                                    <input type="checkbox" id="goalCarryForwardInput">
-                                    <span>Stay until complete</span>
-                                </label>
                             </div>
                             <div class="goal-templates">
                                 <button type="button" class="goal-template-btn" onclick="applyGoalTemplate('admin')">Admin Task</button>
@@ -2475,25 +2579,22 @@
                                 <button type="button" class="goal-template-btn" onclick="applyGoalTemplate('deep')">Deep Work</button>
                                 <button type="button" class="goal-template-btn" onclick="applyGoalTemplate('errand')">Errand</button>
                             </div>
-                            <button class="add-goal-btn" onclick="addGoal()">Add Goal</button>
+                            -->
                         </div>
                         <div id="staleGoalsSection" class="insight-card" style="display: none;">
                             <h3>Needs Attention</h3>
                             <div id="staleGoalsContent"></div>
                         </div>
                         <div id="carryForwardGoalsSection" class="goal-section-card until-complete" style="display: none;">
-                            <h4 style="color: #1f7a4d;">Until Complete Goals</h4>
-                            <div class="goal-section-note">Persistent tasks that stay in view until you finish them.</div>
+                            <h4 style="color: #1f7a4d;">Until Done</h4>
                             <ul id="carryForwardGoalsList" class="goals-list"></ul>
                         </div>
                         <div id="recurringTodayGoalsSection" class="goal-section-card recurring" style="display: none;">
-                            <h4 style="color: #17a2b8;">Daily Recurring Goals</h4>
-                            <div class="goal-section-note">Habits and routines that are supposed to show up every day.</div>
+                            <h4 style="color: #17a2b8;">Recurring</h4>
                             <ul id="recurringTodayGoalsList" class="goals-list"></ul>
                         </div>
                         <div class="goal-section-card one-off">
-                        <h4 style="margin-bottom: 10px; color: #333;">Daily Goals</h4>
-                        <div class="goal-section-note">One-off tasks that matter only for the selected day.</div>
+                        <h4 style="margin-bottom: 10px; color: #333;">Today</h4>
                         <ul id="goalsList" class="goals-list"></ul>
                         </div>
                     </div>
@@ -2512,10 +2613,10 @@
                 <div class="recurring-goals-section">
                     <h3 class="collapsible-header recurring-goals-title" onclick="toggleSection('recurringGoals')" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
                         <span class="collapse-arrow" id="recurringGoalsArrow">▼</span>
-                        <span>Daily Recurring Goals</span>
+                        <span>Recurring To-Dos</span>
                     </h3>
                     <div id="recurringGoalsContent" class="collapsible-content">
-                        <p style="color: #666; font-size: 13px; margin-bottom: 15px;">These goals automatically appear every day.</p>
+                        <p style="color: #666; font-size: 13px; margin-bottom: 15px;">These to-dos automatically appear every day.</p>
                         <div class="recurring-input-container">
                             <input type="text" id="recurringGoalInput" class="recurring-input" placeholder="Add a recurring daily goal..." />
                             <select id="recurringGoalCategorySelect" class="goal-category-select" title="Category" style="border-color: #17a2b8;"></select>
@@ -2534,7 +2635,7 @@
                             <select id="recurringGoalLinkSelect" class="goal-link-select" style="border-color: #17a2b8;">
                                 <option value="">No linked goal</option>
                             </select>
-                            <button class="add-recurring-btn" onclick="addRecurringGoal()">Add Recurring</button>
+                            <button class="add-recurring-btn" onclick="addRecurringGoal()">Add</button>
                         </div>
                         <ul id="recurringGoalsList" class="recurring-goals-list"></ul>
                     </div>
@@ -2543,19 +2644,19 @@
 
             <div class="notes-section">
                 <div class="category-header">
-                    <h2>Daily Notes</h2>
+                    <h2>Notes</h2>
                 </div>
-                <textarea id="dailyNotes" class="notes-textarea" placeholder="Add any notes about your day..."></textarea>
+                <textarea id="dailyNotes" class="notes-textarea" placeholder="Anything to remember for today..."></textarea>
             </div>
 
-            <div class="notes-section">
+            <div class="notes-section shelved-section">
                 <div class="category-header">
                     <h2>Lessons Learned</h2>
                 </div>
                 <textarea id="lessonsLearned" class="notes-textarea" placeholder="What did you learn today?"></textarea>
             </div>
 
-            <div class="stats-grid">
+            <div class="stats-grid shelved-section">
                 <div class="stat-card">
                     <div class="stat-value" id="todayAverage">0.0</div>
                     <div class="stat-label">Today's Average</div>
@@ -2574,7 +2675,7 @@
         <!-- History Section -->
         <div id="history-section" class="section">
             <div class="category-header">
-                <h2>Your History</h2>
+                <h2>Past Days</h2>
             </div>
 
             <!-- Calendar Section -->
@@ -2596,7 +2697,7 @@
             <div id="weeklyReviewContainer" class="insight-card" style="display: none;"></div>
 
             <!-- Charts Section -->
-            <div class="charts-section">
+            <div class="charts-section shelved-section">
                 <div class="category-header">
                     <h2>Analytics & Trends</h2>
                 </div>
@@ -2642,14 +2743,14 @@
         <!-- Journal Section -->
         <div id="journal-section" class="section">
             <div class="category-header">
-                <h2>Journal</h2>
+                <h2>Notes</h2>
             </div>
 
             <!-- Today's Journal Entry -->
             <div class="journal-today">
                 <div class="journal-date-header">
                     <h3 id="journalTodayDate">Today's Entry</h3>
-                    <button class="view-day-btn" onclick="viewDayFromJournal(getTodayKey())">View Day's Goals & Metrics</button>
+                    <button class="view-day-btn" onclick="viewDayFromJournal(getTodayKey())">View Day's To-Dos</button>
                 </div>
                 <textarea id="journalTodayEntry" class="journal-textarea" placeholder="Write your journal entry for today..."></textarea>
                 <button class="save-journal-btn" onclick="saveJournalEntry(getTodayKey())">Save Entry</button>
@@ -2694,12 +2795,12 @@
         <!-- Long-Term Goals Section -->
         <div id="longterm-section" class="section">
             <div class="category-header">
-                <h2>Long-Term Goals</h2>
+                <h2>Projects</h2>
             </div>
 
             <!-- Add New Long-Term Goal Form -->
             <div class="add-longterm-form">
-                <h3>Add New Long-Term Goal</h3>
+                <h3>Add Project</h3>
                 <div class="form-group">
                     <label>Goal Title *</label>
                     <input type="text" id="ltGoalTitle" placeholder="e.g., Learn Spanish">
@@ -2728,18 +2829,18 @@
                     </div>
                     <button type="button" class="btn subgoal-add-btn" onclick="addLongTermSubgoalInput()" style="margin-top: 10px;">Add Sub-goal</button>
                 </div>
-                <button class="btn" onclick="addLongTermGoal()">Add Long-Term Goal</button>
+                <button class="btn" onclick="addLongTermGoal()">Add Project</button>
             </div>
 
             <!-- Long-Term Goals List -->
             <div class="category-header" style="margin-top: 30px;">
-                <h2>Your Long-Term Goals</h2>
+                <h2>Your Projects</h2>
             </div>
             <div id="longTermGoalsList"></div>
         </div>
 
         <!-- Manage Metrics Section -->
-        <div id="manage-section" class="section">
+        <div id="manage-section" class="section shelved-section">
             <div class="category-header">
                 <h2>Add New Metric</h2>
             </div>
@@ -3434,7 +3535,6 @@
             const container = document.getElementById('weeklyReviewContainer');
             if (!container) return;
 
-            const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
             const allGoals = getAllGoals();
             const dates = [];
 
@@ -3444,28 +3544,11 @@
 
             const reviewGoals = dates.flatMap(date => allGoals[date] || []);
             const summary = getGoalSummary(reviewGoals);
-            const avgScores = dates
-                .map(date => {
-                    const data = history[date];
-                    if (!data) return null;
-                    const scores = Object.keys(data)
-                        .filter(key => key !== 'notes' && key !== 'lessonsLearned')
-                        .map(key => data[key])
-                        .filter(value => typeof value === 'number' && !isNaN(value));
-                    if (scores.length === 0) return null;
-                    return scores.reduce((a, b) => a + b, 0) / scores.length;
-                })
-                .filter(value => value !== null);
-
-            const weeklyAverage = avgScores.length > 0
-                ? (avgScores.reduce((a, b) => a + b, 0) / avgScores.length).toFixed(1)
-                : '0.0';
-
             const missedP1 = reviewGoals.filter(goal => getGoalPriority(goal) === 1 && goal.status !== 'complete');
             const skippedGoals = reviewGoals.filter(goal => goal.status === 'skipped');
             const staleCarryForward = reviewGoals.filter(goal => goal.stayUntilComplete && getCarryForwardAgeDays(goal, allGoals) >= 7);
 
-            if (reviewGoals.length === 0 && avgScores.length === 0) {
+            if (reviewGoals.length === 0) {
                 container.style.display = 'none';
                 container.innerHTML = '';
                 return;
@@ -3477,26 +3560,22 @@
                 <p>Last 7 days at a glance so you can see what is actually slipping.</p>
                 <div class="insight-grid">
                     <div class="insight-stat">
-                        <div class="insight-stat-value">${weeklyAverage}</div>
-                        <div class="insight-stat-label">Average score</div>
-                    </div>
-                    <div class="insight-stat">
                         <div class="insight-stat-value">${summary.p1Complete}/${summary.p1Total}</div>
-                        <div class="insight-stat-label">P1 goals finished</div>
+                        <div class="insight-stat-label">P1 to-dos done</div>
                     </div>
                     <div class="insight-stat">
                         <div class="insight-stat-value">${skippedGoals.length}</div>
-                        <div class="insight-stat-label">Goals skipped</div>
+                        <div class="insight-stat-label">To-dos skipped</div>
                     </div>
                     <div class="insight-stat">
                         <div class="insight-stat-value">${staleCarryForward.length}</div>
-                        <div class="insight-stat-label">Stale until-complete goals</div>
+                        <div class="insight-stat-label">Stale until-done</div>
                     </div>
                 </div>
                 <ul class="insight-list">
-                    <li>${missedP1.length} priority-1 goals were not completed.</li>
-                    <li>${summary.partial} goals were left partial.</li>
-                    <li>${summary.incomplete} goals were left incomplete.</li>
+                    <li>${missedP1.length} priority-1 to-dos were not completed.</li>
+                    <li>${summary.partial} to-dos were left partial.</li>
+                    <li>${summary.incomplete} to-dos were left incomplete.</li>
                 </ul>
             `;
         }
@@ -6694,10 +6773,14 @@
 
         // Update statistics
         function updateStats() {
+            const todayAverageElement = document.getElementById('todayAverage');
+            const weekAverageElement = document.getElementById('weekAverage');
+            const totalDaysElement = document.getElementById('totalDays');
+            if (!todayAverageElement || !weekAverageElement || !totalDaysElement) return;
+
             const history = JSON.parse(localStorage.getItem('habitHistory'));
             const todayKey = getTodayKey();
             const todayData = history[todayKey] || {};
-            const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
 
             // Today's average
             const todayScores = Object.keys(todayData)
@@ -6707,7 +6790,7 @@
             const todayAvg = todayScores.length > 0
                 ? (todayScores.reduce((a, b) => a + b, 0) / todayScores.length).toFixed(1)
                 : '0.0';
-            document.getElementById('todayAverage').textContent = todayAvg;
+            todayAverageElement.textContent = todayAvg;
 
             // 7-day average
             const last7Days = [];
@@ -6728,16 +6811,15 @@
             const weekAvg = last7Days.length > 0
                 ? (last7Days.reduce((a, b) => a + b, 0) / last7Days.length).toFixed(1)
                 : '0.0';
-            document.getElementById('weekAverage').textContent = weekAvg;
+            weekAverageElement.textContent = weekAvg;
 
             // Total days tracked
-            document.getElementById('totalDays').textContent = Object.keys(history).length;
+            totalDaysElement.textContent = Object.keys(history).length;
         }
 
         // Render history
         function renderHistory(filterDate = null) {
             const history = JSON.parse(localStorage.getItem('habitHistory'));
-            const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
             const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
             const container = document.getElementById('historyContainer');
             container.innerHTML = '';
@@ -6775,34 +6857,13 @@
                     day: 'numeric'
                 });
 
-                const scores = Object.keys(data)
-                    .filter(key => key !== 'notes' && key !== 'lessonsLearned')
-                    .map(key => data[key])
-                    .filter(val => typeof val === 'number' && !isNaN(val));
-                const avg = scores.length > 0
-                    ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1)
-                    : '0.0';
-
                 const entryDiv = document.createElement('div');
                 entryDiv.className = 'history-entry';
                 entryDiv.dataset.date = date;
                 entryDiv.id = `history-entry-${date}`;
 
-                let scoresHTML = '<div class="history-scores">';
-                Object.keys(data).forEach(key => {
-                    if (key !== 'notes' && key !== 'lessonsLearned') {
-                        const metric = metrics.find(m => m.id == key);
-                        if (metric) {
-                            scoresHTML += `
-                                <div class="history-score-item">
-                                    <span>${metric.name}:</span>
-                                    <strong>${data[key]}/10</strong>
-                                </div>
-                            `;
-                        }
-                    }
-                });
-                scoresHTML += '</div>';
+                // Metric score display shelved.
+                const scoresHTML = '';
 
                 // Get goals for this date
                 const dateGoals = allGoals[date] || [];
@@ -6850,22 +6911,19 @@
 
                 entryDiv.innerHTML = `
                     <div class="history-header">
-                        <div class="history-date">${formattedDate} - Average: ${avg}/10</div>
+                        <div class="history-date">${formattedDate}</div>
                         <button class="history-edit-btn" onclick="startEditHistory('${date}')">Edit</button>
                     </div>
                     ${scoresHTML}
                     ${summaryHTML}
                     ${goalsHTML}
                     ${data.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${escapeHtml(data.notes)}</div>` : ''}
-                    ${data.lessonsLearned ? `<div style="margin-top: 10px; font-style: italic; color: #667eea;"><strong>Lessons Learned:</strong> ${escapeHtml(data.lessonsLearned)}</div>` : ''}
+                    ${data.lessonsLearned ? `<div class="shelved-section" style="margin-top: 10px; font-style: italic; color: #667eea;"><strong>Lessons Learned:</strong> ${escapeHtml(data.lessonsLearned)}</div>` : ''}
                 `;
                 container.appendChild(entryDiv);
             });
 
-            // Render charts after history entries (skip when filtering a single day)
-            if (!filterDate) {
-                renderCharts();
-            }
+            // Analytics charts shelved.
             renderWeeklyReview();
             renderCalendar();
         }
@@ -6873,14 +6931,10 @@
         // Start editing a history entry
         function startEditHistory(date) {
             const history = JSON.parse(localStorage.getItem('habitHistory'));
-            const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
             const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
             if (!history[date]) {
                 history[date] = {};
-                metrics.forEach(metric => {
-                    history[date][metric.id] = 5;
-                });
                 history[date].notes = '';
                 history[date].lessonsLearned = '';
                 localStorage.setItem('habitHistory', JSON.stringify(history));
@@ -6914,21 +6968,8 @@
 
             entryDiv.className = 'history-entry editing';
 
-            // Build metrics edit form
+            // Metric edit form shelved.
             let metricsEditHTML = '';
-            metrics.forEach(metric => {
-                const value = data[metric.id] !== undefined ? data[metric.id] : 5;
-                metricsEditHTML += `
-                    <div class="history-edit-metric">
-                        <span class="history-edit-metric-name">${metric.name}</span>
-                        <input type="range" min="1" max="10" value="${value}"
-                               class="slider history-edit-slider"
-                               id="history-edit-${date}-${metric.id}"
-                               oninput="document.getElementById('history-value-${date}-${metric.id}').textContent = this.value + '/10'">
-                        <span class="history-edit-value" id="history-value-${date}-${metric.id}">${value}/10</span>
-                    </div>
-                `;
-            });
 
             // Build goals edit form
             let goalsEditHTML = '';
@@ -6983,7 +7024,7 @@
                         <strong>Notes:</strong>
                         <textarea class="history-edit-notes" id="history-notes-${date}">${escapeHtml(data.notes || '')}</textarea>
                     </div>
-                    <div style="margin-top: 15px;">
+                    <div class="shelved-section" style="margin-top: 15px;">
                         <strong>Lessons Learned:</strong>
                         <textarea class="history-edit-notes" id="history-lessons-${date}">${escapeHtml(data.lessonsLearned || '')}</textarea>
                     </div>
@@ -7056,20 +7097,13 @@
         function saveEditHistory(date) {
             const showUndo = queueUndoSnapshot('History day updated.', ['habitHistory', 'dailyGoals']);
             const history = JSON.parse(localStorage.getItem('habitHistory'));
-            const metrics = JSON.parse(localStorage.getItem('habitMetrics'));
             const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
             if (!history[date]) {
                 history[date] = {};
             }
 
-            // Save metric values
-            metrics.forEach(metric => {
-                const slider = document.getElementById(`history-edit-${date}-${metric.id}`);
-                if (slider) {
-                    history[date][metric.id] = parseInt(slider.value);
-                }
-            });
+            // Metric editing is shelved; preserve any existing metric data untouched.
 
             // Save notes
             const notesTextarea = document.getElementById(`history-notes-${date}`);
@@ -7832,7 +7866,6 @@
             const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
             const todayKey = getTodayKey();
 
-            const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
             const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
             // Empty cells before month starts
@@ -7856,27 +7889,6 @@
 
                 const badges = document.createElement('div');
                 badges.className = 'calendar-badges';
-
-                // Average score badge if history exists
-                if (history[dateKey]) {
-                    const scores = Object.keys(history[dateKey])
-                        .filter(key => key !== 'notes' && key !== 'lessonsLearned')
-                        .map(key => history[dateKey][key])
-                        .filter(val => typeof val === 'number' && !isNaN(val));
-                    if (scores.length > 0) {
-                        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
-                        const badge = document.createElement('span');
-                        badge.className = `calendar-badge ${avg >= 7 ? 'avg-high' : avg >= 5 ? 'avg-mid' : 'avg-low'}`;
-                        badge.textContent = `${avg.toFixed(1)}`;
-                        badges.appendChild(badge);
-                    }
-                    if (history[dateKey].notes || history[dateKey].lessonsLearned) {
-                        const noteBadge = document.createElement('span');
-                        noteBadge.className = 'calendar-badge notes';
-                        noteBadge.textContent = 'Notes';
-                        badges.appendChild(noteBadge);
-                    }
-                }
 
                 // Goals badge if goals exist
                 if (allGoals[dateKey] && allGoals[dateKey].length > 0) {
@@ -7906,7 +7918,6 @@
             if (!calendarDetail) return;
 
             const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
-            const metrics = JSON.parse(localStorage.getItem('habitMetrics') || '[]');
             const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
 
             const [year, month, day] = dateKey.split('-').map(Number);
@@ -7921,31 +7932,18 @@
             const data = history[dateKey] || null;
             const dateGoals = allGoals[dateKey] || [];
 
-            let avgText = 'No metrics logged.';
-            if (data) {
-                const scores = Object.keys(data)
-                    .filter(key => key !== 'notes' && key !== 'lessonsLearned')
-                    .map(key => data[key])
-                    .filter(val => typeof val === 'number' && !isNaN(val));
-                if (scores.length > 0) {
-                    const avg = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
-                    avgText = `Average score: ${avg}/10`;
-                }
-            }
-
             let goalsText = dateGoals.length > 0
-                ? `Goals: ${dateGoals.length} total (${dateGoals.filter(g => g.status === 'complete').length} complete)`
-                : 'No goals logged.';
+                ? `To-dos: ${dateGoals.length} total (${dateGoals.filter(g => g.status === 'complete').length} complete)`
+                : 'No to-dos logged.';
 
             const notesText = data && data.notes ? data.notes : '';
             const lessonsText = data && data.lessonsLearned ? data.lessonsLearned : '';
 
             calendarDetail.innerHTML = `
                 <h4>${formattedDate}</h4>
-                <div>${avgText}</div>
-                <div style="margin-top: 6px;">${goalsText}</div>
+                <div>${goalsText}</div>
                 ${notesText ? `<div style="margin-top: 6px;"><strong>Notes:</strong> ${escapeHtml(notesText)}</div>` : ''}
-                ${lessonsText ? `<div style="margin-top: 6px;"><strong>Lessons Learned:</strong> ${escapeHtml(lessonsText)}</div>` : ''}
+                ${lessonsText ? `<div class="shelved-section" style="margin-top: 6px;"><strong>Lessons Learned:</strong> ${escapeHtml(lessonsText)}</div>` : ''}
             `;
             calendarDetail.style.display = 'block';
         }
@@ -7979,14 +7977,9 @@
         function createPastEntry(dateKey) {
             // Initialize empty history entry for this date
             const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
-            const metrics = JSON.parse(localStorage.getItem('habitMetrics') || '[]');
 
             if (!history[dateKey]) {
                 history[dateKey] = {};
-                // Initialize all metrics with default value of 5
-                metrics.forEach(metric => {
-                    history[dateKey][metric.id] = 5;
-                });
                 history[dateKey].notes = '';
                 history[dateKey].lessonsLearned = '';
                 localStorage.setItem('habitHistory', JSON.stringify(history));
