@@ -2523,24 +2523,6 @@
                         </label>
                     </div>
                 </div>
-                <!-- Total Time Counter -->
-                <div class="total-time-container">
-                    <span class="total-time-label">Open Time Today</span>
-                    <span class="total-time-value" id="totalTimeDisplay">0 min</span>
-                </div>
-
-                <!-- Overdue Goals Section -->
-                <div id="overdueGoalsSection" class="overdue-goals-section" style="display: none;">
-                    <div class="overdue-goals-header collapsible-header" onclick="toggleSection('overdue')">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span class="collapse-arrow" id="overdueArrow">▼</span>
-                            <h3 class="overdue-goals-title">⚠️ Overdue Goals</h3>
-                            <span class="overdue-count" id="overdueCount">0</span>
-                        </div>
-                    </div>
-                    <div id="overdueGoalsList" class="collapsible-content"></div>
-                </div>
-
                 <!-- Today's Goals Section -->
                 <div class="todays-goals-wrapper">
                     <h3 class="collapsible-header" onclick="toggleSection('todayGoals')" style="cursor: pointer; display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
@@ -2598,6 +2580,24 @@
                         <ul id="goalsList" class="goals-list"></ul>
                         </div>
                     </div>
+                </div>
+
+                <!-- Total Time Counter -->
+                <div class="total-time-container">
+                    <span class="total-time-label">Open Time Today</span>
+                    <span class="total-time-value" id="totalTimeDisplay">0 min</span>
+                </div>
+
+                <!-- Overdue Goals Section -->
+                <div id="overdueGoalsSection" class="overdue-goals-section" style="display: none;">
+                    <div class="overdue-goals-header collapsible-header" onclick="toggleSection('overdue')">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="collapse-arrow" id="overdueArrow">▼</span>
+                            <h3 class="overdue-goals-title">⚠️ Overdue Goals</h3>
+                            <span class="overdue-count" id="overdueCount">0</span>
+                        </div>
+                    </div>
+                    <div id="overdueGoalsList" class="collapsible-content"></div>
                 </div>
 
                 <!-- Upcoming Goals Section -->
