@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily To-Dos</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -2085,22 +2084,152 @@
             opacity: 0.9;
         }
 
-        .journal-textarea {
+        .journal-rich-editor {
             width: 100%;
-            min-height: 200px;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            font-family: inherit;
-            resize: vertical;
+            overflow: hidden;
+            border: 2px solid #d8dbe2;
+            border-radius: 10px;
+            background: white;
             margin-bottom: 15px;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        .journal-textarea:focus {
-            outline: none;
+        .journal-rich-editor:focus-within {
             border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.14);
         }
+
+        .journal-editor-toolbar {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 9px;
+            border-bottom: 1px solid #d8dbe2;
+            background: #f4f5f8;
+        }
+
+        .journal-toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding-right: 6px;
+            margin-right: 2px;
+            border-right: 1px solid #d8dbe2;
+        }
+
+        .journal-toolbar-group:last-child {
+            padding-right: 0;
+            margin-right: 0;
+            border-right: none;
+        }
+
+        .journal-toolbar-btn,
+        .journal-toolbar-select {
+            min-height: 34px;
+            border: 1px solid #c9cdd6;
+            border-radius: 6px;
+            background: white;
+            color: #30343b;
+            font: inherit;
+        }
+
+        .journal-toolbar-btn {
+            min-width: 34px;
+            padding: 5px 9px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+        }
+
+        .journal-toolbar-btn:hover,
+        .journal-toolbar-btn.active {
+            border-color: #667eea;
+            background: #e8ecff;
+            color: #3f51b5;
+        }
+
+        .journal-toolbar-btn:focus-visible,
+        .journal-toolbar-select:focus-visible {
+            outline: 3px solid rgba(102, 126, 234, 0.3);
+            outline-offset: 1px;
+        }
+
+        .journal-toolbar-select {
+            max-width: 145px;
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .journal-rich-input {
+            width: 100%;
+            min-height: 210px;
+            max-height: 65vh;
+            overflow-y: auto;
+            padding: 16px;
+            outline: none;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.65;
+            overflow-wrap: anywhere;
+        }
+
+        .journal-rich-input.compact {
+            min-height: 150px;
+        }
+
+        .journal-rich-input:empty::before {
+            content: attr(data-placeholder);
+            color: #9297a1;
+            pointer-events: none;
+        }
+
+        .journal-rich-input h2,
+        .journal-entry-content h2 {
+            margin: 0.7em 0 0.35em;
+            font-size: 1.45em;
+        }
+
+        .journal-rich-input h3,
+        .journal-entry-content h3 {
+            margin: 0.65em 0 0.3em;
+            font-size: 1.2em;
+        }
+
+        .journal-rich-input blockquote,
+        .journal-entry-content blockquote {
+            margin: 0.7em 0;
+            padding: 0.25em 0 0.25em 1em;
+            border-left: 4px solid #b9c3ff;
+            color: #5d6470;
+        }
+
+        .journal-rich-input ul,
+        .journal-rich-input ol,
+        .journal-entry-content ul,
+        .journal-entry-content ol {
+            margin: 0.55em 0;
+            padding-left: 1.8em;
+        }
+
+        .journal-rich-input ul[data-list-style="disc"],
+        .journal-entry-content ul[data-list-style="disc"] { list-style-type: disc; }
+
+        .journal-rich-input ul[data-list-style="circle"],
+        .journal-entry-content ul[data-list-style="circle"] { list-style-type: circle; }
+
+        .journal-rich-input ul[data-list-style="square"],
+        .journal-entry-content ul[data-list-style="square"] { list-style-type: square; }
+
+        .journal-rich-input ol[data-list-style="decimal"],
+        .journal-entry-content ol[data-list-style="decimal"] { list-style-type: decimal; }
+
+        .journal-rich-input ol[data-list-style="lower-alpha"],
+        .journal-entry-content ol[data-list-style="lower-alpha"] { list-style-type: lower-alpha; }
+
+        .journal-rich-input ol[data-list-style="upper-roman"],
+        .journal-entry-content ol[data-list-style="upper-roman"] { list-style-type: upper-roman; }
 
         .save-journal-btn {
             padding: 12px 24px;
@@ -2201,7 +2330,7 @@
         .journal-entry-content {
             color: #555;
             line-height: 1.6;
-            white-space: pre-wrap;
+            overflow-wrap: anywhere;
         }
 
         .journal-entry-preview {
@@ -2263,18 +2392,6 @@
 
         .delete-journal-btn:hover {
             background: #c82333;
-        }
-
-        .journal-edit-textarea {
-            width: 100%;
-            min-height: 150px;
-            padding: 12px;
-            border: 2px solid #667eea;
-            border-radius: 8px;
-            font-size: 14px;
-            font-family: inherit;
-            resize: vertical;
-            margin-bottom: 10px;
         }
 
         .empty-journal {
@@ -2433,6 +2550,30 @@
             .goal-actions button {
                 flex: 1 1 auto;
             }
+            .journal-today,
+            .journal-add-past,
+            .multi-journal-card,
+            .journal-entry-card {
+                padding: 14px !important;
+            }
+            .journal-editor-toolbar {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding: 7px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .journal-toolbar-group {
+                flex: 0 0 auto;
+            }
+            .journal-rich-input {
+                min-height: 190px;
+                padding: 13px;
+                font-size: 16px;
+            }
+            .journal-entry-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
             .undo-toast {
                 left: 16px;
                 right: 16px;
@@ -2483,7 +2624,7 @@
         <div class="nav-buttons">
             <button class="nav-btn active" onclick="showSection('today', this)">Today</button>
             <button class="nav-btn" onclick="showSection('history', this)">Past Days</button>
-            <button class="nav-btn" onclick="showSection('journal', this)">Notes</button>
+            <button class="nav-btn" onclick="showSection('journal', this)">Journal Entries</button>
             <!-- Metrics management nav shelved.
             <button class="nav-btn" onclick="showSection('manage', this)">Manage Metrics</button>
             -->
@@ -2644,9 +2785,9 @@
 
             <div class="notes-section">
                 <div class="category-header">
-                    <h2>Notes</h2>
+                    <h2>Quick Reflection</h2>
                 </div>
-                <textarea id="dailyNotes" class="notes-textarea" placeholder="Anything to remember for today..."></textarea>
+                <textarea id="dailyNotes" class="notes-textarea" placeholder="Capture a quick thought about today..."></textarea>
             </div>
 
             <div class="notes-section shelved-section">
@@ -2699,7 +2840,7 @@
             <!-- Charts Section -->
             <div class="charts-section shelved-section">
                 <div class="category-header">
-                    <h2>Analytics & Trends</h2>
+                    <h2>Analytics &amp; Trends</h2>
                 </div>
                 <div class="charts-grid">
                     <!-- Daily Average Trend Chart -->
@@ -2743,7 +2884,7 @@
         <!-- Journal Section -->
         <div id="journal-section" class="section">
             <div class="category-header">
-                <h2>Notes</h2>
+                <h2>Journal Entries</h2>
             </div>
 
             <!-- Today's Journal Entry -->
@@ -2752,8 +2893,8 @@
                     <h3 id="journalTodayDate">Today's Entry</h3>
                     <button class="view-day-btn" onclick="viewDayFromJournal(getTodayKey())">View Day's To-Dos</button>
                 </div>
-                <textarea id="journalTodayEntry" class="journal-textarea" placeholder="Write your journal entry for today..."></textarea>
-                <button class="save-journal-btn" onclick="saveJournalEntry(getTodayKey())">Save Entry</button>
+                <div id="journalTodayEditorMount"></div>
+                <button type="button" class="save-journal-btn" onclick="saveJournalEntry(getTodayKey())">Save Entry</button>
             </div>
 
             <!-- Add Past Entry -->
@@ -2776,8 +2917,8 @@
                             <input type="date" id="multiJournalStartDate" class="goal-date-input" title="Start date">
                             <input type="date" id="multiJournalEndDate" class="goal-date-input" title="End date">
                         </div>
-                        <textarea id="multiJournalContent" class="journal-textarea" placeholder="Write one extended entry that can span multiple days..."></textarea>
-                        <button onclick="addMultiDayJournalEntry()" class="save-journal-btn" style="margin: 0; align-self: flex-start;">Save Multi-Day Entry</button>
+                        <div id="multiJournalEditorMount"></div>
+                        <button type="button" onclick="addMultiDayJournalEntry()" class="save-journal-btn" style="margin: 0; align-self: flex-start;">Save Multi-Day Entry</button>
                     </div>
                 </div>
                 <div id="multiJournalEntriesList" class="multi-journal-list" style="margin-top: 20px;"></div>
@@ -2869,7 +3010,7 @@
 
             <div class="danger-zone">
                 <h3>Danger Zone</h3>
-                <p>This will permanently delete all your data including metrics history, goals, and notes. This action cannot be undone.</p>
+                <p>This will permanently delete all your data including metrics history, goals, reflections, and journal entries. This action cannot be undone.</p>
                 <button class="btn-clear-all" onclick="clearAllData()">Clear All Data</button>
             </div>
         </div>
@@ -2990,13 +3131,7 @@
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
-            const dateKey = `${year}-${month}-${day}`;
-            console.log('getTodayKey() called:', {
-                fullDate: today.toString(),
-                year, month, day,
-                dateKey
-            });
-            return dateKey;
+            return `${year}-${month}-${day}`;
         }
 
         function isActiveCarryForwardGoal(goal) {
@@ -3096,6 +3231,319 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+        }
+
+        const JOURNAL_FORMAT = 'html-v1';
+        const JOURNAL_ALLOWED_TAGS = new Set([
+            'P', 'DIV', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'S',
+            'UL', 'OL', 'LI', 'H2', 'H3', 'BLOCKQUOTE', 'SUB', 'SUP'
+        ]);
+        const JOURNAL_BLOCKED_TAGS = new Set([
+            'SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'MATH',
+            'IMG', 'VIDEO', 'AUDIO', 'FORM', 'INPUT', 'BUTTON', 'TEXTAREA'
+        ]);
+        const JOURNAL_UNORDERED_STYLES = new Set(['disc', 'circle', 'square']);
+        const JOURNAL_ORDERED_STYLES = new Set(['decimal', 'lower-alpha', 'upper-roman']);
+        const journalEditorSelections = new Map();
+
+        function plainTextToJournalHtml(value) {
+            return escapeHtml(String(value ?? '').replace(/\r\n?/g, '\n')).replace(/\n/g, '<br>');
+        }
+
+        function sanitizeJournalHtml(value) {
+            const template = document.createElement('template');
+            template.innerHTML = String(value ?? '');
+
+            Array.from(template.content.querySelectorAll('*')).forEach(element => {
+                if (JOURNAL_BLOCKED_TAGS.has(element.tagName)) {
+                    element.remove();
+                    return;
+                }
+
+                if (!JOURNAL_ALLOWED_TAGS.has(element.tagName)) {
+                    element.replaceWith(...Array.from(element.childNodes));
+                    return;
+                }
+
+                const listStyle = element.getAttribute('data-list-style');
+                Array.from(element.attributes).forEach(attribute => {
+                    element.removeAttribute(attribute.name);
+                });
+
+                const validUnorderedStyle = element.tagName === 'UL' && JOURNAL_UNORDERED_STYLES.has(listStyle);
+                const validOrderedStyle = element.tagName === 'OL' && JOURNAL_ORDERED_STYLES.has(listStyle);
+                if (validUnorderedStyle || validOrderedStyle) {
+                    element.setAttribute('data-list-style', listStyle);
+                }
+            });
+
+            return template.innerHTML.trim();
+        }
+
+        function normalizeJournalContent(content, format) {
+            if (!content) return '';
+            return format === JOURNAL_FORMAT
+                ? sanitizeJournalHtml(content)
+                : plainTextToJournalHtml(content);
+        }
+
+        function isJournalContentEmpty(content) {
+            const template = document.createElement('template');
+            template.innerHTML = sanitizeJournalHtml(content);
+            return !String(template.content.textContent || '')
+                .replace(/[\u00a0\u200b]/g, '')
+                .trim();
+        }
+
+        function rememberJournalSelection(editorId) {
+            const editor = document.getElementById(editorId);
+            const selection = window.getSelection();
+            if (!editor || !selection || selection.rangeCount === 0) return;
+
+            const range = selection.getRangeAt(0);
+            if (editor.contains(range.commonAncestorContainer)) {
+                journalEditorSelections.set(editorId, range.cloneRange());
+            }
+        }
+
+        function restoreJournalSelection(editorId) {
+            const range = journalEditorSelections.get(editorId);
+            const selection = window.getSelection();
+            if (!range || !selection) return;
+
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+
+        function notifyJournalEditorInput(editor) {
+            editor.dispatchEvent(new Event('input', { bubbles: true }));
+            rememberJournalSelection(editor.id);
+            updateJournalToolbarState(editor.id);
+        }
+
+        function runJournalCommand(editorId, command, value = null) {
+            const editor = document.getElementById(editorId);
+            if (!editor) return;
+
+            editor.focus();
+            restoreJournalSelection(editorId);
+            document.execCommand(command, false, value);
+            notifyJournalEditorInput(editor);
+        }
+
+        function applyJournalBlockStyle(editorId, tagName) {
+            if (!['p', 'h2', 'h3', 'blockquote'].includes(tagName)) return;
+            runJournalCommand(editorId, 'formatBlock', `<${tagName}>`);
+        }
+
+        function findJournalListAtSelection(editorId) {
+            const editor = document.getElementById(editorId);
+            const selection = window.getSelection();
+            if (!editor || !selection || selection.rangeCount === 0) return null;
+
+            let node = selection.anchorNode;
+            if (!node || !editor.contains(node)) return null;
+            if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+
+            const list = node && node.closest ? node.closest('ul, ol') : null;
+            return list && editor.contains(list) ? list : null;
+        }
+
+        function applyJournalListStyle(editorId, listStyle) {
+            const isUnordered = JOURNAL_UNORDERED_STYLES.has(listStyle);
+            const isOrdered = JOURNAL_ORDERED_STYLES.has(listStyle);
+            if (!isUnordered && !isOrdered) return;
+
+            const editor = document.getElementById(editorId);
+            if (!editor) return;
+
+            editor.focus();
+            restoreJournalSelection(editorId);
+
+            const expectedTag = isOrdered ? 'OL' : 'UL';
+            let list = findJournalListAtSelection(editorId);
+            if (!list || list.tagName !== expectedTag) {
+                document.execCommand(isOrdered ? 'insertOrderedList' : 'insertUnorderedList', false, null);
+                list = findJournalListAtSelection(editorId);
+            }
+
+            if (list && list.tagName === expectedTag) {
+                list.setAttribute('data-list-style', listStyle);
+            }
+
+            notifyJournalEditorInput(editor);
+        }
+
+        function updateJournalToolbarState(editorId) {
+            const editor = document.getElementById(editorId);
+            const wrapper = editor ? editor.closest('.journal-rich-editor') : null;
+            if (!wrapper) return;
+
+            ['bold', 'italic', 'underline'].forEach(command => {
+                const button = wrapper.querySelector(`[data-command="${command}"]`);
+                if (!button) return;
+                let active = false;
+                try {
+                    active = document.queryCommandState(command);
+                } catch (e) {
+                    active = false;
+                }
+                button.classList.toggle('active', active);
+                button.setAttribute('aria-pressed', String(active));
+            });
+        }
+
+        function createJournalToolbarButton(editorId, command, label, title, content = label) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'journal-toolbar-btn';
+            button.dataset.command = command;
+            button.setAttribute('aria-label', label);
+            button.setAttribute('title', title);
+            if (['bold', 'italic', 'underline'].includes(command)) {
+                button.setAttribute('aria-pressed', 'false');
+            }
+            button.innerHTML = content;
+            button.addEventListener('mousedown', event => {
+                rememberJournalSelection(editorId);
+                event.preventDefault();
+            });
+            button.addEventListener('click', () => runJournalCommand(editorId, command));
+            return button;
+        }
+
+        function createJournalToolbar(editorId) {
+            const toolbar = document.createElement('div');
+            toolbar.className = 'journal-editor-toolbar';
+            toolbar.setAttribute('role', 'toolbar');
+            toolbar.setAttribute('aria-label', 'Journal text formatting');
+
+            const historyGroup = document.createElement('div');
+            historyGroup.className = 'journal-toolbar-group';
+            historyGroup.appendChild(createJournalToolbarButton(editorId, 'undo', 'Undo', 'Undo', '↶'));
+            historyGroup.appendChild(createJournalToolbarButton(editorId, 'redo', 'Redo', 'Redo', '↷'));
+
+            const styleGroup = document.createElement('div');
+            styleGroup.className = 'journal-toolbar-group';
+            const styleSelect = document.createElement('select');
+            styleSelect.className = 'journal-toolbar-select';
+            styleSelect.setAttribute('aria-label', 'Paragraph style');
+            [
+                ['', 'Text style'],
+                ['p', 'Normal text'],
+                ['h2', 'Heading'],
+                ['h3', 'Subheading'],
+                ['blockquote', 'Quote']
+            ].forEach(([value, label]) => styleSelect.add(new Option(label, value)));
+            styleSelect.addEventListener('mousedown', () => rememberJournalSelection(editorId));
+            styleSelect.addEventListener('change', () => {
+                applyJournalBlockStyle(editorId, styleSelect.value);
+                styleSelect.value = '';
+            });
+            styleGroup.appendChild(styleSelect);
+
+            const formatGroup = document.createElement('div');
+            formatGroup.className = 'journal-toolbar-group';
+            formatGroup.appendChild(createJournalToolbarButton(editorId, 'bold', 'Bold', 'Bold (Ctrl+B)', '<strong>B</strong>'));
+            formatGroup.appendChild(createJournalToolbarButton(editorId, 'italic', 'Italic', 'Italic (Ctrl+I)', '<em>I</em>'));
+            formatGroup.appendChild(createJournalToolbarButton(editorId, 'underline', 'Underline', 'Underline (Ctrl+U)', '<u>U</u>'));
+
+            const listGroup = document.createElement('div');
+            listGroup.className = 'journal-toolbar-group';
+            const listSelect = document.createElement('select');
+            listSelect.className = 'journal-toolbar-select';
+            listSelect.setAttribute('aria-label', 'List style');
+            [
+                ['', 'List style'],
+                ['disc', '• Bullets'],
+                ['circle', '○ Circle bullets'],
+                ['square', '▪ Square bullets'],
+                ['decimal', '1. Numbered'],
+                ['lower-alpha', 'a. Lettered'],
+                ['upper-roman', 'I. Roman numerals']
+            ].forEach(([value, label]) => listSelect.add(new Option(label, value)));
+            listSelect.addEventListener('mousedown', () => rememberJournalSelection(editorId));
+            listSelect.addEventListener('change', () => {
+                applyJournalListStyle(editorId, listSelect.value);
+                listSelect.value = '';
+            });
+            listGroup.appendChild(listSelect);
+
+            const clearGroup = document.createElement('div');
+            clearGroup.className = 'journal-toolbar-group';
+            clearGroup.appendChild(createJournalToolbarButton(editorId, 'removeFormat', 'Clear formatting', 'Clear formatting', 'Tx'));
+
+            toolbar.appendChild(historyGroup);
+            toolbar.appendChild(styleGroup);
+            toolbar.appendChild(formatGroup);
+            toolbar.appendChild(listGroup);
+            toolbar.appendChild(clearGroup);
+            return toolbar;
+        }
+
+        function setupJournalEditor(editor) {
+            ['focus', 'keyup', 'mouseup'].forEach(eventName => {
+                editor.addEventListener(eventName, () => {
+                    rememberJournalSelection(editor.id);
+                    updateJournalToolbarState(editor.id);
+                });
+            });
+
+            editor.addEventListener('input', () => rememberJournalSelection(editor.id));
+            editor.addEventListener('blur', () => {
+                if (isJournalContentEmpty(editor.innerHTML)) {
+                    editor.innerHTML = '';
+                }
+            });
+            editor.addEventListener('paste', event => {
+                event.preventDefault();
+                const clipboard = event.clipboardData;
+                const pastedHtml = clipboard ? clipboard.getData('text/html') : '';
+                const pastedText = clipboard ? clipboard.getData('text/plain') : '';
+                const safeContent = pastedHtml
+                    ? sanitizeJournalHtml(pastedHtml)
+                    : plainTextToJournalHtml(pastedText);
+                document.execCommand('insertHTML', false, safeContent);
+                notifyJournalEditorInput(editor);
+            });
+        }
+
+        function createJournalEditor(editorId, content, placeholder, compact = false) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'journal-rich-editor';
+            wrapper.appendChild(createJournalToolbar(editorId));
+
+            const editor = document.createElement('div');
+            editor.id = editorId;
+            editor.className = `journal-rich-input${compact ? ' compact' : ''}`;
+            editor.contentEditable = 'true';
+            editor.setAttribute('role', 'textbox');
+            editor.setAttribute('aria-multiline', 'true');
+            editor.setAttribute('aria-label', placeholder);
+            editor.setAttribute('data-placeholder', placeholder);
+            editor.setAttribute('spellcheck', 'true');
+            editor.innerHTML = sanitizeJournalHtml(content);
+            wrapper.appendChild(editor);
+            setupJournalEditor(editor);
+            return wrapper;
+        }
+
+        function ensureJournalEditor(mountId, editorId, content, placeholder, compact = false) {
+            let editor = document.getElementById(editorId);
+            if (editor) return editor;
+
+            const mount = document.getElementById(mountId);
+            if (!mount) return null;
+            const wrapper = createJournalEditor(editorId, content, placeholder, compact);
+            mount.replaceChildren(wrapper);
+            return document.getElementById(editorId);
+        }
+
+        function getJournalEditorContent(editorId) {
+            const editor = document.getElementById(editorId);
+            if (!editor) return '';
+            const content = sanitizeJournalHtml(editor.innerHTML);
+            return isJournalContentEmpty(content) ? '' : content;
         }
 
         function inferGoalCategory(text) {
@@ -3338,6 +3786,7 @@
             updateRecurringGoalLinkDropdown();
             renderRecurringGoals();
             renderLongTermGoals();
+            renderMultiDayJournalEntries();
             renderJournalEntries();
             renderMetricsList();
             renderGoals();
@@ -3779,7 +4228,7 @@
                 localStorage.setItem('habitHistory', JSON.stringify(history));
             }
 
-            // Load notes
+            // Load the lightweight daily reflection (separate from Journal Entries).
             document.getElementById('dailyNotes').value = todayData.notes || '';
             document.getElementById('dailyNotes').onchange = saveNotes;
 
@@ -3810,7 +4259,7 @@
             updateStats();
         }
 
-        // Save notes
+        // Save the lightweight daily reflection.
         function saveNotes() {
             const notes = document.getElementById('dailyNotes').value;
             const history = JSON.parse(localStorage.getItem('habitHistory'));
@@ -6111,22 +6560,45 @@
         // Get all journal entries
         function getJournalEntries() {
             try {
-                const entries = JSON.parse(localStorage.getItem('journalEntries') || '{}');
+                const storedEntries = JSON.parse(localStorage.getItem('journalEntries') || '{}');
+                const entries = storedEntries && typeof storedEntries === 'object' && !Array.isArray(storedEntries)
+                    ? storedEntries
+                    : {};
                 let needsSave = false;
 
                 Object.keys(entries).forEach(dateKey => {
-                    const entry = entries[dateKey];
-                    if (typeof entry === 'string') {
-                        entries[dateKey] = {
-                            content: entry,
-                            updatedAt: null
-                        };
+                    const original = entries[dateKey];
+                    const record = typeof original === 'string'
+                        ? { content: original, updatedAt: null }
+                        : (original && typeof original === 'object' ? original : { content: '' });
+                    const content = normalizeJournalContent(record.content, record.format);
+
+                    if (isJournalContentEmpty(content)) {
+                        delete entries[dateKey];
+                        needsSave = true;
+                        return;
+                    }
+
+                    const normalized = {
+                        ...record,
+                        content,
+                        format: JOURNAL_FORMAT,
+                        updatedAt: record.updatedAt || null
+                    };
+                    if (typeof original === 'string' ||
+                        record.format !== JOURNAL_FORMAT ||
+                        record.content !== content) {
                         needsSave = true;
                     }
+                    entries[dateKey] = normalized;
                 });
 
                 if (needsSave) {
-                    localStorage.setItem('journalEntries', JSON.stringify(entries));
+                    try {
+                        localStorage.setItem('journalEntries', JSON.stringify(entries));
+                    } catch (saveError) {
+                        console.error('Could not persist journal entry migration:', saveError);
+                    }
                 }
 
                 return entries;
@@ -6140,15 +6612,52 @@
         function saveJournalEntries(entries) {
             try {
                 localStorage.setItem('journalEntries', JSON.stringify(entries));
+                return true;
             } catch (e) {
                 console.error('Error saving journal entries:', e);
+                return false;
             }
         }
 
         function getMultiDayJournalEntries() {
             try {
-                const entries = JSON.parse(localStorage.getItem('multiDayJournalEntries') || '[]');
-                return Array.isArray(entries) ? entries : [];
+                const storedEntries = JSON.parse(localStorage.getItem('multiDayJournalEntries') || '[]');
+                if (!Array.isArray(storedEntries)) return [];
+
+                let needsSave = false;
+                const entries = storedEntries.map((entry, index) => {
+                    const record = entry && typeof entry === 'object' ? entry : {};
+                    const content = normalizeJournalContent(record.content, record.format);
+                    const numericId = Number(record.id);
+                    const id = Number.isSafeInteger(numericId) ? numericId : Date.now() + index;
+                    const startDate = /^\d{4}-\d{2}-\d{2}$/.test(record.startDate || '') ? record.startDate : null;
+                    const endDate = /^\d{4}-\d{2}-\d{2}$/.test(record.endDate || '') ? record.endDate : startDate;
+                    if (record.format !== JOURNAL_FORMAT ||
+                        record.content !== content ||
+                        record.id !== id ||
+                        record.startDate !== startDate ||
+                        record.endDate !== endDate) {
+                        needsSave = true;
+                    }
+                    return {
+                        ...record,
+                        id,
+                        startDate,
+                        endDate,
+                        content,
+                        format: JOURNAL_FORMAT
+                    };
+                });
+
+                if (needsSave) {
+                    try {
+                        localStorage.setItem('multiDayJournalEntries', JSON.stringify(entries));
+                    } catch (saveError) {
+                        console.error('Could not persist multi-day journal migration:', saveError);
+                    }
+                }
+
+                return entries;
             } catch (e) {
                 console.error('Error getting multi-day journal entries:', e);
                 return [];
@@ -6158,8 +6667,10 @@
         function saveMultiDayJournalEntries(entries) {
             try {
                 localStorage.setItem('multiDayJournalEntries', JSON.stringify(entries));
+                return true;
             } catch (e) {
                 console.error('Error saving multi-day journal entries:', e);
+                return false;
             }
         }
 
@@ -6174,23 +6685,28 @@
         // Save a journal entry for a specific date
         window.saveJournalEntry = function(dateKey, silent = false) {
             try {
-                const textarea = document.getElementById('journalTodayEntry');
-                if (!textarea) return;
+                const editor = document.getElementById('journalTodayEntry');
+                if (!editor) return false;
 
-                const content = textarea.value.trim();
+                const content = getJournalEditorContent('journalTodayEntry');
                 const entries = getJournalEntries();
+                let updatedAt = null;
 
                 if (content) {
+                    updatedAt = new Date().toISOString();
                     entries[dateKey] = {
-                        content: content,
-                        updatedAt: new Date().toISOString()
+                        content,
+                        format: JOURNAL_FORMAT,
+                        updatedAt
                     };
                 } else {
                     // Remove empty entries
                     delete entries[dateKey];
                 }
 
-                saveJournalEntries(entries);
+                if (!saveJournalEntries(entries)) {
+                    throw new Error('Browser storage rejected the journal update.');
+                }
                 renderJournalEntries();
 
                 // Show save feedback
@@ -6199,18 +6715,21 @@
                 }
 
                 // Update the last saved indicator
-                updateJournalSaveStatus(content ? 'saved' : 'empty');
+                updateJournalSaveStatus(content ? 'saved' : 'empty', updatedAt);
+                return true;
             } catch (e) {
                 console.error('Error saving journal entry:', e);
                 if (!silent) {
                     showJournalSaveFeedback('error');
                 }
+                updateJournalSaveStatus('error');
+                return false;
             }
         }
 
         // Show visual feedback for journal save
         function showJournalSaveFeedback(status) {
-            const saveBtn = document.querySelector('.save-journal-btn');
+            const saveBtn = document.querySelector('.journal-today .save-journal-btn');
             if (!saveBtn) return;
 
             const originalText = saveBtn.textContent;
@@ -6230,7 +6749,7 @@
         }
 
         // Update journal save status indicator
-        function updateJournalSaveStatus(status) {
+        function updateJournalSaveStatus(status, savedAt = null) {
             let statusDiv = document.getElementById('journalSaveStatus');
 
             if (!statusDiv) {
@@ -6239,19 +6758,23 @@
                 statusDiv.id = 'journalSaveStatus';
                 statusDiv.className = 'journal-save-status';
 
-                const saveBtn = document.querySelector('.save-journal-btn');
+                const saveBtn = document.querySelector('.journal-today .save-journal-btn');
                 if (saveBtn) {
                     saveBtn.parentNode.insertBefore(statusDiv, saveBtn);
                 }
             }
 
             if (status === 'saved') {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                const savedDate = savedAt ? new Date(savedAt) : new Date();
+                const validSavedDate = Number.isNaN(savedDate.getTime()) ? new Date() : savedDate;
+                const timeStr = validSavedDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                 statusDiv.innerHTML = `<span style="color: #28a745;">✓</span> Last saved at ${timeStr}`;
                 statusDiv.style.display = 'block';
             } else if (status === 'empty') {
                 statusDiv.style.display = 'none';
+            } else if (status === 'error') {
+                statusDiv.innerHTML = '<span style="color: #dc3545;">!</span> Could not save. Your browser storage may be full.';
+                statusDiv.style.display = 'block';
             }
         }
 
@@ -6259,10 +6782,10 @@
         let journalAutoSaveTimeout = null;
         let journalAutoSaveSetup = false;
         function setupJournalAutoSave() {
-            const textarea = document.getElementById('journalTodayEntry');
-            if (!textarea || journalAutoSaveSetup) return;
+            const editor = document.getElementById('journalTodayEntry');
+            if (!editor || journalAutoSaveSetup) return;
 
-            textarea.addEventListener('input', function() {
+            editor.addEventListener('input', function() {
                 // Clear existing timeout
                 if (journalAutoSaveTimeout) {
                     clearTimeout(journalAutoSaveTimeout);
@@ -6275,10 +6798,8 @@
             });
 
             // Also save on blur (when user clicks away)
-            textarea.addEventListener('blur', function() {
-                if (textarea.value.trim()) {
-                    saveJournalEntry(getTodayKey(), true);
-                }
+            editor.addEventListener('blur', function() {
+                saveJournalEntry(getTodayKey(), true);
             });
 
             journalAutoSaveSetup = true;
@@ -6298,14 +6819,28 @@
                     dateHeader.textContent = today.toLocaleDateString('en-US', options);
                 }
 
-                // Load today's entry if exists
-                const textarea = document.getElementById('journalTodayEntry');
-                if (textarea && entries[todayKey]) {
-                    textarea.value = entries[todayKey].content;
+                // Create the reusable rich-text editors when this section first opens.
+                const todayEntry = entries[todayKey] || null;
+                const editor = ensureJournalEditor(
+                    'journalTodayEditorMount',
+                    'journalTodayEntry',
+                    todayEntry ? todayEntry.content : '',
+                    'Write your journal entry for today...'
+                );
+                ensureJournalEditor(
+                    'multiJournalEditorMount',
+                    'multiJournalContent',
+                    '',
+                    'Write one extended entry that can span multiple days...'
+                );
+
+                // Load today's entry if it exists.
+                if (editor && todayEntry) {
+                    editor.innerHTML = sanitizeJournalHtml(todayEntry.content);
                     // Show saved status if entry exists
-                    updateJournalSaveStatus('saved');
-                } else if (textarea) {
-                    textarea.value = '';
+                    updateJournalSaveStatus('saved', todayEntry.updatedAt);
+                } else if (editor) {
+                    editor.innerHTML = '';
                     updateJournalSaveStatus('empty');
                 }
 
@@ -6358,7 +6893,7 @@
                                 <button class="delete-journal-btn" onclick="deleteMultiDayJournalEntry(${entry.id})">Delete</button>
                             </div>
                         </div>
-                        <div class="journal-entry-content">${escapeHtml(entry.content || '')}</div>
+                        <div class="journal-entry-content">${sanitizeJournalHtml(entry.content || '')}</div>
                     `;
 
                     container.appendChild(card);
@@ -6378,7 +6913,7 @@
                 const title = titleInput ? titleInput.value.trim() : '';
                 const startDate = startDateInput ? startDateInput.value : '';
                 const endDate = endDateInput ? endDateInput.value : '';
-                const content = contentInput ? contentInput.value.trim() : '';
+                const content = contentInput ? getJournalEditorContent('multiJournalContent') : '';
 
                 if (!title) {
                     alert('Please add a title for the multi-day entry.');
@@ -6402,15 +6937,19 @@
                     startDate: startDate || null,
                     endDate: endDate || startDate || null,
                     content,
+                    format: JOURNAL_FORMAT,
                     updatedAt: new Date().toISOString()
                 });
 
-                saveMultiDayJournalEntries(entries);
+                if (!saveMultiDayJournalEntries(entries)) {
+                    alert('The entry could not be saved. Your browser storage may be full.');
+                    return;
+                }
 
                 if (titleInput) titleInput.value = '';
                 if (startDateInput) startDateInput.value = '';
                 if (endDateInput) endDateInput.value = '';
-                if (contentInput) contentInput.value = '';
+                if (contentInput) contentInput.innerHTML = '';
 
                 renderMultiDayJournalEntries();
             } catch (e) {
@@ -6494,7 +7033,7 @@
                     // Content preview
                     const content = document.createElement('div');
                     content.className = 'journal-entry-content';
-                    content.textContent = entry.content;
+                    content.innerHTML = sanitizeJournalHtml(entry.content);
 
                     card.appendChild(header);
                     card.appendChild(content);
@@ -6510,31 +7049,33 @@
             try {
                 // Switch to history section and show that day's data
                 showSection('history');
-
-                // Find or create a way to show specific day
-                // For now, we'll use the calendar detail view if available
-                const calendarDetail = document.getElementById('calendarDetail');
-                if (calendarDetail && typeof showDayDetail === 'function') {
-                    showDayDetail(dateKey);
-                } else {
-                    // Fallback: scroll to history and alert user
-                    alert(`Viewing data for ${dateKey}. Check the History section.`);
-                }
+                showOnlyHistoryDate(dateKey);
             } catch (e) {
                 console.error('Error viewing day from journal:', e);
             }
         }
 
         // Start editing a journal entry
-        function startEditJournalEntry(dateKey) {
+        function startEditJournalEntry(dateKey, createIfMissing = false) {
             try {
                 const container = document.getElementById('journalEntriesList');
-                const card = container.querySelector(`[data-date="${dateKey}"]`);
-                if (!card) return;
+                if (!container) return;
 
                 const entries = getJournalEntries();
-                const entry = entries[dateKey];
+                const entry = entries[dateKey] || (createIfMissing
+                    ? { content: '', format: JOURNAL_FORMAT, updatedAt: null }
+                    : undefined);
                 if (entry === undefined) return;
+
+                let card = container.querySelector(`[data-date="${dateKey}"]`);
+                if (!card && createIfMissing) {
+                    container.querySelector('.empty-journal')?.remove();
+                    card = document.createElement('div');
+                    card.className = 'journal-entry-card';
+                    card.dataset.date = dateKey;
+                    container.prepend(card);
+                }
+                if (!card) return;
 
                 // Replace content with edit form
                 card.innerHTML = '';
@@ -6557,10 +7098,13 @@
                 dateSpan.textContent = formattedDate;
                 header.appendChild(dateSpan);
 
-                const textarea = document.createElement('textarea');
-                textarea.className = 'journal-edit-textarea';
-                textarea.value = entry || '';
-                textarea.id = `edit-journal-${dateKey}`;
+                const editorId = `edit-journal-${dateKey}`;
+                const editorWrapper = createJournalEditor(
+                    editorId,
+                    entry.content || '',
+                    `Edit the journal entry for ${formattedDate}`,
+                    true
+                );
 
                 const actions = document.createElement('div');
                 actions.className = 'journal-entry-actions';
@@ -6579,10 +7123,10 @@
                 actions.appendChild(cancelBtn);
 
                 card.appendChild(header);
-                card.appendChild(textarea);
+                card.appendChild(editorWrapper);
                 card.appendChild(actions);
 
-                textarea.focus();
+                document.getElementById(editorId)?.focus();
             } catch (e) {
                 console.error('Error starting edit journal entry:', e);
             }
@@ -6591,18 +7135,26 @@
         // Save edited journal entry
         function saveEditJournalEntry(dateKey) {
             try {
-                const textarea = document.getElementById(`edit-journal-${dateKey}`);
-                if (!textarea) return;
+                const editorId = `edit-journal-${dateKey}`;
+                const editor = document.getElementById(editorId);
+                if (!editor) return;
 
-                const content = textarea.value.trim();
+                const content = getJournalEditorContent(editorId);
                 const entries = getJournalEntries();
 
                 if (content) {
                     entries[dateKey] = {
-                        content: content,
+                        content,
+                        format: JOURNAL_FORMAT,
                         updatedAt: new Date().toISOString()
                     };
-                    saveJournalEntries(entries);
+                } else {
+                    delete entries[dateKey];
+                }
+
+                if (!saveJournalEntries(entries)) {
+                    alert('The entry could not be saved. Your browser storage may be full.');
+                    return;
                 }
 
                 renderJournalEntries();
@@ -6617,7 +7169,10 @@
                 const showUndo = queueUndoSnapshot('Journal entry deleted.', ['journalEntries']);
                 const entries = getJournalEntries();
                 delete entries[dateKey];
-                saveJournalEntries(entries);
+                if (!saveJournalEntries(entries)) {
+                    alert('The entry could not be deleted because browser storage is unavailable.');
+                    return;
+                }
                 renderJournalEntries();
                 showUndo();
             } catch (e) {
@@ -6641,13 +7196,25 @@
                             <input type="date" id="edit-multi-start-${entryId}" class="goal-date-input" value="${entry.startDate || ''}">
                             <input type="date" id="edit-multi-end-${entryId}" class="goal-date-input" value="${entry.endDate || ''}">
                         </div>
-                        <textarea id="edit-multi-content-${entryId}" class="journal-edit-textarea">${escapeHtml(entry.content || '')}</textarea>
+                        <div id="edit-multi-editor-mount-${entryId}"></div>
                         <div class="journal-entry-actions">
                             <button class="save-goal-btn" onclick="saveEditMultiDayJournalEntry(${entryId})">Save</button>
                             <button class="cancel-edit-btn" onclick="renderMultiDayJournalEntries()">Cancel</button>
                         </div>
                     </div>
                 `;
+
+                const editorMount = document.getElementById(`edit-multi-editor-mount-${entryId}`);
+                if (editorMount) {
+                    const editorId = `edit-multi-content-${entryId}`;
+                    editorMount.replaceChildren(createJournalEditor(
+                        editorId,
+                        entry.content || '',
+                        `Edit ${entry.title || 'multi-day journal entry'}`,
+                        true
+                    ));
+                    document.getElementById(editorId)?.focus();
+                }
             } catch (e) {
                 console.error('Error editing multi-day journal entry:', e);
             }
@@ -6663,7 +7230,7 @@
                 const title = titleInput ? titleInput.value.trim() : '';
                 const startDate = startDateInput ? startDateInput.value : '';
                 const endDate = endDateInput ? endDateInput.value : '';
-                const content = contentInput ? contentInput.value.trim() : '';
+                const content = contentInput ? getJournalEditorContent(`edit-multi-content-${entryId}`) : '';
 
                 if (!title) {
                     alert('Please add a title for the multi-day entry.');
@@ -6690,10 +7257,14 @@
                     startDate: startDate || null,
                     endDate: endDate || startDate || null,
                     content,
+                    format: JOURNAL_FORMAT,
                     updatedAt: new Date().toISOString()
                 };
 
-                saveMultiDayJournalEntries(entries);
+                if (!saveMultiDayJournalEntries(entries)) {
+                    alert('The entry could not be saved. Your browser storage may be full.');
+                    return;
+                }
                 renderMultiDayJournalEntries();
             } catch (e) {
                 console.error('Error saving multi-day journal entry:', e);
@@ -6704,7 +7275,10 @@
             try {
                 const showUndo = queueUndoSnapshot('Multi-day journal entry deleted.', ['multiDayJournalEntries']);
                 const entries = getMultiDayJournalEntries().filter(entry => entry.id !== entryId);
-                saveMultiDayJournalEntries(entries);
+                if (!saveMultiDayJournalEntries(entries)) {
+                    alert('The entry could not be deleted because browser storage is unavailable.');
+                    return;
+                }
                 renderMultiDayJournalEntries();
                 showUndo();
             } catch (e) {
@@ -6745,17 +7319,10 @@
                     return;
                 }
 
-                // Create empty entry for this date
-                entries[selectedDate] = {
-                    content: '',
-                    updatedAt: null
-                };
-                saveJournalEntries(entries);
-
-                // Re-render and open edit mode for the new entry
+                // Open an unsaved editor. Canceling it will not leave an empty record behind.
                 renderJournalEntries();
                 setTimeout(() => {
-                    startEditJournalEntry(selectedDate);
+                    startEditJournalEntry(selectedDate, true);
                     const card = document.querySelector(`.journal-entry-card[data-date="${selectedDate}"]`);
                     if (card) {
                         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -6917,7 +7484,7 @@
                     ${scoresHTML}
                     ${summaryHTML}
                     ${goalsHTML}
-                    ${data.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Notes: ${escapeHtml(data.notes)}</div>` : ''}
+                    ${data.notes ? `<div style="margin-top: 10px; font-style: italic; color: #666;">Quick reflection: ${escapeHtml(data.notes)}</div>` : ''}
                     ${data.lessonsLearned ? `<div class="shelved-section" style="margin-top: 10px; font-style: italic; color: #667eea;"><strong>Lessons Learned:</strong> ${escapeHtml(data.lessonsLearned)}</div>` : ''}
                 `;
                 container.appendChild(entryDiv);
@@ -7021,7 +7588,7 @@
                         </div>
                     </div>
                     <div style="margin-top: 15px;">
-                        <strong>Notes:</strong>
+                        <strong>Quick Reflection:</strong>
                         <textarea class="history-edit-notes" id="history-notes-${date}">${escapeHtml(data.notes || '')}</textarea>
                     </div>
                     <div class="shelved-section" style="margin-top: 15px;">
@@ -7105,7 +7672,7 @@
 
             // Metric editing is shelved; preserve any existing metric data untouched.
 
-            // Save notes
+            // Save the lightweight daily reflection.
             const notesTextarea = document.getElementById(`history-notes-${date}`);
             if (notesTextarea) {
                 history[date].notes = notesTextarea.value;
@@ -7226,6 +7793,9 @@
 
         // Render all charts
         function renderCharts() {
+            // Charts are currently shelved and the app has no runtime CDN dependency.
+            if (typeof Chart === 'undefined') return;
+
             const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
             const metrics = JSON.parse(localStorage.getItem('habitMetrics') || '[]');
             const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
@@ -7259,6 +7829,7 @@
 
         // Line chart showing daily averages over time
         function renderAverageTrendChart(history, dates) {
+            if (typeof Chart === 'undefined') return;
             const ctx = document.getElementById('averageTrendChart');
             if (!ctx) return;
 
@@ -7329,6 +7900,7 @@
 
         // Bar chart comparing average scores by metric
         function renderMetricComparisonChart(history, metrics, dates) {
+            if (typeof Chart === 'undefined') return;
             const ctx = document.getElementById('metricComparisonChart');
             if (!ctx) return;
 
@@ -7397,6 +7969,7 @@
 
         // Doughnut chart showing goal completion rates
         function renderGoalCompletionChart(allGoals) {
+            if (typeof Chart === 'undefined') return;
             const ctx = document.getElementById('goalCompletionChart');
             if (!ctx) return;
 
@@ -7491,6 +8064,7 @@
 
         // Radar chart showing category averages
         function renderCategoryChart(history, metrics, dates) {
+            if (typeof Chart === 'undefined') return;
             const ctx = document.getElementById('categoryChart');
             if (!ctx) return;
 
@@ -7773,7 +8347,7 @@
 
         // Clear all data
         function clearAllData() {
-            const confirmed = confirm('⚠️ WARNING: This will permanently delete ALL your data including:\n\n- All metrics history\n- All daily goals\n- All notes\n- Custom metrics\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?');
+            const confirmed = confirm('⚠️ WARNING: This will permanently delete ALL your data including:\n\n- All metrics history\n- All daily goals\n- All reflections and journal entries\n- Custom metrics\n\nThis action CANNOT be undone!\n\nAre you absolutely sure?');
 
             if (!confirmed) {
                 return;
@@ -7942,7 +8516,7 @@
             calendarDetail.innerHTML = `
                 <h4>${formattedDate}</h4>
                 <div>${goalsText}</div>
-                ${notesText ? `<div style="margin-top: 6px;"><strong>Notes:</strong> ${escapeHtml(notesText)}</div>` : ''}
+                ${notesText ? `<div style="margin-top: 6px;"><strong>Quick Reflection:</strong> ${escapeHtml(notesText)}</div>` : ''}
                 ${lessonsText ? `<div class="shelved-section" style="margin-top: 6px;"><strong>Lessons Learned:</strong> ${escapeHtml(lessonsText)}</div>` : ''}
             `;
             calendarDetail.style.display = 'block';
