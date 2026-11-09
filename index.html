@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily To-Dos</title>
+    <title>Journal</title>
+    <meta name="description" content="A little intention and reflection: daily goals, journal entries, and gratitude.">
+    <meta name="theme-color" content="#667eea">
     <style>
         * {
             margin: 0;
@@ -2603,7 +2605,7 @@
         }
 
         .collapsible-content {
-            max-height: 5000px;
+            max-height: none;
             overflow: visible;
             transition: max-height 0.3s ease, opacity 0.3s ease;
             opacity: 1;
@@ -2615,21 +2617,25 @@
             overflow: hidden;
         }
     </style>
+    <link rel="stylesheet" href="journal.css?v=2">
 </head>
 <body>
     <div class="container">
-        <h1>Daily To-Dos</h1>
-        <div class="date" id="currentDate"></div>
-
-        <div class="nav-buttons">
-            <button class="nav-btn active" onclick="showSection('today', this)">Today</button>
-            <button class="nav-btn" onclick="showSection('history', this)">Past Days</button>
-            <button class="nav-btn" onclick="showSection('journal', this)">Journal Entries</button>
-            <!-- Metrics management nav shelved.
-            <button class="nav-btn" onclick="showSection('manage', this)">Manage Metrics</button>
-            -->
-            <button class="nav-btn" onclick="showSection('longterm', this)">Projects</button>
-        </div>
+        <header class="app-header">
+            <div class="app-title-row"><h1>Journal</h1></div>
+            <p class="app-kicker">A little intention. A little reflection.</p>
+            <div class="date" id="currentDate"></div>
+        </header>
+        <nav class="nav-buttons" aria-label="Main pages">
+            <button class="nav-btn active" data-page="today" aria-current="page" onclick="showSection('today')">Goals Today</button>
+            <button class="nav-btn" data-page="journal" onclick="showSection('journal')">Journal Entries</button>
+            <button class="nav-btn" data-page="gratitude" onclick="showSection('gratitude')">Gratitude Entries</button>
+        </nav>
+        <nav class="goal-subnav" id="goalSubnav" aria-label="Goal views">
+            <button class="goal-view-btn active" data-goal-view="today" aria-current="page" onclick="showSection('today')">Today</button>
+            <button class="goal-view-btn" data-goal-view="history" onclick="showSection('history')">Past Days</button>
+            <button class="goal-view-btn" data-goal-view="longterm" onclick="showSection('longterm')">Projects</button>
+        </nav>
 
         <!-- Today Section -->
         <div id="today-section" class="section active">
@@ -2639,24 +2645,26 @@
 
             <div class="goals-section">
                 <div class="category-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2>Today's To-Dos</h2>
+                    <h2>Goals Today</h2>
+                    <button type="button" class="header-export-btn" onclick="openEntryExport('goals')">Export Goals</button>
                     <div class="goal-toolbar-controls">
-                        <select id="goalSortSelect" class="goal-filter-select" onchange="renderGoals()">
+                        <select id="goalSortSelect" aria-label="Sort goals" class="goal-filter-select" onchange="renderGoals()">
                             <option value="priority">Sort: Priority</option>
                             <option value="duration">Sort: Duration</option>
                             <option value="alphabetical">Sort: A-Z</option>
                         </select>
-                        <select id="goalPriorityFilterSelect" class="goal-filter-select" onchange="renderGoals()">
+                        <select id="goalPriorityFilterSelect" aria-label="Filter by priority" class="goal-filter-select" onchange="renderGoals()">
                             <option value="all">All Priorities</option>
                             <option value="1">P1 Only</option>
                             <option value="2">P2 Only</option>
                             <option value="3">P3 Only</option>
                         </select>
-                        <select id="goalFilterSelect" class="goal-filter-select" onchange="renderGoals()">
+                        <select id="goalFilterSelect" aria-label="Filter by status" class="goal-filter-select" onchange="if (['complete', 'skipped'].includes(this.value)) document.getElementById('goalActiveOnlyToggle').checked = false; renderGoals()">
                             <option value="all">Show All</option>
                             <option value="incomplete">Incomplete Only</option>
                             <option value="partial">Partial Only</option>
                             <option value="complete">Complete Only</option>
+                            <option value="skipped">Skipped Only</option>
                         </select>
                         <label class="goal-toolbar-toggle" for="goalActiveOnlyToggle">
                             <input type="checkbox" id="goalActiveOnlyToggle" onchange="renderGoals()" checked>
@@ -2673,7 +2681,7 @@
                     <div id="todayGoalsContent" class="collapsible-content">
                         <div class="goal-input-container">
                             <div class="goal-quick-add-row">
-                                <input type="text" id="goalInput" class="goal-input" placeholder="What needs to get done?" />
+                                <input type="text" id="goalInput" aria-label="New goal" class="goal-input" placeholder="What needs to get done?" />
                                 <button class="add-goal-btn" onclick="addGoal()">Add</button>
                             </div>
                             <div class="goal-options-row">
@@ -2759,7 +2767,7 @@
                     <div id="recurringGoalsContent" class="collapsible-content">
                         <p style="color: #666; font-size: 13px; margin-bottom: 15px;">These to-dos automatically appear every day.</p>
                         <div class="recurring-input-container">
-                            <input type="text" id="recurringGoalInput" class="recurring-input" placeholder="Add a recurring daily goal..." />
+                            <input type="text" id="recurringGoalInput" aria-label="New recurring goal" class="recurring-input" placeholder="Add a recurring daily goal..." />
                             <select id="recurringGoalCategorySelect" class="goal-category-select" title="Category" style="border-color: #17a2b8;"></select>
                             <select id="recurringGoalPrioritySelect" class="goal-priority-select" title="Priority" style="border-color: #17a2b8;">
                                 <option value="1">P1</option>
@@ -2767,13 +2775,13 @@
                                 <option value="3" selected>P3</option>
                             </select>
                             <input type="number" id="recurringGoalDurationInput" class="recurring-time-input" placeholder="min" min="0" title="Duration in minutes">
-                            <select id="recurringGoalTimeSelect" class="recurring-time-select">
+                            <select id="recurringGoalTimeSelect" aria-label="Time of day" class="recurring-time-select">
                                 <option value="">Any time</option>
                                 <option value="morning">Morning</option>
                                 <option value="day">Day</option>
                                 <option value="night">Night</option>
                             </select>
-                            <select id="recurringGoalLinkSelect" class="goal-link-select" style="border-color: #17a2b8;">
+                            <select id="recurringGoalLinkSelect" aria-label="Linked project" class="goal-link-select" style="border-color: #17a2b8;">
                                 <option value="">No linked goal</option>
                             </select>
                             <button class="add-recurring-btn" onclick="addRecurringGoal()">Add</button>
@@ -2787,7 +2795,7 @@
                 <div class="category-header">
                     <h2>Quick Reflection</h2>
                 </div>
-                <textarea id="dailyNotes" class="notes-textarea" placeholder="Capture a quick thought about today..."></textarea>
+                <textarea id="dailyNotes" aria-label="Quick reflection" class="notes-textarea" placeholder="Capture a quick thought about today..."></textarea>
             </div>
 
             <div class="notes-section shelved-section">
@@ -2815,8 +2823,9 @@
 
         <!-- History Section -->
         <div id="history-section" class="section">
-            <div class="category-header">
+            <div class="category-header section-heading-actions">
                 <h2>Past Days</h2>
+                <button type="button" class="header-export-btn" onclick="openEntryExport('goals')">Export Goals</button>
             </div>
 
             <!-- Calendar Section -->
@@ -2883,8 +2892,9 @@
 
         <!-- Journal Section -->
         <div id="journal-section" class="section">
-            <div class="category-header">
+            <div class="category-header section-heading-actions">
                 <h2>Journal Entries</h2>
+                <button type="button" class="header-export-btn" onclick="openEntryExport('journal')">Export Entries</button>
             </div>
 
             <!-- Today's Journal Entry -->
@@ -2894,14 +2904,14 @@
                     <button class="view-day-btn" onclick="viewDayFromJournal(getTodayKey())">View Day's To-Dos</button>
                 </div>
                 <div id="journalTodayEditorMount"></div>
-                <button type="button" class="save-journal-btn" onclick="saveJournalEntry(getTodayKey())">Save Entry</button>
+                <button type="button" class="save-journal-btn" onclick="saveJournalEntry()">Save Entry</button>
             </div>
 
             <!-- Add Past Entry -->
             <div class="journal-add-past" style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 12px;">
                 <h3 style="margin: 0 0 15px 0; color: #333;">Add Entry for Past Date</h3>
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <input type="date" id="pastJournalDatePicker" class="goal-date-input" style="padding: 10px; font-size: 16px;">
+                    <input type="date" aria-label="Date of past journal entry" id="pastJournalDatePicker" class="goal-date-input" style="padding: 10px; font-size: 16px;">
                     <button onclick="createPastJournalEntry()" class="save-journal-btn" style="margin: 0;">Create Entry</button>
                 </div>
             </div>
@@ -2912,7 +2922,7 @@
                 </div>
                 <div class="journal-add-past" style="padding: 20px; background: #f8f9fa; border-radius: 12px;">
                     <div class="multi-journal-form">
-                        <input type="text" id="multiJournalTitle" class="goal-edit-input" placeholder="Title, like: UNC trip or job search stretch">
+                        <input type="text" aria-label="Multi-day entry title" id="multiJournalTitle" class="goal-edit-input" placeholder="Title, like: UNC trip or job search stretch">
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                             <input type="date" id="multiJournalStartDate" class="goal-date-input" title="Start date">
                             <input type="date" id="multiJournalEndDate" class="goal-date-input" title="End date">
@@ -2933,10 +2943,62 @@
             </div>
         </div>
 
+        <section id="gratitude-section" class="section" aria-labelledby="gratitudeTitle">
+            <div class="category-header section-heading-actions">
+                <h2 id="gratitudeTitle">Gratitude Entries</h2>
+                <button type="button" class="header-export-btn" onclick="openEntryExport('gratitude')">Export Entries</button>
+            </div>
+            <p class="gratitude-intro">Three small things worth remembering. A little space for the good in your life, the person you love, and the moments that make a day.</p>
+            <div class="gratitude-workspace">
+                <div class="gratitude-heading-row">
+                    <h3 id="gratitudeDateHeading">Today's gratitude</h3>
+                    <div class="gratitude-date-controls">
+                        <button type="button" class="btn-small" aria-label="Previous gratitude day" onclick="stepGratitudeDate(-1)">&#8592;</button>
+                        <input type="date" id="gratitudeDate" aria-label="Gratitude entry date" onchange="changeGratitudeDate(this.value)">
+                        <button type="button" class="btn-small" id="gratitudeNextDay" aria-label="Next gratitude day" onclick="stepGratitudeDate(1)">&#8594;</button>
+                        <button type="button" class="btn-small" onclick="changeGratitudeDate(getTodayKey())">Today</button>
+                    </div>
+                </div>
+                <div class="gratitude-prompts">
+                    <div class="gratitude-prompt">
+                        <span class="prompt-number" aria-hidden="true">01</span>
+                        <label for="gratitudeLife">Life in general</label>
+                        <p>What is one thing about your life you're grateful for?</p>
+                        <textarea id="gratitudeLife" placeholder="Something I appreciate about my life..." rows="6"></textarea>
+                    </div>
+                    <div class="gratitude-prompt">
+                        <span class="prompt-number" aria-hidden="true">02</span>
+                        <label for="gratitudeAislynn">Aislynn</label>
+                        <p>What is one thing you appreciate about Aislynn?</p>
+                        <textarea id="gratitudeAislynn" placeholder="Something about you I'm grateful for..." rows="6"></textarea>
+                    </div>
+                    <div class="gratitude-prompt">
+                        <span class="prompt-number" aria-hidden="true">03</span>
+                        <label for="gratitudeRecent">Something recent</label>
+                        <p>What happened recently that you're thankful for?</p>
+                        <textarea id="gratitudeRecent" placeholder="A moment I want to remember..." rows="6"></textarea>
+                    </div>
+                </div>
+                <div class="gratitude-footer">
+                    <span id="gratitudeProgress">0 of 3 reflections</span>
+                    <span id="gratitudeSaveStatus" role="status" aria-live="polite">Your writing saves automatically.</span>
+                    <button type="button" class="save-journal-btn" onclick="saveGratitudeEntry(false)">Save Entry</button>
+                </div>
+            </div>
+            <div class="gratitude-history">
+                <div class="gratitude-heading-row">
+                    <h3>Saved Gratitude</h3>
+                    <input type="search" id="gratitudeSearch" class="entry-search" aria-label="Search gratitude entries" placeholder="Search your gratitude..." oninput="renderGratitudeEntries()">
+                </div>
+                <div id="gratitudeEntriesList"></div>
+            </div>
+        </section>
+
         <!-- Long-Term Goals Section -->
         <div id="longterm-section" class="section">
-            <div class="category-header">
+            <div class="category-header section-heading-actions">
                 <h2>Projects</h2>
+                <button type="button" class="header-export-btn" onclick="openEntryExport('projects')">Export Projects</button>
             </div>
 
             <!-- Add New Long-Term Goal Form -->
@@ -3014,10 +3076,22 @@
                 <button class="btn-clear-all" onclick="clearAllData()">Clear All Data</button>
             </div>
         </div>
+
+    <footer class="app-footer">
+        <p>Made for your everyday. Your writing stays in this browser.</p>
+        <details class="backup-footer">
+            <summary>Back up &amp; restore your data</summary>
+            <p>Entry exports are available on the Journal and Gratitude pages. A full backup includes goals, projects, reflections, journals, and gratitude.</p>
+            <button type="button" class="btn-small" onclick="downloadJournalBackup()">Download Full Backup</button>
+            <button type="button" class="btn-small" onclick="document.getElementById('backupFile').click()">Restore Backup</button>
+            <input type="file" id="backupFile" accept=".json,application/json" hidden onchange="restoreJournalBackup(this)">
+            <p id="backupMessage" class="backup-message" role="status" aria-live="polite"></p>
+        </details>
+    </footer>
     </div>
 
     <div id="undoToast" class="undo-toast">
-        <div id="undoToastMessage" class="undo-toast-message"></div>
+        <div role="status" aria-live="polite" id="undoToastMessage" class="undo-toast-message"></div>
         <button type="button" class="undo-btn" onclick="runUndoAction()">Undo</button>
         <button type="button" class="dismiss-btn" onclick="dismissUndoToast()">Dismiss</button>
     </div>
@@ -3730,13 +3804,20 @@
         }
 
         function restoreStorageSnapshot(snapshot) {
-            Object.entries(snapshot).forEach(([key, value]) => {
-                if (value === null || value === undefined) {
-                    localStorage.removeItem(key);
-                } else {
-                    localStorage.setItem(key, value);
-                }
-            });
+            const current = captureStorageSnapshot(Object.keys(snapshot));
+            const apply = values => {
+                // Release replaced values first, so two individually valid datasets fit.
+                Object.keys(values).forEach(key => localStorage.removeItem(key));
+                Object.entries(values).forEach(([key, value]) => {
+                    if (value !== null && value !== undefined) localStorage.setItem(key, value);
+                });
+            };
+            try {
+                apply(snapshot);
+            } catch (error) {
+                apply(current);
+                throw error;
+            }
         }
 
         function dismissUndoToast() {
@@ -3781,6 +3862,12 @@
         }
 
         function refreshAllViews() {
+            const journalEditor = document.getElementById('journalTodayEntry');
+            if (journalEditor && journalEditor.dataset.dirty !== 'true') {
+                journalEditor.removeAttribute('data-date');
+                renderJournal();
+            }
+            if (typeof renderGratitude === 'function') renderGratitude(true);
             populateGoalCategorySelects();
             updateGoalLinkDropdown();
             updateRecurringGoalLinkDropdown();
@@ -4107,52 +4194,44 @@
         }
 
         // Show section
-        function showSection(section, trigger = null) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-
-            document.getElementById(`${section}-section`).classList.add('active');
-
-            if (trigger) {
-                trigger.classList.add('active');
-            } else {
-                const targetBtn = document.querySelector(`.nav-btn[onclick="showSection('${section}', this)"]`);
-                if (targetBtn) {
-                    targetBtn.classList.add('active');
-                }
-            }
-
+        function showSection(section, trigger = null, updateHash = true) {
+            const allowed = ['today', 'history', 'longterm', 'journal', 'gratitude'];
+            if (!allowed.includes(section)) section = 'today';
+            if (document.getElementById('journalTodayEntry')?.dataset.dirty === 'true' && !saveJournalEntry(undefined, true)) return;
+            if (typeof flushGratitudeDraft === 'function' && !flushGratitudeDraft()) return;
+            const target = document.getElementById(`${section}-section`);
+            const primary = ['history', 'longterm'].includes(section) ? 'today' : section;
+            document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s === target));
+            document.querySelectorAll('.nav-btn').forEach(button => {
+                const active = button.dataset.page === primary;
+                button.classList.toggle('active', active);
+                if (active) button.setAttribute('aria-current', 'page');
+                else button.removeAttribute('aria-current');
+            });
+            document.getElementById('goalSubnav').hidden = primary !== 'today';
+            document.querySelectorAll('.goal-view-btn').forEach(button => {
+                const active = button.dataset.goalView === section;
+                button.classList.toggle('active', active);
+                if (active) button.setAttribute('aria-current', 'page');
+                else button.removeAttribute('aria-current');
+            });
             if (section === 'today') {
                 renderMetrics();
             } else if (section === 'history') {
-                const historyContainer = document.getElementById('historyContainer');
-                const calendarDetail = document.getElementById('calendarDetail');
-
-                if (selectedCalendarDate) {
-                    focusCalendarOnDate(selectedCalendarDate);
-                    if (historyContainer) {
-                        historyContainer.style.display = 'block';
-                    }
-                    renderHistory(selectedCalendarDate);
-                    if (calendarDetail) {
-                        calendarDetail.style.display = 'none';
-                    }
-                } else {
-                    if (historyContainer) {
-                        historyContainer.style.display = 'block';
-                    }
-                    if (calendarDetail) {
-                        calendarDetail.style.display = 'none';
-                    }
-                    renderHistory();
-                }
-            } else if (section === 'manage') {
-                renderMetricsList();
+                if (selectedCalendarDate) focusCalendarOnDate(selectedCalendarDate);
+                document.getElementById('historyContainer').style.display = 'block';
+                document.getElementById('calendarDetail').style.display = 'none';
+                renderHistory(selectedCalendarDate);
+                renderCalendar();
             } else if (section === 'longterm') {
                 renderLongTermGoals();
             } else if (section === 'journal') {
                 renderJournal();
+            } else if (section === 'gratitude') {
+                renderGratitude();
             }
+            const hashes = { today: 'goals-today', history: 'past-days', longterm: 'projects', journal: 'journal-entries', gratitude: 'gratitude-entries' };
+            if (updateHash && location.hash !== `#${hashes[section]}`) history.pushState(null, '', `#${hashes[section]}`);
         }
 
         // Render metrics for today
@@ -4230,7 +4309,8 @@
 
             // Load the lightweight daily reflection (separate from Journal Entries).
             document.getElementById('dailyNotes').value = todayData.notes || '';
-            document.getElementById('dailyNotes').onchange = saveNotes;
+            document.getElementById('dailyNotes').dataset.date = todayKey;
+            document.getElementById('dailyNotes').oninput = saveNotes;
 
             // Load lessons learned
             document.getElementById('lessonsLearned').value = todayData.lessonsLearned || '';
@@ -4261,9 +4341,10 @@
 
         // Save the lightweight daily reflection.
         function saveNotes() {
-            const notes = document.getElementById('dailyNotes').value;
+            const field = document.getElementById('dailyNotes');
+            const notes = field.value;
             const history = JSON.parse(localStorage.getItem('habitHistory'));
-            const todayKey = getTodayKey();
+            const todayKey = field.dataset.date || getTodayKey();
 
             if (!history[todayKey]) {
                 history[todayKey] = {};
@@ -5032,7 +5113,7 @@
                     } else if (filterValue !== 'all') {
                         emptyDiv.textContent = `No ${filterValue} goals for today.`;
                     } else {
-                        emptyDiv.textContent = `No P${priorityFilterValue} goals for today.`;
+                        emptyDiv.textContent = priorityFilterValue === 'all' ? 'No active goals match the current filters. Turn off Active to see completed and skipped goals.' : `No P${priorityFilterValue} goals for today.`;
                     }
                     goalsList.appendChild(emptyDiv);
                 } else {
@@ -6688,6 +6769,8 @@
                 const editor = document.getElementById('journalTodayEntry');
                 if (!editor) return false;
 
+                dateKey = editor.dataset.date || dateKey || getTodayKey();
+                clearTimeout(journalAutoSaveTimeout);
                 const content = getJournalEditorContent('journalTodayEntry');
                 const entries = getJournalEntries();
                 let updatedAt = null;
@@ -6707,6 +6790,7 @@
                 if (!saveJournalEntries(entries)) {
                     throw new Error('Browser storage rejected the journal update.');
                 }
+                editor.dataset.dirty = 'false';
                 renderJournalEntries();
 
                 // Show save feedback
@@ -6732,7 +6816,7 @@
             const saveBtn = document.querySelector('.journal-today .save-journal-btn');
             if (!saveBtn) return;
 
-            const originalText = saveBtn.textContent;
+            const originalText = 'Save Entry';
 
             if (status === 'saved') {
                 saveBtn.textContent = '✓ Saved!';
@@ -6757,6 +6841,8 @@
                 statusDiv = document.createElement('div');
                 statusDiv.id = 'journalSaveStatus';
                 statusDiv.className = 'journal-save-status';
+                statusDiv.setAttribute('role', 'status');
+                statusDiv.setAttribute('aria-live', 'polite');
 
                 const saveBtn = document.querySelector('.journal-today .save-journal-btn');
                 if (saveBtn) {
@@ -6770,8 +6856,12 @@
                 const timeStr = validSavedDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
                 statusDiv.innerHTML = `<span style="color: #28a745;">✓</span> Last saved at ${timeStr}`;
                 statusDiv.style.display = 'block';
+            } else if (status === 'pending') {
+                statusDiv.textContent = 'Saving…';
+                statusDiv.style.display = 'block';
             } else if (status === 'empty') {
-                statusDiv.style.display = 'none';
+                statusDiv.textContent = 'Your writing saves automatically.';
+                statusDiv.style.display = 'block';
             } else if (status === 'error') {
                 statusDiv.innerHTML = '<span style="color: #dc3545;">!</span> Could not save. Your browser storage may be full.';
                 statusDiv.style.display = 'block';
@@ -6786,20 +6876,22 @@
             if (!editor || journalAutoSaveSetup) return;
 
             editor.addEventListener('input', function() {
+                editor.dataset.dirty = 'true';
+                updateJournalSaveStatus('pending');
                 // Clear existing timeout
                 if (journalAutoSaveTimeout) {
                     clearTimeout(journalAutoSaveTimeout);
                 }
 
-                // Set new timeout for auto-save (2 seconds after user stops typing)
+                // Save shortly after typing pauses; blur/navigation flush immediately.
                 journalAutoSaveTimeout = setTimeout(() => {
-                    saveJournalEntry(getTodayKey(), true); // Silent save
-                }, 2000);
+                    saveJournalEntry(undefined, true);
+                }, 600);
             });
 
             // Also save on blur (when user clicks away)
             editor.addEventListener('blur', function() {
-                saveJournalEntry(getTodayKey(), true);
+                if (editor.dataset.dirty === 'true') saveJournalEntry(undefined, true);
             });
 
             journalAutoSaveSetup = true;
@@ -6835,14 +6927,16 @@
                 );
 
                 // Load today's entry if it exists.
-                if (editor && todayEntry) {
+                if (editor && editor.dataset.date !== todayKey && todayEntry) {
                     editor.innerHTML = sanitizeJournalHtml(todayEntry.content);
                     // Show saved status if entry exists
                     updateJournalSaveStatus('saved', todayEntry.updatedAt);
-                } else if (editor) {
+                } else if (editor && editor.dataset.date !== todayKey) {
                     editor.innerHTML = '';
                     updateJournalSaveStatus('empty');
                 }
+                if (editor) editor.dataset.date = todayKey;
+                document.getElementById('pastJournalDatePicker').max = shiftDateKey(todayKey, -1);
 
                 // Set up auto-save for the journal
                 setupJournalAutoSave();
@@ -6889,6 +6983,7 @@
                                 <div class="multi-journal-meta">${escapeHtml(formatJournalRange(entry.startDate, entry.endDate))}</div>
                             </div>
                             <div class="journal-entry-actions">
+                                <button class="view-day-btn" onclick="openEntryExport('journal', {multiId: ${entry.id}})">Export</button>
                                 <button class="edit-journal-btn" onclick="startEditMultiDayJournalEntry(${entry.id})">Edit</button>
                                 <button class="delete-journal-btn" onclick="deleteMultiDayJournalEntry(${entry.id})">Delete</button>
                             </div>
@@ -7023,6 +7118,11 @@
                     deleteBtn.textContent = 'Delete';
                     deleteBtn.onclick = function() { deleteJournalEntry(dateKey); };
 
+                    const exportBtn = document.createElement('button');
+                    exportBtn.className = 'view-day-btn';
+                    exportBtn.textContent = 'Export';
+                    exportBtn.onclick = () => openEntryExport('journal', dateKey);
+                    actions.appendChild(exportBtn);
                     actions.appendChild(viewDayBtn);
                     actions.appendChild(editBtn);
                     actions.appendChild(deleteBtn);
@@ -7662,83 +7762,67 @@
 
         // Save edited history entry
         function saveEditHistory(date) {
-            const showUndo = queueUndoSnapshot('History day updated.', ['habitHistory', 'dailyGoals']);
-            const history = JSON.parse(localStorage.getItem('habitHistory'));
+            const history = JSON.parse(localStorage.getItem('habitHistory') || '{}');
             const allGoals = JSON.parse(localStorage.getItem('dailyGoals') || '{}');
+            const remainingGoals = [];
+            const goalsToMove = [];
 
-            if (!history[date]) {
-                history[date] = {};
-            }
+            // Read and validate the entire draft before writing either storage key.
+            // Rebuild the source list once: deleting one row must not shift another
+            // row's move index, and moved goals must retain their original order.
+            for (const [index, originalGoal] of (allGoals[date] || []).entries()) {
+                const statusSelect = document.getElementById(`history-goal-${date}-${index}`);
+                const dateInput = document.getElementById(`history-goal-date-${date}-${index}`);
+                const textInput = document.getElementById(`history-goal-text-${date}-${index}`);
+                const categorySelect = document.getElementById(`history-goal-category-${date}-${index}`);
+                const row = statusSelect ? statusSelect.closest('.history-goal-item-edit') : null;
 
-            // Metric editing is shelved; preserve any existing metric data untouched.
+                if (row && row.dataset.deleted === 'true') continue;
 
-            // Save the lightweight daily reflection.
-            const notesTextarea = document.getElementById(`history-notes-${date}`);
-            if (notesTextarea) {
-                history[date].notes = notesTextarea.value;
-            }
-
-            // Save lessons learned
-            const lessonsTextarea = document.getElementById(`history-lessons-${date}`);
-            if (lessonsTextarea) {
-                history[date].lessonsLearned = lessonsTextarea.value;
-            }
-
-            localStorage.setItem('habitHistory', JSON.stringify(history));
-
-            // Save goal statuses and handle date changes
-            if (allGoals[date]) {
-                // Process goals in reverse order to handle index shifts when moving
-                const goalsToMove = [];
-
-                for (let index = allGoals[date].length - 1; index >= 0; index--) {
-                    const goal = allGoals[date][index];
-                    const statusSelect = document.getElementById(`history-goal-${date}-${index}`);
-                    const dateInput = document.getElementById(`history-goal-date-${date}-${index}`);
-                    const textInput = document.getElementById(`history-goal-text-${date}-${index}`);
-                    const categorySelect = document.getElementById(`history-goal-category-${date}-${index}`);
-                    const row = statusSelect ? statusSelect.closest('.history-goal-item-edit') : null;
-
-                    if (row && row.dataset.deleted === 'true') {
-                        allGoals[date].splice(index, 1);
-                        continue;
-                    }
-
-                    if (statusSelect) {
-                        goal.status = statusSelect.value;
-                    }
-                    if (textInput && textInput.value.trim()) {
-                        goal.text = textInput.value.trim();
-                    }
-                    if (categorySelect) {
-                        goal.category = categorySelect.value;
-                    }
-
-                    // Check if date changed
-                    if (dateInput && dateInput.value !== date) {
-                        goalsToMove.push({ goal: goal, newDate: dateInput.value, index: index });
-                    }
+                const targetDate = dateInput ? dateInput.value : date;
+                const parsedDate = /^\d{4}-\d{2}-\d{2}$/.test(targetDate)
+                    ? new Date(`${targetDate}T12:00:00`)
+                    : null;
+                if (!parsedDate || Number.isNaN(parsedDate.getTime()) || toLocalDateKey(parsedDate) !== targetDate) {
+                    alert('Please choose a valid date for every goal before saving.');
+                    dateInput?.focus();
+                    return;
                 }
 
-                // Move goals to new dates
-                goalsToMove.forEach(({ goal, newDate, index }) => {
-                    // Remove from current date
-                    allGoals[date].splice(index, 1);
+                const goal = { ...originalGoal };
+                if (statusSelect) goal.status = statusSelect.value;
+                if (textInput && textInput.value.trim()) goal.text = textInput.value.trim();
+                if (categorySelect) goal.category = categorySelect.value;
 
-                    // Add to new date
-                    if (!allGoals[newDate]) {
-                        allGoals[newDate] = [];
-                    }
-                    allGoals[newDate].push(goal);
-                });
+                if (targetDate === date) {
+                    remainingGoals.push(goal);
+                } else {
+                    goalsToMove.push({ goal, targetDate });
+                }
+            }
 
-                // Clean up empty date entries
-                if (allGoals[date] && allGoals[date].length === 0) {
+            const showUndo = queueUndoSnapshot('History day updated.', ['habitHistory', 'dailyGoals']);
+            if (!history[date]) history[date] = {};
+
+            // Preserve existing metrics and any reflection fields absent from the draft.
+            const notesTextarea = document.getElementById(`history-notes-${date}`);
+            if (notesTextarea) history[date].notes = notesTextarea.value;
+            const lessonsTextarea = document.getElementById(`history-lessons-${date}`);
+            if (lessonsTextarea) history[date].lessonsLearned = lessonsTextarea.value;
+
+            if (allGoals[date]) {
+                if (remainingGoals.length) {
+                    allGoals[date] = remainingGoals;
+                } else {
                     delete allGoals[date];
                 }
-
+                goalsToMove.forEach(({ goal, targetDate }) => {
+                    if (!allGoals[targetDate]) allGoals[targetDate] = [];
+                    allGoals[targetDate].push(goal);
+                });
                 localStorage.setItem('dailyGoals', JSON.stringify(allGoals));
             }
+            localStorage.setItem('habitHistory', JSON.stringify(history));
 
             if (selectedCalendarDate === date) {
                 renderHistory(date);
@@ -8369,6 +8453,7 @@
                 localStorage.removeItem('recurringDailyGoals');
                 localStorage.removeItem('journalEntries');
                 localStorage.removeItem('multiDayJournalEntries');
+                localStorage.removeItem('gratitudeEntries');
                 localStorage.removeItem('sectionCollapseState');
 
                 // Reinitialize with defaults
@@ -8451,7 +8536,9 @@
 
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateKey = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const cell = document.createElement('div');
+                const cell = document.createElement('button');
+                cell.type = 'button';
+                cell.setAttribute('aria-label', `View goals for ${formatDate(dateKey)}`);
                 cell.className = 'calendar-day';
                 if (dateKey === todayKey) cell.classList.add('today');
                 if (selectedCalendarDate === dateKey) cell.classList.add('selected');
@@ -8605,5 +8692,7 @@
             dateInput.value = getTodayKey();
         }
     </script>
+    <script src="gratitude.js?v=2"></script>
+    <script src="exports.js?v=2"></script>
 </body>
 </html>

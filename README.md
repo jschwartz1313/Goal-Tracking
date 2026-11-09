@@ -1,68 +1,45 @@
-# Daily To-Dos
+# Journal
 
-A lightweight, browser-based planner for daily to-dos, projects, and journal entries. The app is built with plain HTML, CSS, and JavaScript and does not require an account or backend.
+A personal space for daily goals, journal entries, and gratitude, built with HTML, CSS, and JavaScript. No account or backend is required.
 
-[Open the live app](https://jschwartz1313.github.io/Goal-Tracking/)
+[Open Journal](https://jschwartz1313.github.io/Goal-Tracking/)
 
-## Features
+## Pages
 
-### Daily to-dos
+1. **Goals Today** — create and edit goals, set priorities and durations, track progress, carry unfinished tasks forward, and manage recurring tasks. Past Days and Projects are secondary views within this page. Quick Reflection saves as you type.
+2. **Journal Entries** — write rich-text daily or multi-day entries, including entries for past dates. Today's entry saves automatically and stays attached to its original date if the page remains open overnight.
+3. **Gratitude Entries** — keep one dated entry with three independent prompts: life in general, Aislynn, and something recent. Partial entries save automatically. Revisit, search, edit, or delete entries, with Undo for deletions.
 
-- Add to-dos for today or a future date.
-- Set priorities and estimated durations.
-- Track incomplete, partial, complete, and skipped work.
-- Keep a to-do active until it is finished, or create recurring daily to-dos.
-- Sort and filter the list, and review overdue, upcoming, and past items.
-- Use the calendar to revisit earlier days.
+## Export and backups
 
-### Projects
+- Export gratitude independently from journal entries, goals, and projects.
+- Export a single saved entry or a date range; gratitude exports can include all prompts or just Life, Aislynn, or Something recent.
+- Download real editable **Word (.docx)** documents or **plain text (.txt)**, ordered oldest first. Word exports preserve basic journal formatting and provide a simple serif layout suitable for further editing or gift formatting.
+- A full JSON backup and restore option at the bottom of the app includes all existing storage categories. Restore can be undone immediately. When browser storage is full, downloading a backup still captures unsaved writing.
+- All export files are generated in the browser; no entries are uploaded to a server.
 
-- Create longer-term projects with descriptions, target dates, progress, and sub-goals.
-- Connect daily planning with larger outcomes.
+## Existing data
 
-### Journal Entries
+The original GitHub Pages URL and existing storage keys are preserved. Older goals, projects, reflections, metrics history, and plain-text or rich-text journals remain available. Gratitude uses its own `gratitudeEntries` key.
 
-Journal Entries provides a dedicated writing area for daily reflections and longer records.
-
-- Write and edit today's entry.
-- Create or update an entry for a past date.
-- Create a single entry that spans a start and end date, such as a trip or project period.
-- Review, edit, and delete saved entries.
-- Format writing with bold, italic, underline, headings, and block quotes.
-- Use several unordered-list styles (disc, circle, and square) and ordered-list styles (numbers, letters, and Roman numerals).
-
-## Data and privacy
-
-All to-dos, projects, preferences, and journal entries are stored in your browser's local storage. The app does not require an account and does not send this information to an application server.
-
-Browser-local data does not automatically sync or back up across browsers, profiles, or devices. Clearing site data can remove it, so avoid clearing storage for the app if you need to keep your records.
+All data remains in the current browser profile's local storage. It does not sync automatically across browsers or devices. Use Full Backup to move data between browsers and keep copies of important records.
 
 ## Run locally
 
-Clone the repository:
+Serve this folder with a static web server:
 
-```bash
-git clone https://github.com/jschwartz1313/Goal-Tracking.git
-cd Goal-Tracking
-```
-
-Then serve the folder with any static web server, for example:
-
-```bash
+```sh
 python3 -m http.server 8000
 ```
 
-Open `http://localhost:8000` in your browser. You can also open `index.html` directly, although some browsers restrict local storage for pages opened from the filesystem.
+Open `http://localhost:8000`. The site has no runtime dependencies or build step.
 
-## Browser compatibility
+## Checks
 
-Use a current version of Chrome, Edge, Firefox, or Safari. The rich-text editor relies on standard browser editing features, so minor toolbar or list-style behavior can differ between browsers. Existing plain-text journal entries remain readable and editable when rich formatting is introduced.
+```sh
+node --test tests/*.test.cjs
+node --check gratitude.js
+node --check exports.js
+```
 
-## Technology
-
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- Browser `localStorage`
-
-The application has no runtime package dependencies or build step.
+Use a current Chrome, Edge, Firefox, or Safari. Rich-text formatting uses browser editing features, so minor toolbar behavior may vary between browsers.

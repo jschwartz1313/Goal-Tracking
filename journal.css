@@ -1,0 +1,331 @@
+/* Journal's existing purple-blue palette, with clearer navigation and room to write. */
+:root {
+    --journal-blue: #667eea;
+    --journal-purple: #764ba2;
+    --journal-text: #333;
+    --journal-muted: #626574;
+    --journal-border: #e5e7f0;
+    --journal-soft: #f8f9fc;
+}
+
+[hidden] { display: none !important; }
+
+body { color: var(--journal-text); line-height: 1.5; }
+.container { max-width: 1320px; padding: 32px; }
+button, input, select, textarea { font-family: inherit; }
+button { touch-action: manipulation; }
+button:disabled { opacity: .45; cursor: default; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, [contenteditable]:focus-visible, [tabindex]:focus-visible,
+summary:focus-visible {
+    outline: 3px solid var(--journal-purple);
+    outline-offset: 3px;
+}
+
+.app-header { text-align: center; padding: 4px 0 24px; }
+.app-title-row h1 { font-size: 34px; letter-spacing: -.8px; margin-bottom: 2px; }
+.app-kicker { color: var(--journal-muted); font-size: 14px; margin: 2px 0 8px; }
+.app-header .date { color: #747685; font-size: 13px; margin: 0; }
+.nav-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    max-width: 720px;
+    margin: 0 auto 24px;
+    padding: 6px;
+    background: #f0eff8;
+    border: 1px solid #e5e2f0;
+    border-radius: 12px;
+    overflow: visible;
+}
+.nav-btn {
+    min-width: 0;
+    padding: 12px 16px;
+    min-height: 46px;
+    color: #59596d;
+    font-size: 14px;
+    font-weight: 600;
+    background: transparent;
+    border-radius: 8px;
+    white-space: normal;
+}
+.nav-btn:hover { background: #e4e2f3; color: #543875; }
+.nav-btn.active { color: white; background: var(--journal-purple); box-shadow: 0 3px 9px #764ba225; }
+.goal-subnav { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 20px; }
+.goal-view-btn {
+    padding: 8px 15px;
+    min-height: 40px;
+    border: 1px solid var(--journal-border);
+    border-radius: 8px;
+    background: white;
+    color: #626574;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.goal-view-btn:hover { border-color: var(--journal-blue); color: #4d5fc0; }
+.goal-view-btn.active { background: #eef0ff; border-color: #cbd1f8; color: #4c5db8; }
+.category-header { border-radius: 10px; gap: 14px; flex-wrap: wrap; }
+.category-header h2 { line-height: 1.3; }
+.goal-toolbar-controls { margin-left: auto; }
+.goals-section > .category-header { margin-top: 0; }
+.goal-item { gap: 12px; }
+.goal-item .goal-text, .recurring-goal-item .goal-text { overflow-wrap: anywhere; min-width: 0; }
+.goal-actions { flex-wrap: wrap; }
+.goal-input, .recurring-input, .notes-textarea { font-size: 16px; }
+.journal-rich-input, .journal-entry-content, .multi-journal-content { overflow-wrap: anywhere; }
+.journal-entry-content { line-height: 1.75; }
+.journal-save-status { font-size: 13px; margin: 10px 0; }
+.journal-rich-input { line-height: 1.75; }
+
+.gratitude-intro { color: var(--journal-muted); margin: -2px 0 22px; max-width: 690px; }
+.gratitude-workspace {
+    border: 1px solid var(--journal-border);
+    border-left: 4px solid var(--journal-blue);
+    border-radius: 12px;
+    background: var(--journal-soft);
+    padding: 24px;
+}
+.gratitude-heading-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+.gratitude-heading-row h3 { font-size: 19px; font-weight: 650; line-height: 1.4; }
+.gratitude-date-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
+.gratitude-date-controls input {
+    border: 1px solid #ccd0e0;
+    border-radius: 7px;
+    padding: 8px 10px;
+    background: white;
+    color: #454756;
+    min-height: 40px;
+    font-size: 14px;
+    max-width: 100%;
+    min-width: 0;
+}
+.gratitude-date-controls button, .btn-small {
+    border: 1px solid #d8dbea;
+    border-radius: 7px;
+    background: white;
+    color: #555c82;
+    min-height: 38px;
+    padding: 7px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.gratitude-date-controls button:hover:not(:disabled), .btn-small:hover { background: #eeeffb; border-color: #bdc4ed; }
+.btn-small.danger, .btn-small.delete { color: #ba3547; }
+.gratitude-prompts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.gratitude-prompt {
+    min-width: 0;
+    background: white;
+    border: 1px solid var(--journal-border);
+    padding: 20px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.prompt-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    margin-bottom: 14px;
+    background: #eeeffc;
+    color: #5869c4;
+    font-size: 12px;
+    font-weight: 700;
+}
+.gratitude-prompt:nth-child(2) .prompt-number { background: #f2ecf8; color: var(--journal-purple); }
+.gratitude-prompt:nth-child(3) .prompt-number { background: #eaf2f7; color: #41738a; }
+.gratitude-prompt label, .gratitude-prompt h4 { font-size: 16px; font-weight: 650; color: #383b4c; margin-bottom: 7px; }
+.gratitude-prompt p { color: var(--journal-muted); font-size: 13px; line-height: 1.6; margin-bottom: 16px; min-height: 42px; }
+.gratitude-prompt textarea {
+    width: 100%;
+    min-height: 160px;
+    margin-top: auto;
+    padding: 13px;
+    border: 1px solid #d8dce8;
+    border-radius: 8px;
+    background: #fdfdff;
+    color: #383b4c;
+    font-size: 16px;
+    line-height: 1.65;
+    resize: vertical;
+}
+.gratitude-prompt textarea::placeholder { color: #858997; opacity: 1; }
+.gratitude-prompt textarea:focus { border-color: var(--journal-blue); background: white; }
+.gratitude-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.gratitude-footer > div { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+#gratitudeProgress { color: #5b5f72; font-size: 13px; font-weight: 600; }
+#gratitudeSaveStatus { color: #5c6472; font-size: 13px; }
+.gratitude-footer .save-journal-btn { margin: 0; }
+.gratitude-history { margin-top: 32px; }
+.gratitude-history > header, .gratitude-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+.gratitude-history h3 { font-size: 18px; }
+.entry-search {
+    width: min(100%, 310px);
+    border: 1px solid #d8dce8;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 15px;
+    background: white;
+    color: #454756;
+}
+.gratitude-entry-card { border: 1px solid var(--journal-border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+.gratitude-entry-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid #eceef5; margin-bottom: 16px; }
+.gratitude-entry-header time { color: #565b84; font-size: 14px; font-weight: 650; }
+.gratitude-entry-header .journal-entry-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.gratitude-entry-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.gratitude-entry-answer { min-width: 0; }
+.gratitude-entry-answer h4 { color: #656779; font-size: 12px; letter-spacing: .04em; margin-bottom: 7px; }
+.gratitude-entry-answer p { font-size: 14px; line-height: 1.75; color: #454756; white-space: pre-wrap; overflow-wrap: anywhere; }
+.gratitude-entry-answer p.empty { color: #9093a0; font-style: italic; }
+.empty-state { padding: 32px 20px; text-align: center; color: var(--journal-muted); background: var(--journal-soft); border: 1px dashed #daddeb; border-radius: 10px; }
+.empty-state h4 { color: #484d68; margin-bottom: 6px; font-size: 15px; }
+.empty-state p { font-size: 14px; }
+
+.app-footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid #ececf3; color: #757886; font-size: 12px; }
+.backup-footer summary { cursor: pointer; color: #5b628a; font-size: 13px; font-weight: 600; width: fit-content; }
+.backup-footer p { margin: 12px 0; max-width: 700px; }
+.backup-footer .backup-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.backup-footer button { margin: 0 7px 7px 0; }
+.backup-message { margin-top: 10px; color: #555c76; }
+
+.section-heading-actions, .entry-tools { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.section-heading-actions h2 { flex: 1; }
+.category-header .entry-tools button, .category-header .section-heading-actions button {
+    border: 1px solid #ffffff70;
+    background: #ffffff20;
+    color: white;
+}
+.category-header .entry-tools button:hover, .category-header .section-heading-actions button:hover { background: #ffffff35; }
+#exportDialog {
+    width: min(520px, calc(100vw - 32px));
+    max-height: calc(100dvh - 40px);
+    margin: auto;
+    padding: 28px;
+    border: 1px solid #dfdcea;
+    border-radius: 16px;
+    background: white;
+    color: var(--journal-text);
+    box-shadow: 0 24px 80px #30204445;
+    overflow-y: auto;
+}
+#exportDialog::backdrop { background: #2e214c77; backdrop-filter: blur(3px); }
+#exportDialog h2 { font-size: 22px; margin-bottom: 8px; }
+#exportDialog > p, #exportDialog form > p { font-size: 14px; color: var(--journal-muted); margin: 8px 0 20px; }
+#exportDialog form { display: grid; gap: 16px; }
+.export-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.export-dialog-header h2 { margin: 0; }
+.export-dialog-header button { border: 0; border-radius: 7px; background: #f0eef8; color: #68537e; width: 34px; height: 34px; cursor: pointer; font-size: 20px; }
+.export-dialog-form > label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: #4e5266; }
+.export-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.export-field label, label.export-field { font-size: 13px; color: #4e5266; font-weight: 600; }
+#exportDialog input, #exportDialog select {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 9px 11px;
+    border: 1px solid #cfd3e1;
+    border-radius: 7px;
+    background: white;
+    color: #373b50;
+    font-size: 15px;
+}
+#exportDialog input[type="checkbox"] { width: 17px; min-height: auto; height: 17px; accent-color: var(--journal-purple); }
+.export-date-range, .export-dialog-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.export-dialog-grid > label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: #4e5266; }
+.export-actions, .export-dialog-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 9px; margin-top: 8px; }
+.export-actions button, .export-dialog-actions button { min-height: 42px; margin: 0; }
+.export-preview { color: var(--journal-muted); font-size: 13px; line-height: 1.6; padding: 12px 14px; border-radius: 8px; background: #f4f3fa; }
+.export-error { color: #b33047; font-size: 13px; margin: 0; }
+
+@media (max-width: 960px) {
+    .gratitude-prompts { grid-template-columns: 1fr; }
+    .gratitude-prompt { padding: 18px; }
+    .gratitude-prompt p { min-height: 0; margin-bottom: 12px; }
+    .gratitude-prompt textarea { min-height: 115px; }
+    .prompt-number { margin-bottom: 10px; }
+    .gratitude-entry-grid { grid-template-columns: 1fr; gap: 16px; }
+    .goal-toolbar-controls { flex: 1 1 100%; margin: 0; }
+    .category-header h2 { flex: 1 1 100%; }
+}
+
+@media (max-width: 600px) {
+    body { padding: 0; }
+    .container { padding: 18px 14px; width: 100%; border-radius: 0; }
+    .app-header { padding: 4px 0 20px; text-align: left; }
+    .app-title-row h1 { text-align: left; font-size: 30px; }
+    .app-kicker { font-size: 13px; }
+    .app-header .date { text-align: left; font-size: 12px; }
+    .nav-buttons { padding: 4px; gap: 3px; margin-bottom: 18px; }
+    .nav-btn { font-size: 12px; line-height: 1.3; padding: 10px 5px; min-height: 45px; }
+    .goal-subnav { gap: 6px; margin-bottom: 16px; }
+    .goal-view-btn { flex: 1 1 auto; padding: 8px 10px; font-size: 12px; }
+    .goal-toolbar-controls { margin-top: 0; gap: 8px; }
+    .goal-filter-select, .goal-toolbar-toggle { min-width: 0; font-size: 12px; padding: 8px; }
+    .goal-options-row { gap: 8px; }
+    .category-header { gap: 12px; }
+    .gratitude-workspace { padding: 16px; }
+    .gratitude-intro { font-size: 14px; margin-bottom: 18px; }
+    .gratitude-heading-row { margin-bottom: 18px; gap: 12px; }
+    .gratitude-heading-row h3 { font-size: 16px; }
+    .gratitude-date-controls { width: 100%; gap: 5px; }
+    .gratitude-date-controls input { flex: 1 1 120px; width: 130px; font-size: 13px; padding: 7px; }
+    .gratitude-date-controls button { padding: 7px 9px; font-size: 12px; }
+    .gratitude-prompts { gap: 12px; }
+    .gratitude-prompt { padding: 15px; }
+    .gratitude-prompt textarea { padding: 11px; }
+    .gratitude-footer { align-items: flex-start; }
+    .gratitude-footer .save-journal-btn { width: 100%; }
+    .gratitude-history { margin-top: 26px; }
+    .gratitude-history > header, .gratitude-history-header { align-items: stretch; }
+    .entry-search { width: 100%; }
+    .gratitude-entry-card { padding: 16px; }
+    .gratitude-entry-header { gap: 9px; }
+    .gratitude-entry-header .journal-entry-actions { width: auto; }
+    .gratitude-entry-header time { font-size: 13px; }
+    .calendar-grid { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+    .calendar-day { min-width: 0; min-height: 60px; padding: 7px 3px; gap: 4px; }
+    .calendar-day-number { font-size: 12px; }
+    .calendar-badge { max-width: 100%; font-size: 9px; padding: 1px 3px; overflow-wrap: anywhere; }
+    .calendar-header { flex-wrap: wrap; gap: 10px; }
+    .history-goal-item-edit, .history-goal-item { flex-wrap: wrap; min-width: 0; }
+    .history-goal-text-input { min-width: 0; width: 100%; }
+    .app-footer { margin-top: 26px; }
+    #exportDialog { padding: 22px 18px; }
+    .export-date-range, .export-dialog-grid { grid-template-columns: 1fr; }
+    .export-actions button, .export-dialog-actions button { flex: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+}
+
+.header-export-btn {
+    padding: 8px 14px;
+    border: 1px solid #ffffff80;
+    border-radius: 7px;
+    background: #ffffff20;
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+}
+.header-export-btn:hover { background: #ffffff35; }
+.save-error, #gratitudeSaveStatus.save-error { color: #b33047; }
+.gratitude-entry-answer .unanswered { color: #8a8c99; font-style: italic; }
+button.calendar-day { text-align: left; font: inherit; color: inherit; }
+@media (max-width: 600px) {
+    .section-heading-actions h2 { flex: 1; }
+    .header-export-btn { padding: 8px 10px; font-size: 12px; }
+}
